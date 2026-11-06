@@ -1,7 +1,7 @@
 import type { IncomingMessage,ServerResponse } from 'node:http';
 import { Readable } from 'node:stream';
 import process from 'node:process';
-import { proxyApi,MAX_VERCEL_BODY } from '../server/vercelProxy';
+import { proxyApi,MAX_VERCEL_BODY } from '../server/vercelProxy.ts';
 
 export default async function handler(req:IncomingMessage & {body?:unknown},res:ServerResponse){
   try{

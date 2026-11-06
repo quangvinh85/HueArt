@@ -16,4 +16,8 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npm run check
       - run: npm test
+      - name: Install isolated Vercel builder
+        run: npm install --prefix "$RUNNER_TEMP/hueart-vercel-tools" --no-audit --no-fund @vercel/node@30.0.0 @vercel/build-utils@15.3.0
+      - name: Check native Vercel function build and runtime
+        run: node scripts/check-vercel-function.cjs "$RUNNER_TEMP/hueart-vercel-tools"
       - run: npm run build:vercel

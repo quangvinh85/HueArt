@@ -55,3 +55,5 @@ npm run build:vercel
 Backend hiện có được triển khai bằng workflow Sites, không bằng `vercel deploy`. `npm run build:hosted` tạo artifact Worker riêng. Mật khẩu và credential lưu trong biến bí mật của hosting, không nằm trong mã giao diện.
 
 Xem [chi tiết quản lý đơn](docs-order-management.md). Website chưa có cổng thanh toán tự động; quản trị viên xác nhận tiền và giao ảnh sau khi liên hệ khách.
+
+GitHub Actions còn đóng gói API bằng builder Vercel chính thức và chạy thử function sau biên dịch để phát hiện lỗi import chỉ xuất hiện trong môi trường serverless.
