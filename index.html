@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <script>
+      (function() {
+        try {
+          var proto = window.Window ? Window.prototype : Object.getPrototypeOf(window);
+          var nativeFetch = window.fetch;
+          var customFetch = nativeFetch;
+
+          var descriptor = {
+            get: function() { return customFetch; },
+            set: function(v) { customFetch = v; },
+            configurable: true,
+            enumerable: true
+          };
+
+          try { Object.defineProperty(proto, 'fetch', descriptor); } catch (e) {}
+          try { Object.defineProperty(window, 'fetch', descriptor); } catch (e) {}
+        } catch (e) {}
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hue Art Prints — Tranh Nhiếp Ảnh Mỹ Thuật Xứ Huế</title>
+    <meta name="description" content="Fine-art photography prints inspired by the poetic beauty of Hue, Vietnam. Tranh nhiếp ảnh nghệ thuật cố đô Huế." />
+    <meta property="og:title" content="Hue Art Prints — Tranh Nhiếp Ảnh Mỹ Thuật Xứ Huế" />
+    <meta property="og:description" content="Fine-art photography prints inspired by the poetic beauty of Hue, Vietnam." />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 10C50 10 35 35 35 55C35 75 50 90 50 90C50 90 65 75 65 55C65 35 50 10 50 10Z' fill='%236b4f7a'/></svg>" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
