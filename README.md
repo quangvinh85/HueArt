@@ -7,7 +7,7 @@ Cửa hàng ảnh Việt / Anh / Pháp, đặt hàng trực tiếp, gửi tác p
 Repo có sẵn `vercel.json` và API Node tại `api/backend.ts`. Không chỉ deploy trang tĩnh: API Vercel kết nối backend đang lưu đơn và ảnh trên Sites (Cloudflare D1/R2). Cách này giữ nguyên dữ liệu và ảnh đã duyệt. Backend Sites phải tiếp tục hoạt động.
 
 1. Import repo vào project Vercel; dùng Node.js 24, không đặt Root Directory thành `src`.
-2. Giữ các lệnh trong `vercel.json`: `npm ci --legacy-peer-deps`, `npm run build:vercel`, output `dist`.
+2. Giữ các lệnh trong `vercel.json`: `npm ci`, `npm run build:vercel`, output `dist`.
 3. Cấu hình ba biến **chỉ phía máy chủ**, cho cả Production và Preview:
 
 | Biến | Nội dung |
@@ -34,7 +34,7 @@ Trên Vercel, admin dùng username/mật khẩu đã cấu hình tại backend. 
 ## Phát triển và kiểm tra
 
 ```sh
-npm ci --legacy-peer-deps
+npm ci
 npm run check
 npm test
 npm run build:vercel

@@ -13,7 +13,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
+      - name: Check dependency resolution used by Vercel Functions
+        run: npm install --ignore-scripts --no-audit --no-fund
       - run: npm run check
       - run: npm test
       - name: Install isolated Vercel builder
