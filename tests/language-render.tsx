@@ -1,0 +1,32 @@
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {strict as assert} from 'node:assert';
+import {LanguageProvider} from '../src/context/LanguageContext';
+import Shop from '../src/shop/Shop';
+import {SALE_OPTIONS} from '../src/shop/catalog';
+import {translateText} from '../src/shop/language';
+import translations from '../src/shop/translations.json';
+let language: string|null = null;
+Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:(key:string)=>key==='hueart_language'?language:null,setItem:()=>{},removeItem:()=>{}}});
+const render=(saved:string|null)=>{language=saved;return renderToStaticMarkup(<LanguageProvider><Shop/></LanguageProvider>);};
+assert.match(render(null),/Gửi tác phẩm/);
+assert.match(render(null),/Giám tuyển AI/);
+assert.match(render('invalid'),/Ba cách sở hữu một bức ảnh/);
+assert.match(render('en'),/Submit artwork/);
+assert.match(render('en'),/AI curator/);
+assert.match(render('en'),/High-resolution file/);
+assert.match(render('en'),/Echoes of the Imperial Meridian Gate/);
+assert.match(render('fr'),/Soumettre une œuvre/);
+assert.match(render('fr'),/Conseil IA/);
+assert.match(render('fr'),/Fichier haute résolution/);
+assert.match(render('fr'),/Échos de la Porte du Midi Impériale/);
+for(const option of SALE_OPTIONS){
+  for(const field of ['title','short','description','delivery'] as const){
+    assert.ok((translations as Record<string,string[]>)[option[field]],`Missing translation for ${option.id}.${field}`);
+    assert.notEqual(translateText(option[field],'en'),option[field]);
+    assert.notEqual(translateText(option[field],'fr'),option[field]);
+  }
+}
+assert.equal(translateText('Giỏ hàng ({0})','en',3),'Cart (3)');
+assert.equal(translateText('Giỏ hàng ({0})','fr',3),'Panier (3)');
+console.log('Language rendering passed: Vietnamese default and invalid-language fallback, English/French UI and artwork titles, sale descriptions and interpolation.');

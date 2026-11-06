@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1793993505459,
+      "tag": "0000_brave_longshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793994634041,
+      "tag": "0001_clear_tombstone",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793995458867,
+      "tag": "0002_vengeful_raza",
+      "breakpoints": true
+    }
+  ]
+}
