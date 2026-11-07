@@ -22,6 +22,13 @@
       "when": 1793995458867,
       "tag": "0002_vengeful_raza",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794023024076,
+      "tag": "0003_ancient_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
-import { useEffect, type ImgHTMLAttributes, type SyntheticEvent } from 'react';
+import { imagePreview, type ImageView } from './imagePreviews';
+import { useState, useEffect, type ImgHTMLAttributes, type SyntheticEvent } from 'react';
 
 const stopImageAction = (event: SyntheticEvent) => event.preventDefault();
 
@@ -46,11 +47,13 @@ export function useImageProtection(onBlocked: () => void) {
   }, [onBlocked]);
 }
 
-type ProtectedImageProps = Pick<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'alt' | 'loading' | 'fetchPriority'> & { className?: string };
+type ProtectedImageProps = Pick<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'alt' | 'loading' | 'fetchPriority'> & { className?: string; view?: ImageView };
 
-export function ProtectedImage({ className = '', ...props }: ProtectedImageProps) {
+export function ProtectedImage({ className = '', view='card', src='', loading='lazy', ...props }: ProtectedImageProps) {
+  const [failedSource,setFailedSource]=useState('');
+  const preview=failedSource===src?{src}:imagePreview(src,view);
   return <span className={`shop-protected-image ${className}`} data-protected-image onContextMenu={stopImageAction} onDragStart={stopImageAction}>
-    <img {...props} draggable={false} onContextMenu={stopImageAction} onDragStart={stopImageAction} />
+    <img {...props} {...preview} loading={loading} decoding="async" onError={()=>setFailedSource(src)} draggable={false} onContextMenu={stopImageAction} onDragStart={stopImageAction} />
     <span className="shop-image-watermarks" aria-hidden="true">{Array.from({ length: 9 }, (_, index) => <span key={index}>© ĐẶNG HUY TRỨ</span>)}</span>
   </span>;
 }

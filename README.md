@@ -57,3 +57,9 @@ Backend hiện có được triển khai bằng workflow Sites, không bằng `v
 Xem [chi tiết quản lý đơn](docs-order-management.md). Website chưa có cổng thanh toán tự động; quản trị viên xác nhận tiền và giao ảnh sau khi liên hệ khách.
 
 GitHub Actions còn đóng gói API bằng builder Vercel chính thức và chạy thử function sau biên dịch để phát hiện lỗi import chỉ xuất hiện trong môi trường serverless.
+
+## Quản lý thư viện ảnh
+
+Trong `/admin`, tab **Thư viện ảnh** liệt kê cả ảnh có sẵn lẫn tác phẩm gửi lên đã được duyệt. Có tìm kiếm, bộ lọc và phân trang 12 ảnh. Admin sửa tên / địa điểm / câu chuyện theo ba ngôn ngữ, tác giả và bộ sưu tập; ẩn/hiện; chuyển ảnh vào thùng rác và khôi phục. Tác phẩm chưa được duyệt vẫn nằm ở tab **Tác phẩm gửi đến**. Ẩn/xóa chặn đơn mới và bỏ ảnh khỏi cửa hàng; đơn cũ giữ nguyên thông tin lúc đặt. Ảnh trong thùng rác chưa bị xóa vĩnh viễn khỏi kho.
+
+Mỗi lần build tạo WebP 160/480/960/1440 px từ ảnh có sẵn, giữ file gốc nguyên vẹn. Admin dùng ảnh nhỏ 160 px, cửa hàng dùng `srcset` theo kích thước màn hình, chỉ tải ảnh gần màn hình và chỉ dựng thêm ảnh khi bấm “Xem thêm ảnh”. Vercel Image Optimization xử lý ảnh gửi lên đã duyệt; chỉ cho phép đường dẫn ảnh công khai của HueArt, không dùng trình tối ưu công khai cho ảnh quản trị riêng tư. Xem trước ảnh đã ẩn hoặc chưa duyệt chỉ tải khi mở chi tiết. Cache ảnh đã tối ưu trên Vercel có thể còn tối đa 60 giây sau khi ẩn; danh mục và đặt hàng kiểm tra trạng thái hiện tại trên máy chủ.

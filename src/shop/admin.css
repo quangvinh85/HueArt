@@ -72,3 +72,23 @@
 .admin-login-form > label { display:block; color:#bac2ce; font-size:12px; }
 .admin-login-form input { display:block; width:100%; padding:11px 12px; margin-top:7px; background:#090c11; border:1px solid #3b4351; border-radius:4px; color:#f5f0e6; }
 .admin-login-form .shop-order-error { margin:0; color:#f1bdc5; }
+
+.admin-photo-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:18px; }
+.admin-photo-card { border:1px solid #333944; border-radius:6px; padding:14px; background:#13161c; min-width:0; }
+.admin-photo-open { display:flex; gap:12px; width:100%; align-items:center; text-align:left; background:none; border:0; color:inherit; padding:0; cursor:pointer; }
+.admin-photo-open > .shop-protected-image,.admin-photo-placeholder { flex:0 0 80px; width:80px; height:64px; object-fit:cover; border-radius:4px; }
+.admin-photo-open > span:last-child { min-width:0; }
+.admin-photo-open strong { display:block; font-size:14px; overflow-wrap:anywhere; }
+.admin-photo-open small { display:block; color:#9ca7b5; font-size:11px; margin-top:4px; }
+.admin-photo-actions { display:flex; gap:8px; justify-content:space-between; align-items:center; margin-top:14px; }
+.admin-photo-actions .shop-secondary { font-size:11px; padding:7px 10px; }
+.admin-photo-placeholder { display:grid; place-items:center; background:#242a34; color:#9ca7b5; }
+.admin-catalog-preview { height:300px; display:flex; align-items:center; justify-content:center; background:#090c11; }
+.admin-catalog-preview .shop-protected-image { max-height:100%; width:100%; object-fit:contain; }
+.admin-catalog-preview img { object-fit:contain; max-height:300px; width:100%; }
+.admin-visible-toggle { display:flex; align-items:center; gap:9px; margin:20px 0; font-size:13px; }
+.admin-danger { color:#f0aeb5; border-color:#82434b; }
+.admin-trash-confirm { padding:14px; border:1px solid #82434b; margin-top:18px; font-size:13px; }
+.admin-trash-confirm button { margin:4px; }
+@media(max-width:1000px) { .admin-photo-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) { .admin-photo-grid { grid-template-columns:1fr; } }

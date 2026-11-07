@@ -2,6 +2,7 @@ import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {strict as assert} from 'node:assert';
 import {LanguageProvider} from '../src/context/LanguageContext';
+import {ARTWORKS} from '../src/data/artworks';
 import Shop from '../src/shop/Shop';
 import {SALE_OPTIONS} from '../src/shop/catalog';
 import {translateText} from '../src/shop/language';
@@ -15,11 +16,12 @@ assert.match(render('invalid'),/Ba cách sở hữu một bức ảnh/);
 assert.match(render('en'),/Submit artwork/);
 assert.match(render('en'),/AI curator/);
 assert.match(render('en'),/High-resolution file/);
-assert.match(render('en'),/Echoes of the Imperial Meridian Gate/);
+assert.match(ARTWORKS[0].titles.en,/Echoes of the Imperial Meridian Gate/);
+assert.doesNotMatch(render('en'),/images\/hue\//);
 assert.match(render('fr'),/Soumettre une œuvre/);
 assert.match(render('fr'),/Conseil IA/);
 assert.match(render('fr'),/Fichier haute résolution/);
-assert.match(render('fr'),/Échos de la Porte du Midi Impériale/);
+assert.match(ARTWORKS[0].titles.fr,/Échos de la Porte du Midi Impériale/);
 for(const option of SALE_OPTIONS){
   for(const field of ['title','short','description','delivery'] as const){
     assert.ok((translations as Record<string,string[]>)[option[field]],`Missing translation for ${option.id}.${field}`);

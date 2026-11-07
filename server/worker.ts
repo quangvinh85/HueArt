@@ -1,3 +1,4 @@
+import { catalogueAdmin } from './catalogueAdmin';
 import { getCatalogue } from './catalogue';
 import { adminAuth, adminIdentity } from './adminAuth';
 import { submissions } from './submissions';
@@ -29,10 +30,13 @@ export async function api(request: Request, env: Env): Promise<Response> {
     await env.DB.prepare('SELECT 1 AS ok').first();
     return json({ok:true,database:true,uploads:Boolean(env.BUCKET),protocol:1});
   }
+  if (url.pathname.startsWith('/api/admin/catalog')) return catalogueAdmin(request,env,request.method==='PATCH'?await readJson(request):undefined);
   if (url.pathname === '/api/catalog' && request.method === 'GET') return json({ artworks: await getCatalogue(env) });
   const publicImage = /^\/api\/catalog\/([0-9a-f-]{36})\/image$/.exec(url.pathname);
   if (publicImage && request.method === 'GET') {
     const image = await env.DB.prepare("SELECT object_key, content_type FROM artwork_submissions WHERE id = ? AND status = 'accepted'").bind(publicImage[1]).first();
+    const override = await env.DB.prepare('SELECT hidden, deleted_at FROM catalogue_overrides WHERE artwork_id = ?').bind('submission-'+publicImage[1]).first();
+    if (override?.hidden || override?.deleted_at) throw new ApiError(404, 'Tác phẩm chưa được xuất bản hoặc đã ngừng bán.');
     if (!image) throw new ApiError(404, 'Tác phẩm chưa được xuất bản hoặc đã ngừng bán.');
     const object = await env.BUCKET?.get(image.object_key);
     if (!object) throw new ApiError(404, 'Không tìm thấy ảnh.');

@@ -10,3 +10,5 @@ coverage/
 .work-tests/
 .wrangler/
 .vercel/
+
+public/images/previews/

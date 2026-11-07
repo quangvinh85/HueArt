@@ -22,5 +22,29 @@
     "api/backend.ts": {
       "maxDuration": 60
     }
+  },
+  "images": {
+    "sizes": [
+      160,
+      480,
+      960,
+      1440
+    ],
+    "localPatterns": [
+      {
+        "pathname": "^/api/catalog/[0-9a-f-]{36}/image$",
+        "search": ""
+      }
+    ],
+    "formats": [
+      "image/webp"
+    ],
+    "qualities": [
+      75
+    ],
+    "minimumCacheTTL": 60,
+    "dangerouslyAllowSVG": false,
+    "contentSecurityPolicy": "default-src 'none'; sandbox;",
+    "contentDispositionType": "inline"
   }
 }

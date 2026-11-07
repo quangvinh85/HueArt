@@ -281,6 +281,8 @@ test('accepting a submitted photo publishes it, enables all purchase options and
   const art=catalog.data.artworks.find(art=>art.id===artworkId);
   assert.equal(art.titles.vi,'Tác phẩm đã duyệt');assert.equal(art.titles.en,'Approved artwork');assert.equal(art.titles.fr,'Œuvre acceptée');
   assert.equal(art.photographer,'Nguyễn An');assert.equal(art.imageUrl,`/api/catalog/${id}/image`);
+  const library=(await f.request('/api/admin/catalog?q='+encodeURIComponent('Tác phẩm đã duyệt'),{headers:owner})).data;
+  assert.equal(library.total,1);assert.equal(library.items[0].artwork.id,artworkId);
   const serialized=JSON.stringify(catalog.data);
   assert.doesNotMatch(serialized,/private@example.com|0901234567|Private admin note|object_key|password_hash/);
   const image=await worker.fetch(new Request(origin+art.imageUrl),f.env);assert.equal(image.status,200);assert.equal(image.headers.get('Cache-Control'),'no-store');
@@ -296,4 +298,44 @@ test('accepting a submitted photo publishes it, enables all purchase options and
   assert.equal((await f.request('/api/orders',{method:'POST',body:f.payload({items:[{artworkId,optionId:'high-resolution',quantity:1}]})})).status,400);
   const saved=(await f.request('/api/admin/orders',{headers:owner})).data.orders[0];
   assert.equal(saved.items[0].title,'Tác phẩm đã duyệt');assert.equal(saved.items.length,3);
+});
+
+test('admin photo library lists every public artwork, paginates and rejects anonymous writes',async()=>{
+ const f=fixture();
+ assert.equal((await f.request('/api/admin/catalog')).status,401);
+ const publicIds=(await f.request('/api/catalog')).data.artworks.map(a=>a.id).sort();
+ const library=await f.request('/api/admin/catalog',{headers:owner});
+ assert.equal(library.status,200);assert.equal(library.data.stats.visible,publicIds.length);assert.equal(library.data.items.length,12);
+ const second=await f.request('/api/admin/catalog?page=2',{headers:owner});
+ assert.deepEqual([...library.data.items,...second.data.items].map(i=>i.artwork.id).sort(),publicIds);
+ assert.equal((await f.request('/api/admin/catalog/'+artId,{method:'PATCH',body:{action:'trash',version:0}})).status,401);
+ assert.equal((await f.request('/api/admin/catalog/'+artId,{method:'PATCH',headers:owner,sameOrigin:false,body:{action:'trash',version:0}})).status,403);
+ assert.equal((await f.request('/api/admin/catalog?state=invalid',{headers:owner})).status,400);
+});
+
+test('catalogue edits, visibility, trash and restore preserve order snapshots and reject stale updates',async()=>{
+ const f=fixture();
+ await f.request('/api/orders',{method:'POST',body:f.payload()});
+ const old=(await f.request('/api/admin/orders',{headers:owner})).data.orders[0];
+ const artwork=(await f.request('/api/catalog')).data.artworks.find(a=>a.id===artId);
+ const patch={action:'save',version:0,hidden:false,titles:{vi:'Tên ảnh mới',en:'New title',fr:'Nouveau titre'},stories:artwork.stories,locations:artwork.locations,photographer:'New author',collection:artwork.collection};
+ assert.equal((await f.request('/api/admin/catalog/'+artId,{method:'PATCH',headers:owner,body:{...patch,titles:{vi:''}}})).status,400);
+ assert.equal((await f.request('/api/admin/catalog/'+artId,{method:'PATCH',headers:owner,body:patch})).status,200);
+ assert.equal((await f.request('/api/catalog')).data.artworks.find(a=>a.id===artId).titles.en,'New title');
+ assert.equal((await f.request('/api/admin/catalog/'+artId,{method:'PATCH',headers:owner,body:patch})).status,409);
+ assert.equal((await f.request('/api/admin/orders',{headers:owner})).data.orders[0].items[0].title,old.items[0].title);
+ patch.version=1;patch.hidden=true;
+ assert.equal((await f.request('/api/admin/catalog/'+artId,{method:'PATCH',headers:owner,body:patch})).status,200);
+ assert.equal((await f.request('/api/catalog')).data.artworks.some(a=>a.id===artId),false);
+ assert.equal((await f.request('/api/orders',{method:'POST',body:f.payload()})).status,400);
+ assert.equal((await f.request('/api/admin/catalog?state=hidden',{headers:owner})).data.total,1);
+ assert.equal((await f.request('/api/admin/catalog/'+artId,{method:'PATCH',headers:owner,body:{action:'trash',version:2}})).status,200);
+ assert.equal((await f.request('/api/admin/catalog?state=trash',{headers:owner})).data.total,1);
+ assert.equal((await f.request('/api/admin/catalog?state=all',{headers:owner})).data.items.some(i=>i.artwork.id===artId),false);
+ assert.equal((await f.request('/api/admin/catalog/'+artId,{method:'PATCH',headers:owner,body:{action:'restore',version:3}})).status,200);
+ assert.equal((await f.request('/api/admin/catalog?state=hidden',{headers:owner})).data.total,1);
+ patch.version=4;patch.hidden=false;
+ assert.equal((await f.request('/api/admin/catalog/'+artId,{method:'PATCH',headers:owner,body:patch})).status,200);
+ assert.equal((await f.request('/api/catalog')).data.artworks.find(a=>a.id===artId).titles.vi,'Tên ảnh mới');
+ assert.equal((await f.request('/api/orders',{method:'POST',body:f.payload()})).status,201);
 });

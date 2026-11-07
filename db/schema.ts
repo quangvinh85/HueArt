@@ -47,3 +47,13 @@ export const adminSessions = sqliteTable('admin_sessions', {
 export const adminLoginAttempts = sqliteTable('admin_login_attempts', {
   attemptKey:text('attempt_key').primaryKey(), failures:integer('failures').notNull().default(0), windowStarted:integer('window_started').notNull(),
 });
+
+// Overrides keep the original catalogue and historical order snapshots intact.
+export const catalogueOverrides = sqliteTable('catalogue_overrides', {
+  artworkId: text('artwork_id').primaryKey(),
+  metadataJson: text('metadata_json').notNull().default('{}'),
+  hidden: integer('hidden').notNull().default(0),
+  deletedAt: text('deleted_at'),
+  version: integer('version').notNull().default(1),
+  updatedAt: text('updated_at').notNull(),
+});

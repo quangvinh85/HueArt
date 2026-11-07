@@ -198,3 +198,5 @@
 @media(max-width:1100px) { .shop-header nav { display:none; } }
 @media(max-width:600px) { .shop-feature-actions { order:5; width:100%; justify-content:center; } .shop-header { min-height:104px; } .shop-feature-actions button { flex:1; justify-content:center; } .shop-language { margin-left:auto; } .shop-language select { max-width:100px; } .submission-fields { grid-template-columns:1fr; } }
 .shop-photographer { color:#9ca3af; font-size:11px; margin:0 0 8px; }
+.shop-load-more { display:flex; justify-content:center; padding-top:28px; }
+.shop-art-grid > article { content-visibility:auto; contain-intrinsic-size:auto 450px; }

@@ -1130,5 +1130,153 @@
   "Ảnh gửi từ Vercel tối đa 3 MB.": [
     "Uploads from Vercel are limited to 3 MB.",
     "Les envois depuis Vercel sont limités à 3 Mo."
+  ],
+  "Thư viện ảnh": [
+    "Photo library",
+    "Photothèque"
+  ],
+  "Quản lý ảnh có sẵn và tác phẩm đã duyệt đang bán trên cửa hàng.": [
+    "Manage existing photos and approved submissions in the shop.",
+    "Gérez les photos existantes et les œuvres acceptées de la boutique."
+  ],
+  "Tổng số ảnh": [
+    "Total photos",
+    "Nombre de photos"
+  ],
+  "Đang hiển thị": [
+    "Visible",
+    "Visible"
+  ],
+  "Đã ẩn": [
+    "Hidden",
+    "Masquée"
+  ],
+  "Thùng rác": [
+    "Trash",
+    "Corbeille"
+  ],
+  "Tìm ảnh": [
+    "Search photos",
+    "Rechercher des photos"
+  ],
+  "Tên ảnh hoặc tác giả…": [
+    "Photo title or photographer…",
+    "Titre ou photographe…"
+  ],
+  "Ảnh có sẵn": [
+    "Original collection",
+    "Collection initiale"
+  ],
+  "Tác phẩm đã duyệt": [
+    "Approved submission",
+    "Œuvre acceptée"
+  ],
+  "Khôi phục": [
+    "Restore",
+    "Restaurer"
+  ],
+  "Chỉnh sửa": [
+    "Edit",
+    "Modifier"
+  ],
+  "Không có ảnh phù hợp.": [
+    "No matching photos.",
+    "Aucune photo correspondante."
+  ],
+  "{0} ảnh · Trang {1}": [
+    "{0} photos · Page {1}",
+    "{0} photos · Page {1}"
+  ],
+  "Thông tin tác phẩm": [
+    "Artwork information",
+    "Informations sur l’œuvre"
+  ],
+  "Ảnh đang ở trong thùng rác. Khôi phục để chỉnh sửa.": [
+    "This photo is in the trash. Restore it to edit.",
+    "Cette photo est dans la corbeille. Restaurez-la pour la modifier."
+  ],
+  "Hiển thị trên cửa hàng": [
+    "Show in the shop",
+    "Afficher dans la boutique"
+  ],
+  "Ẩn hoặc xóa sẽ ngừng hiển thị và ngừng nhận đơn mới cho ảnh này. Đơn đã đặt vẫn được giữ.": [
+    "Hiding or deleting removes this photo from the shop and stops new orders. Existing orders are preserved.",
+    "Masquer ou supprimer retire cette photo de la boutique et bloque les nouvelles commandes. Les commandes existantes sont conservées."
+  ],
+  "Đưa vào thùng rác": [
+    "Move to trash",
+    "Mettre à la corbeille"
+  ],
+  "Xóa ảnh khỏi cửa hàng? Bạn có thể khôi phục từ thùng rác.": [
+    "Remove this photo from the shop? You can restore it from the trash.",
+    "Retirer cette photo de la boutique ? Vous pourrez la restaurer depuis la corbeille."
+  ],
+  "Xác nhận xóa": [
+    "Confirm deletion",
+    "Confirmer la suppression"
+  ],
+  "Ngôn ngữ nội dung": [
+    "Content language",
+    "Langue du contenu"
+  ],
+  "Tên tác phẩm": [
+    "Artwork title",
+    "Titre de l’œuvre"
+  ],
+  "Địa điểm": [
+    "Location",
+    "Lieu"
+  ],
+  "Câu chuyện": [
+    "Story",
+    "Histoire"
+  ],
+  "Đã chuyển ảnh vào thùng rác.": [
+    "Photo moved to the trash.",
+    "Photo mise à la corbeille."
+  ],
+  "Đã khôi phục ảnh.": [
+    "Photo restored.",
+    "Photo restaurée."
+  ],
+  "Đã lưu thông tin ảnh.": [
+    "Photo information saved.",
+    "Informations de la photo enregistrées."
+  ],
+  "Không tải được danh sách ảnh.": [
+    "Could not load the photo list.",
+    "Impossible de charger la liste des photos."
+  ],
+  "Không lưu được tác phẩm.": [
+    "Could not save the artwork.",
+    "Impossible d’enregistrer l’œuvre."
+  ],
+  "Đang tải ảnh…": [
+    "Loading photos…",
+    "Chargement des photos…"
+  ],
+  "Xem thêm ảnh": [
+    "Load more photos",
+    "Afficher plus de photos"
+  ],
+  "Bộ lọc không hợp lệ.": [
+    "Invalid filter.",
+    "Filtre non valide."
+  ],
+  "Tác phẩm đã thay đổi. Vui lòng tải lại.": [
+    "This artwork has changed. Please reload.",
+    "Cette œuvre a changé. Veuillez recharger."
+  ],
+  "Thông tin tác phẩm không hợp lệ.": [
+    "Invalid artwork information.",
+    "Informations de l’œuvre non valides."
+  ],
+  "Vui lòng nhập tên tác phẩm.": [
+    "Please enter an artwork title.",
+    "Veuillez saisir un titre."
+  ],
+  "Thao tác không hợp lệ.": [
+    "Invalid action.",
+    "Action non valide."
   ]
 }
