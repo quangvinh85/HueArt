@@ -69,6 +69,11 @@ test('Vercel can log in, manage orders and log out without Sites browser identit
  assert.equal((await(await proxy('/api/session',null,cookie)).json()).isAdmin,true);
  const order=await proxy('/api/orders',{checkoutKey:crypto.randomUUID(),items:[{artworkId:'meridian-gate-twilight',optionId:'high-resolution',quantity:1}],customer:{name:'Khách Vercel',phone:'0901234567'},rightsAccepted:false});assert.equal(order.status,201);
  const orders=await(await proxy('/api/admin/orders',null,cookie)).json();assert.equal(orders.total,1);assert.equal(orders.orders[0].customer.name,'Khách Vercel');
+ const library=await(await proxy('/api/admin/catalog',null,cookie)).json();assert.equal(library.stats.visible,12);
+ const mutation=new Request(publicOrigin+'/api/admin/catalog/meridian-gate-twilight',{method:'PATCH',headers:{Origin:publicOrigin,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify({action:'trash',version:0})});
+ assert.equal((await proxyApi(mutation,config,send)).status,200);
+ assert.equal((await(await proxy('/api/catalog')).json()).artworks.some(a=>a.id==='meridian-gate-twilight'),false);
+ const advice=await(await proxy('/api/curator',{query:'A royal photograph',language:'en'})).json();assert.ok(advice.recommendations);assert.equal(advice.recommendations.some(a=>a.artworkId==='meridian-gate-twilight'),false);
  assert.equal((await proxy('/api/admin-auth/logout',{},cookie)).status,200);
  assert.equal((await proxy('/api/admin/orders',null,cookie)).status,403);
 });

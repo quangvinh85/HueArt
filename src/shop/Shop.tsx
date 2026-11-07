@@ -90,6 +90,7 @@ export default function Shop() {
     if(index>=visibleCount)setVisibleCount(index+1);
     document.getElementById(window.location.hash.slice(1))?.scrollIntoView({block:'center'});
   },[artworks,visibleCount]);
+  useEffect(()=>{setSelected(current=>current?artworks.find(art=>art.id===current.id)||null:null);},[artworks]);
   const heroArtwork=artworks.find(art=>art.id==='meridian-gate-twilight')||artworks[0];
   const hasUnavailableItem = cart.some(item=>!artworks.some(art=>art.id===item.artworkId));
   const hasPrint = cart.some(item => item.optionId === 'framed-print');
@@ -102,8 +103,9 @@ export default function Shop() {
     return artworks.filter(art => (category === 'all' || category === art.collection) && normalize(`${art.titles[language]} ${art.locations[language]}`).includes(query));
   }, [category, search, language, artworks]);
   const openArtwork = (art: Artwork) => {
-    setArtworks(current=>current.some(existing=>existing.id===art.id)?current:[art,...current]);
-    setSelected(art);
+    const available=artworks.find(existing=>existing.id===art.id);
+    if(!available){setNotice(tr('Tác phẩm chưa được xuất bản hoặc đã ngừng bán.'));void loadCatalogue();return;}
+    setSelected(available);
     setOptionId('high-resolution');
     setQuantity(1);
   };
