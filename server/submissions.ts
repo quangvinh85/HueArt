@@ -55,10 +55,14 @@ export async function submissions(request: Request, env: any, rateKey?: string, 
       if(adminUpload&&!data.publish)await env.DB.prepare('INSERT INTO catalogue_overrides (artwork_id, metadata_json, hidden, deleted_at, version, updated_at) VALUES (?, ?, 1, NULL, 1, ?)').bind('submission-'+id,'{}',new Date().toISOString()).run();
       await env.DB.prepare('INSERT INTO artwork_submissions (id, reference, submission_key, payload_hash, requester_hash, title, title_en, title_fr, author_name, author_email, author_phone, location, story, collection, object_key, content_type, status, admin_note, version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id,reference,key,payloadHash,requester,title,titleEn,titleFr,authorName,authorEmail,authorPhone,location,story,collection,objectKey,type,adminUpload?'accepted':'pending',adminUpload?'Thêm trực tiếp từ thư viện admin':'',1,new Date().toISOString(),new Date().toISOString()).run();
     } catch (error) {
+      // A database write may have committed even when its response was lost.
+      // Keep that row's original file; only clean up this request's unused object.
+      const saved = await env.DB.prepare('SELECT id, reference, payload_hash FROM artwork_submissions WHERE submission_key = ?').bind(key).first();
+      if(saved?.id===id&&saved.payload_hash===payloadHash)return json(receipt(saved));
       await env.BUCKET.delete(objectKey);
       if(adminUpload)await env.DB.prepare('DELETE FROM catalogue_overrides WHERE artwork_id = ?').bind('submission-'+id).run();
-      const saved = await env.DB.prepare('SELECT id, reference, payload_hash FROM artwork_submissions WHERE submission_key = ?').bind(key).first();
       if (saved?.payload_hash === payloadHash) return json(receipt(saved));
+      if(saved)throw new ApiError(409,'Yêu cầu đã gửi có nội dung khác. Vui lòng đóng rồi mở lại biểu mẫu.');
       throw error;
     }
     return json(receipt({id,reference}), 201);

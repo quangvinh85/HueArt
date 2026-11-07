@@ -467,3 +467,11 @@ test('direct library upload rejects invalid files and public contributions canno
  const forged=await worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:uploadForm({...metadata,authorPhone:'0901234567',adminUpload:true,status:'accepted'})}),f.env);assert.equal(forged.status,201);
  assert.equal(f.sqlite.prepare('SELECT status FROM artwork_submissions').get().status,'pending');
 });
+
+test('a committed upload keeps its original image if the database write response is lost',async()=>{
+ const f=fixture(),prepare=f.env.DB.prepare.bind(f.env.DB);
+ f.env.DB.prepare=sql=>{const statement=prepare(sql);if(sql.startsWith('INSERT INTO artwork_submissions')){const run=statement.run.bind(statement);statement.run=async()=>{await run();throw new Error('Simulated lost database response');};}return statement;};
+ const response=await uploadAdmin(f,{submissionKey:crypto.randomUUID(),title:'Ảnh giữ nguyên',authorName:'Test owner',collection:'imperial-echoes',rightsConfirmed:true,publish:true});assert.equal(response.status,200);const saved=await response.json();
+ const image=await worker.fetch(new Request(origin+'/api/catalog/'+saved.artworkId.slice(11)+'/image'),f.env);assert.equal(image.status,200);assert.deepEqual(Buffer.from(await image.arrayBuffer()),adminUploadPng);
+ assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS count FROM artwork_submissions').get().count,1);
+});
