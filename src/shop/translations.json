@@ -2034,5 +2034,37 @@
   "Tôi là tác giả hoặc có quyền gửi ảnh này để quản trị viên xem xét. Việc gửi ảnh không tự chuyển quyền tác giả. Tôi chịu trách nhiệm pháp lý về bản quyền tác phẩm.": [
     "I am the creator or authorized to submit this photo for review. Submission does not transfer copyright. I take legal responsibility for the copyright of this work.",
     "Je suis l’auteur ou autorisé à soumettre cette photo. L’envoi ne transfère pas les droits d’auteur. J’assume la responsabilité juridique concernant les droits d’auteur de cette œuvre."
+  ],
+  "Không kiểm tra được trạng thái Zalo.": [
+    "Could not check Zalo notification status.",
+    "Impossible de vérifier l’état des notifications Zalo."
+  ],
+  "Chưa kết nối Zalo nhận đơn hàng": [
+    "Zalo order notifications are not connected",
+    "Les notifications de commande Zalo ne sont pas connectées"
+  ],
+  "Thông báo đơn hàng qua Zalo đang tắt": [
+    "Zalo order notifications are disabled",
+    "Les notifications de commande Zalo sont désactivées"
+  ],
+  "Zalo: Đã bật tự gửi thông báo đơn hàng": [
+    "Zalo: automatic order notifications enabled",
+    "Zalo : notifications automatiques de commande activées"
+  ],
+  "Số điện thoại ở nút chat chưa đủ để nhận thông báo tự động. Kết nối Zalo Bot, nhận tài khoản admin, gửi thử rồi bật thông báo.": [
+    "The chat phone number alone cannot receive automatic notifications. Connect a Zalo Bot, select the admin account, send a test and enable notifications.",
+    "Le numéro de téléphone du chat ne suffit pas pour recevoir les notifications automatiques. Connectez un bot Zalo, sélectionnez le compte administrateur, envoyez un test et activez les notifications."
+  ],
+  "Có {0} thông báo chưa gửi trong các đơn gần đây. Sau khi kết nối, mở cài đặt thông báo để gửi lại.": [
+    "There are {0} unsent notifications for recent orders. After connecting, open notification settings to resend them.",
+    "Il reste {0} notifications non envoyées pour les commandes récentes. Après connexion, ouvrez les paramètres pour les renvoyer."
+  ],
+  "Cài đặt thông báo Zalo": [
+    "Zalo notification settings",
+    "Paramètres des notifications Zalo"
+  ],
+  "Số điện thoại này dùng cho nút chat. Để tự nhận đơn hàng, kết nối Zalo Bot trong phần Thông báo đơn hàng qua Zalo bên dưới.": [
+    "This phone number is used by the chat button. To receive orders automatically, connect a Zalo Bot in the Zalo order notifications section below.",
+    "Ce numéro de téléphone est utilisé par le bouton de chat. Pour recevoir automatiquement les commandes, connectez un bot Zalo dans la section ci-dessous."
   ]
 }
