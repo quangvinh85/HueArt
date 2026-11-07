@@ -81,3 +81,11 @@ Biên nhận có liên kết riêng chứa khóa ngẫu nhiên trong URL fragmen
 Vào `/admin` → **Cài đặt chat** để nhập số Zalo và link Facebook/Messenger (hoặc ID/username trang), bật từng kênh và lưu. Hỗ trợ số Việt Nam dạng `0…` / `+84…`; link Facebook được chuyển về `https://m.me/...`. Chưa cấu hình thì kênh tương ứng không xuất hiện, không dùng tài khoản mẫu.
 
 Nút nổi nằm ở góc phải dưới, mở trang chat hoặc ứng dụng qua liên kết HTTPS khi khách bấm. Hiệu ứng pulse tắt khi thiết bị bật giảm chuyển động. Nút tạm ẩn khi mở giỏ hàng, thanh toán hoặc hộp thoại; không tải SDK Facebook/Zalo bên ngoài. Cài đặt lưu ở khóa `contact` trong bảng `shop_settings`, độc lập với thanh toán. Phần đầu trang chỉ hiển thị USD; các vị trí giá khác vẫn hiển thị USD/VND.
+
+## Admin thêm ảnh trực tiếp
+
+Trong `/admin` → **Thư viện ảnh** → **Thêm ảnh**, chọn JPG/PNG/WebP, nhập tên và tác giả, chọn bộ sưu tập rồi lưu. Không cần nhập số điện thoại hay gửi qua luồng cộng tác viên. Mặc định ảnh hiển thị trên cửa hàng ngay sau khi lưu; bỏ chọn **Hiển thị trên cửa hàng sau khi lưu** để giữ ảnh ẩn. Ảnh đã thêm tiếp tục dùng các chức năng sửa, ẩn/hiện và thùng rác của thư viện.
+
+Upload yêu cầu phiên admin và Origin hợp lệ. File gốc được lưu trong R2; trạng thái ẩn được thiết lập trước khi đưa ảnh vào danh mục để tránh xuất bản thoáng qua. Yêu cầu gửi lại cùng nội dung và khóa không tạo ảnh trùng. Gửi tác phẩm từ cửa hàng vẫn ở trạng thái chờ duyệt, không thể tự xuất bản bằng cách thêm cờ admin trong dữ liệu.
+
+Vercel Production và Preview cần biến build **`NODEJS_HELPERS=0`** để Node adapter đọc được nguyên vẹn multipart/file bytes. Adapter tự xử lý JSON và giới hạn dung lượng. Giới hạn upload từ Vercel vẫn là 3 MB mỗi ảnh; trên Sites là 8 MB. Không commit credential; `NODEJS_HELPERS` chỉ là cấu hình không bí mật.

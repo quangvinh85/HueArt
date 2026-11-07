@@ -429,3 +429,41 @@ test('chat settings require admin, validate destinations, normalize links and hi
  assert.equal((await f.request('/api/admin/contact-settings',{headers:owner})).data.zaloPhone,'0901234567');
  const facebookId=await f.request('/api/admin/contact-settings',{method:'PATCH',headers:owner,body:{...disabled.data,messengerEnabled:true,messengerUrl:'https://facebook.com/profile.php?id=1234567890'}});assert.equal(facebookId.data.messengerUrl,'https://m.me/1234567890');
 });
+
+const adminUploadPng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvhoAAAAASUVORK5CYII=','base64');
+function uploadForm(metadata,bytes=adminUploadPng){const form=new FormData();form.append('image',new File([bytes],'admin-photo.png',{type:'image/png'}));form.append('metadata',JSON.stringify(metadata));return form;}
+async function uploadAdmin(f,metadata,headers=owner,originHeader=origin,bytes=adminUploadPng){return worker.fetch(new Request(origin+'/api/admin/artworks',{method:'POST',headers:{Origin:originHeader,...headers},body:uploadForm(metadata,bytes)}),f.env);}
+
+test('admin can add and immediately sell a photo without submitting a contact phone; retries create only one record',async()=>{
+ const f=fixture(),metadata={submissionKey:crypto.randomUUID(),title:'Ảnh admin mới',titleEn:'Admin photo',titleFr:'Photo admin',authorName:'Đặng Huy Trứ',collection:'imperial-echoes',rightsConfirmed:true,publish:true};
+ assert.equal((await uploadAdmin(f,metadata,{})).status,401);
+ assert.equal((await uploadAdmin(f,metadata,ownerIdentity)).status,403);
+ assert.equal((await uploadAdmin(f,metadata,owner,'https://other.example')).status,403);
+ const saved=await uploadAdmin(f,metadata);assert.equal(saved.status,201);const receipt=await saved.json();assert.match(receipt.artworkId,/^submission-/);
+ const retry=await uploadAdmin(f,metadata);assert.equal(retry.status,200);assert.equal((await retry.json()).artworkId,receipt.artworkId);
+ assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS count FROM artwork_submissions').get().count,1);
+ const row=f.sqlite.prepare('SELECT * FROM artwork_submissions').get();assert.equal(row.status,'accepted');assert.equal(row.author_phone,'');
+ const publicArt=(await f.request('/api/catalog')).data.artworks.find(art=>art.id===receipt.artworkId);assert.equal(publicArt.titles.vi,metadata.title);assert.equal(publicArt.titles.en,metadata.titleEn);
+ assert.equal((await f.request('/api/orders',{method:'POST',body:f.payload({items:[{artworkId:receipt.artworkId,optionId:'high-resolution',quantity:1}]})})).status,201);
+ assert.equal((await uploadAdmin(f,{...metadata,title:'Changed retry'})).status,409);
+});
+
+test('admin can save a photo hidden from both the public catalogue and image endpoint',async()=>{
+ const f=fixture(),metadata={submissionKey:crypto.randomUUID(),title:'Ảnh admin lưu ẩn',authorName:'Đặng Huy Trứ',collection:'perfume-river',rightsConfirmed:true,publish:false};
+ const saved=await uploadAdmin(f,metadata);assert.equal(saved.status,201);const receipt=await saved.json();
+ assert.equal((await f.request('/api/catalog')).data.artworks.some(art=>art.id===receipt.artworkId),false);
+ assert.equal((await f.request('/api/catalog/'+receipt.artworkId.slice(11)+'/image')).status,404);
+ const library=(await f.request('/api/admin/catalog?state=hidden',{headers:owner})).data;const entry=library.items.find(item=>item.artwork.id===receipt.artworkId);assert.ok(entry);assert.equal(entry.hidden,true);
+ assert.equal((await f.request('/api/orders',{method:'POST',body:f.payload({items:[{artworkId:receipt.artworkId,optionId:'high-resolution',quantity:1}]})})).status,400);
+ assert.equal((await f.request('/api/admin/catalog/'+receipt.artworkId,{method:'PATCH',headers:owner,body:{...entry.artwork,version:entry.version,action:'save',hidden:false}})).status,200);
+ assert.equal((await f.request('/api/catalog')).data.artworks.some(art=>art.id===receipt.artworkId),true);
+});
+
+test('direct library upload rejects invalid files and public contributions cannot forge admin publication',async()=>{
+ const f=fixture(),metadata={submissionKey:crypto.randomUUID(),title:'Ảnh thử',authorName:'Đặng Huy Trứ',collection:'imperial-echoes',rightsConfirmed:true,publish:true};
+ assert.equal((await uploadAdmin(f,metadata,owner,origin,Buffer.from('<svg>not a photo</svg>'))).status,400);
+ assert.equal((await uploadAdmin(f,{...metadata,publish:'yes'})).status,400);
+ assert.equal((await uploadAdmin(f,{...metadata,rightsConfirmed:false})).status,400);
+ const forged=await worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:uploadForm({...metadata,authorPhone:'0901234567',adminUpload:true,status:'accepted'})}),f.env);assert.equal(forged.status,201);
+ assert.equal(f.sqlite.prepare('SELECT status FROM artwork_submissions').get().status,'pending');
+});

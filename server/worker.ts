@@ -61,7 +61,7 @@ export async function api(request: Request, env: Env): Promise<Response> {
 
   if (url.pathname.startsWith('/api/admin-auth/') && request.method === 'POST') return adminAuth(request, env, actor, url.pathname.endsWith('/login') ? await readJson(request) : {});
 
-  if (url.pathname === '/api/submissions' || url.pathname.startsWith('/api/admin/submissions')) return submissions(request, env, actor.rateKey);
+  if (url.pathname === '/api/submissions' || url.pathname === '/api/admin/artworks' || url.pathname.startsWith('/api/admin/submissions')) return submissions(request, env, actor.rateKey,actor.isAdmin);
   if (url.pathname === '/api/curator' && request.method === 'POST') return json(await curate(await readJson(request), env));
 
   if (url.pathname === '/api/orders' && request.method === 'POST') {

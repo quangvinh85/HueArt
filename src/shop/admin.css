@@ -98,3 +98,5 @@
 .admin-payment-info { padding:16px; background:#191e28; border:1px solid #414b5b; margin:16px 0; font-size:13px; }
 .admin-badge-reported { background:#a1804526; color:#f0ce8c; }
 .admin-badge-partial { background:#41688740; color:#a4cdef; }
+.admin-heading-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0; }
+@media(max-width:600px) { .admin-heading:has(.admin-heading-actions) { align-items:start; flex-wrap:wrap; gap:16px; } .admin-heading-actions { width:100%; } }

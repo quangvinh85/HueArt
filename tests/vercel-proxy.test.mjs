@@ -79,7 +79,10 @@ test('Vercel can log in, manage orders and log out without Sites browser identit
  const customerKey=sqlite.prepare('SELECT checkout_key FROM orders').get().checkout_key,orderNumber=orders.orders[0].orderNumber;
  const reportRequest=new Request(publicOrigin+'/api/order-payment/'+orderNumber+'/report',{method:'POST',headers:{Origin:publicOrigin,'X-HueArt-Checkout-Key':customerKey,'Content-Type':'application/json'},body:JSON.stringify({method:'transfer',reference:'TEST-REF'})});
  const report=await proxyApi(reportRequest,config,send);assert.equal(report.status,200);assert.equal((await report.json()).paymentStatus,'reported');
- const library=await(await proxy('/api/admin/catalog',null,cookie)).json();assert.equal(library.stats.visible,12);
+ const uploadForm=new FormData();uploadForm.append('image',new File([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvhoAAAAASUVORK5CYII=','base64')],'admin.png',{type:'image/png'}));uploadForm.append('metadata',JSON.stringify({submissionKey:crypto.randomUUID(),title:'Uploaded via Vercel',authorName:'Test owner',rightsConfirmed:true,collection:'imperial-echoes',publish:true}));
+ env.BUCKET={async put(){},async get(){return null},async delete(){}};
+ const uploadResponse=await proxyApi(new Request(publicOrigin+'/api/admin/artworks',{method:'POST',headers:{Origin:publicOrigin,Cookie:cookie},body:uploadForm}),config,send);assert.equal(uploadResponse.status,201);const uploaded=await uploadResponse.json();assert.ok((await(await proxy('/api/catalog')).json()).artworks.some(art=>art.id===uploaded.artworkId));
+ const library=await(await proxy('/api/admin/catalog',null,cookie)).json();assert.equal(library.stats.visible,13);
  const mutation=new Request(publicOrigin+'/api/admin/catalog/meridian-gate-twilight',{method:'PATCH',headers:{Origin:publicOrigin,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify({action:'trash',version:0})});
  assert.equal((await proxyApi(mutation,config,send)).status,200);
  assert.equal((await(await proxy('/api/catalog')).json()).artworks.some(a=>a.id==='meridian-gate-twilight'),false);
@@ -105,4 +108,16 @@ test('Vercel Node handler handles parsed JSON and streams the backend response',
   const res=new CaptureResponse();await handler(req,res);await finished(res);
   assert.equal(res.statusCode,200);assert.equal(JSON.parse(res.text).isAdmin,true);
  }finally{globalThis.fetch=originalFetch;for(const [key,value]of Object.entries(saved)){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
+});
+
+test('Node API preserves raw multipart file bytes and boundary when helpers are disabled',async()=>{
+ const saved=Object.fromEntries(['HUEART_BACKEND_URL','HUEART_BACKEND_SERVICE_TOKEN','HUEART_BACKEND_BRIDGE_TOKEN'].map(key=>[key,process.env[key]]));
+ Object.assign(process.env,{HUEART_BACKEND_URL:config.backendUrl,HUEART_BACKEND_SERVICE_TOKEN:config.serviceToken,HUEART_BACKEND_BRIDGE_TOKEN:config.bridgeToken});
+ const originalFetch=globalThis.fetch;
+ try{
+  const bytes=Buffer.from([0xff,0xd8,0xff,0x00,0x80,0xfe]);const form=new FormData();form.append('image',new File([bytes],'photo.jpg',{type:'image/jpeg'}));form.append('metadata',JSON.stringify({title:'Ảnh thử'}));
+  const source=new Request(publicOrigin+'/api/backend?__hueart_route=admin%2Fartworks',{method:'POST',body:form});const raw=Buffer.from(await source.arrayBuffer());
+  globalThis.fetch=async(url,init)=>{assert.equal(new URL(url).pathname,'/api/admin/artworks');const forwarded=await new Request(url,init).formData();assert.deepEqual(Buffer.from(await forwarded.get('image').arrayBuffer()),bytes);assert.equal(JSON.parse(forwarded.get('metadata')).title,'Ảnh thử');return Response.json({artworkId:'fixture'}, {status:201});};
+  const req=Readable.from([raw]);Object.assign(req,{method:'POST',url:new URL(source.url).pathname+new URL(source.url).search,headers:{host:'hue-art2.vercel.app',origin:publicOrigin,'content-type':source.headers.get('Content-Type')}});const res=new CaptureResponse();await handler(req,res);await finished(res);assert.equal(res.statusCode,201);
+ }finally{globalThis.fetch=originalFetch;for(const[key,value]of Object.entries(saved)){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
 });

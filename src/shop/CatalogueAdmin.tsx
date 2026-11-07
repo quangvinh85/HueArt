@@ -1,10 +1,12 @@
-import {useCallback,useEffect,useRef,useState} from 'react';
-import {Eye,EyeOff,ImageIcon,RefreshCw,Search,Trash2,Undo2} from 'lucide-react';
+import {lazy,Suspense,useCallback,useEffect,useRef,useState} from 'react';
+import {Eye,EyeOff,ImageIcon,ImagePlus,RefreshCw,Search,Trash2,Undo2} from 'lucide-react';
 import type {Artwork} from '../types';
 import {useShopLanguage} from './language';
 import {requestApi} from './ordersApi';
 import {ProtectedImage} from './ProtectedImage';
 import Modal from './Modal';
+
+const AdminUploadModal=lazy(()=>import('./AdminUploadModal'));
 
 type Entry={artwork:Artwork;source:string;hidden:boolean;deleted:boolean;version:number};
 type Result={items:Entry[];total:number;page:number;pageSize:number;stats:{total:number;visible:number;hidden:number;trash:number}};
@@ -17,6 +19,7 @@ export default function CatalogueAdmin(){
  const [result,setResult]=useState<Result|null>(null),[query,setQuery]=useState(''),[search,setSearch]=useState(''),[state,setState]=useState('all'),[page,setPage]=useState(1);
  const [loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [selected,setSelected]=useState<Entry|null>(null),[editLanguage,setEditLanguage]=useState<'vi'|'en'|'fr'>('vi'),[confirmTrash,setConfirmTrash]=useState(false);
+ const [uploadOpen,setUploadOpen]=useState(false);
  const sequence=useRef(0);
  const load=useCallback(async()=>{
   const version=++sequence.current;setLoading(true);setError('');
@@ -34,7 +37,7 @@ export default function CatalogueAdmin(){
  };
  const changeText=(field:'titles'|'locations'|'stories',value:string)=>setSelected(item=>item?{...item,artwork:{...item.artwork,[field]:{...item.artwork[field],[editLanguage]:value}}}:null);
  return <section>
-  <div className="admin-heading"><div><h1>{tr('Thư viện ảnh')}</h1><p>{tr('Quản lý ảnh có sẵn và tác phẩm đã duyệt đang bán trên cửa hàng.')}</p></div><button className="shop-secondary" disabled={loading||saving} onClick={()=>void load()}><RefreshCw size={15}/>{tr('Làm mới')}</button></div>
+  <div className="admin-heading"><div><h1>{tr('Thư viện ảnh')}</h1><p>{tr('Quản lý ảnh có sẵn và tác phẩm đã duyệt đang bán trên cửa hàng.')}</p></div><div className="admin-heading-actions"><button type="button" className="shop-primary" disabled={saving} onClick={()=>setUploadOpen(true)}><ImagePlus size={17}/>{tr('Thêm ảnh')}</button><button className="shop-secondary" disabled={loading||saving} onClick={()=>void load()}><RefreshCw size={15}/>{tr('Làm mới')}</button></div></div>
   <div className="admin-stats"><article><span>{tr('Tổng số ảnh')}</span><strong>{result?.stats.total??'—'}</strong><ImageIcon size={22}/></article><article><span>{tr('Đang hiển thị')}</span><strong>{result?.stats.visible??'—'}</strong><Eye size={22}/></article><article><span>{tr('Đã ẩn')}</span><strong>{result?.stats.hidden??'—'}</strong><EyeOff size={22}/></article><article><span>{tr('Thùng rác')}</span><strong>{result?.stats.trash??'—'}</strong><Trash2 size={22}/></article></div>
   <div className="admin-toolbar"><form onSubmit={e=>{e.preventDefault();setSearch(query.trim());setPage(1);}}><label className="shop-search"><Search size={17}/><input aria-label={tr('Tìm ảnh')} placeholder={tr('Tên ảnh hoặc tác giả…')} value={query} onChange={e=>setQuery(e.target.value)}/></label><button type="submit" className="shop-secondary">{tr('Tìm')}</button></form><label>{tr('Trạng thái')}<select aria-label={tr('Trạng thái')} value={state} disabled={saving} onChange={e=>{setState(e.target.value);setPage(1);}}>{[['all','Tất cả ảnh'],['visible','Đang hiển thị'],['hidden','Đã ẩn'],['trash','Thùng rác']].map(([value,label])=><option key={value} value={value}>{tr(label)}</option>)}</select></label></div>
   {notice&&<p className="admin-success" role="status">{notice}</p>}{error&&!selected&&<p className="shop-order-error" role="alert">{tr(error)}</p>}
@@ -46,6 +49,7 @@ export default function CatalogueAdmin(){
   </article>)}</div>
   {!result?.items.length&&<div className="shop-empty"><ImageIcon size={30}/><p>{loading?tr('Đang tải…'):tr('Không có ảnh phù hợp.')}</p></div>}
   <div className="admin-pagination"><span>{tr('{0} ảnh · Trang {1}',result?.total??0,page)}</span><div><button className="shop-secondary" disabled={loading||saving||page<=1} onClick={()=>setPage(p=>p-1)}>{tr('Trước')}</button><button className="shop-secondary" disabled={loading||saving||!result||page*result.pageSize>=result.total} onClick={()=>setPage(p=>p+1)}>{tr('Sau')}</button></div></div>
+  <Suspense fallback={<p role="status">{tr('Đang tải…')}</p>}>{uploadOpen&&<AdminUploadModal onClose={()=>setUploadOpen(false)} onUploaded={()=>{setUploadOpen(false);notifyCatalogue();setNotice(tr('Đã thêm ảnh vào thư viện.'));setQuery('');setSearch('');setState('all');setPage(1);if(search===''&&state==='all'&&page===1)void load();}}/>}</Suspense>
   {selected&&<Modal title={tr('Thông tin tác phẩm')} wide onClose={()=>{if(!saving)setSelected(null);}}><form className="admin-detail admin-catalog-editor" onSubmit={e=>{e.preventDefault();void mutate(selected,'save');}}>
    <section><div className="admin-catalog-preview"><ProtectedImage src={previewSource(selected)} alt={selected.artwork.titles[language]} view="detail" loading="eager"/></div><p className="admin-note">{selected.artwork.id}</p>{selected.deleted?<p>{tr('Ảnh đang ở trong thùng rác. Khôi phục để chỉnh sửa.')}</p>:<label className="admin-visible-toggle"><input type="checkbox" checked={!selected.hidden} disabled={saving} onChange={e=>setSelected({...selected,hidden:!e.target.checked})}/>{tr('Hiển thị trên cửa hàng')}</label>}<p className="admin-note">{tr('Ẩn hoặc xóa sẽ ngừng hiển thị và ngừng nhận đơn mới cho ảnh này. Đơn đã đặt vẫn được giữ.')}</p>
     {!selected.deleted&&(!confirmTrash?<button className="shop-secondary admin-danger" type="button" disabled={saving} onClick={()=>setConfirmTrash(true)}><Trash2 size={15}/>{tr('Đưa vào thùng rác')}</button>:<div className="admin-trash-confirm"><p>{tr('Xóa ảnh khỏi cửa hàng? Bạn có thể khôi phục từ thùng rác.')}</p><button className="shop-secondary admin-danger" type="button" disabled={saving} onClick={()=>void mutate(selected,'trash')}>{tr('Xác nhận xóa')}</button><button className="shop-secondary" type="button" disabled={saving} onClick={()=>setConfirmTrash(false)}>{tr('Hủy')}</button></div>)}

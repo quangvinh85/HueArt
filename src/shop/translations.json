@@ -1694,5 +1694,49 @@
   "Gửi ảnh của bạn để được xét duyệt và trao đổi cơ hội hợp tác bán ảnh. Điều kiện hợp tác và phân chia doanh thu sẽ được hai bên thống nhất trước khi đăng bán.": [
     "Submit your photos for review and discuss selling them with HueArt. Partnership and revenue-sharing terms will be agreed before publication.",
     "Proposez vos photos pour examen et discutez de leur vente avec HueArt. Les conditions du partenariat et du partage des revenus seront convenues avant publication."
+  ],
+  "Thêm ảnh": [
+    "Add photo",
+    "Ajouter une photo"
+  ],
+  "Thêm ảnh vào thư viện": [
+    "Add a photo to the library",
+    "Ajouter une photo à la photothèque"
+  ],
+  "Ảnh do admin thêm được lưu trực tiếp vào thư viện. Chọn hiển thị để khách xem và mua ngay, hoặc lưu ẩn để chỉnh sửa sau.": [
+    "Administrator uploads go directly to the library. Publish for customers to view and buy, or save hidden to edit later.",
+    "Les photos ajoutées par l’administrateur vont directement dans la photothèque. Publiez-les pour les vendre ou gardez-les masquées pour les modifier plus tard."
+  ],
+  "Hiển thị trên cửa hàng sau khi lưu": [
+    "Show in the shop after saving",
+    "Afficher dans la boutique après enregistrement"
+  ],
+  "Tôi là tác giả hoặc được phép đăng bán ảnh này.": [
+    "I am the photographer or have permission to sell this photo.",
+    "Je suis l’auteur ou dispose de l’autorisation de vendre cette photo."
+  ],
+  "Lưu ảnh vào thư viện": [
+    "Save photo to library",
+    "Enregistrer dans la photothèque"
+  ],
+  "Đã thêm ảnh vào thư viện.": [
+    "Photo added to the library.",
+    "Photo ajoutée à la photothèque."
+  ],
+  "Đang tải ảnh lên…": [
+    "Uploading photo…",
+    "Envoi de la photo…"
+  ],
+  "Không tải được ảnh lên. Vui lòng thử lại.": [
+    "Could not upload the photo. Please try again.",
+    "Impossible d’envoyer la photo. Veuillez réessayer."
+  ],
+  "Vui lòng chọn trạng thái hiển thị ảnh.": [
+    "Please choose the photo visibility.",
+    "Veuillez choisir la visibilité de la photo."
+  ],
+  "Vui lòng nhập tên tác phẩm và tác giả hợp lệ.": [
+    "Please enter a valid photo title and photographer name.",
+    "Veuillez saisir un titre et un nom d’auteur valides."
   ]
 }
