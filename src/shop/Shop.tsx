@@ -34,6 +34,17 @@ export default function Shop() {
     language,
     tr
   } = useShopLanguage();
+  const [siteStats,setSiteStats] = useState({visits:1000000,sold:1000,contributions:100});
+  useEffect(()=>{
+    let active=true;
+    let sessionId:string|null=null;
+    try {
+      sessionId=sessionStorage.getItem('hueart_visit_session');
+      if(!sessionId){sessionId=crypto.randomUUID();sessionStorage.setItem('hueart_visit_session',sessionId);}
+    } catch { /* Read counts without incrementing when session storage is unavailable. */ }
+    requestApi<typeof siteStats>('/api/site-stats',sessionId?{method:'POST',body:JSON.stringify({sessionId})}:{}).then(stats=>{if(active)setSiteStats(stats);}).catch(()=>{/* Baseline figures remain visible during an outage. */});
+    return ()=>{active=false;};
+  },[]);
   const [artworks,setArtworks] = useState<Artwork[]>([]);
   const [catalogueLoading,setCatalogueLoading] = useState(true);
   const [catalogueError,setCatalogueError] = useState('');
@@ -202,7 +213,8 @@ export default function Shop() {
       </section>
       <section className="shop-how shop-container"><div><span className="shop-eyebrow">{tr("Đặt ảnh thật đơn giản")}</span><h2>{tr("Chọn ảnh. Chọn loại. Liên hệ đặt hàng.")}</h2></div><ol><li><b>01</b><span>{tr("Chọn ảnh và một trong ba lựa chọn mua.")}</span></li><li><b>02</b><span>{tr("Kiểm tra giỏ hàng, điền thông tin liên hệ và gửi đơn trực tiếp.")}</span></li><li><b>03</b><span>{tr("Nhận xác nhận, thống nhất thanh toán và cách giao ảnh qua điện thoại.")}</span></li></ol></section>
     </main>
-    <footer id="contact" className="shop-footer"><div className="shop-container shop-footer-grid"><div><span className="shop-eyebrow">{tr("Huế · Việt Nam")}</span><h2>{tr("Nhiếp ảnh Nghệ thuật")}<br />Đặng Huy Trứ</h2><p>{tr("Ảnh đẹp để ngắm, lưu giữ và mang về.")}</p><p>{tr("© Ảnh xem trước có bản quyền. Vui lòng không sao chép hoặc sử dụng khi chưa được phép.")}</p></div><div><h3>{tr("Liên hệ đặt ảnh")}</h3><a href={`mailto:${CONTACT_EMAIL}`} target="_blank" rel="noopener noreferrer"><Mail size={16} />{CONTACT_EMAIL}</a><a href="tel:+84778480911">{tr("Điện thoại: +84 778 480 911")}</a><p>{tr("273 Điện Biên Phủ, Thành phố Huế")}</p></div><div><h3>{tr("Thông tin mua hàng")}</h3><p>{tr("Gửi đơn trực tiếp, không cần tài khoản email. Người bán liên hệ xác nhận và thống nhất cách giao file.")}</p><p>{tr("Bản in 40 × 60 cm đã gồm khung; phí vận chuyển được báo riêng.")}</p><p>{tr("Chuyển quyền tác giả được xác nhận bằng thỏa thuận riêng.")}</p></div></div><div className="shop-container shop-copyright">© {new Date().getFullYear()}{tr(" Nhiếp ảnh Nghệ thuật Đặng Huy Trứ ")}<span>{tr('USD kèm giá VND tham khảo · 1 USD = {0}',vnd(paymentSettings.exchangeRate))}</span></div></footer>
+
+    <footer id="contact" className="shop-footer"><div className="shop-container shop-footer-grid"><div><span className="shop-eyebrow">{tr("Huế · Việt Nam")}</span><h2>{tr("Nhiếp ảnh Nghệ thuật")}<br />Đặng Huy Trứ</h2><p>{tr("Ảnh đẹp để ngắm, lưu giữ và mang về.")}</p><p>{tr("© Ảnh xem trước có bản quyền. Vui lòng không sao chép hoặc sử dụng khi chưa được phép.")}</p></div><div><h3>{tr("Liên hệ đặt ảnh")}</h3><a href={`mailto:${CONTACT_EMAIL}`} target="_blank" rel="noopener noreferrer"><Mail size={16} />{CONTACT_EMAIL}</a><a href="tel:+84778480911">{tr("Điện thoại: +84 778 480 911")}</a><p>{tr("273 Điện Biên Phủ, Thành phố Huế")}</p></div><div><h3>{tr("Thông tin mua hàng")}</h3><p>{tr("Gửi đơn trực tiếp, không cần tài khoản email. Người bán liên hệ xác nhận và thống nhất cách giao file.")}</p><p>{tr("Bản in 40 × 60 cm đã gồm khung; phí vận chuyển được báo riêng.")}</p><p>{tr("Chuyển quyền tác giả được xác nhận bằng thỏa thuận riêng.")}</p></div></div><div className="shop-container shop-site-stats" aria-label={tr("Thống kê website")}>{([["visits","Lượt truy cập"],["sold","Ảnh đã bán"],["contributions","Tác phẩm cộng tác"]] as const).map(([key,label])=><div key={key}><strong>{siteStats[key].toLocaleString(language==='vi'?'vi-VN':language==='fr'?'fr-FR':'en-US')}</strong><span>{tr(label)}</span></div>)}</div><div className="shop-container shop-copyright">© {new Date().getFullYear()}{tr(" Nhiếp ảnh Nghệ thuật Đặng Huy Trứ ")}<span>{tr('USD kèm giá VND tham khảo · 1 USD = {0}',vnd(paymentSettings.exchangeRate))}</span></div></footer>
     {selected && <Modal title={tr("Chọn cách mua ảnh")} onClose={() => setSelected(null)} wide>
       <div className="shop-product"><div className="shop-product-photo"><ProtectedImage src={selected.imageUrl} alt={selected.titles[language]} view="detail" loading="eager" /><p><MapPin size={13} />{selected.locations[language]}</p></div><div className="shop-product-details"><h3>{selected.titles[language]}</h3><p className="shop-story">{selected.stories[language]}</p>{selected.photographer&&<p className="shop-photographer">{tr("Ảnh:")} {selected.photographer}</p>}<fieldset className="shop-purchase-options"><legend>{tr("Chọn loại mua")}</legend>{SALE_OPTIONS.map(option => <label key={option.id} className={`shop-radio-card ${optionId === option.id ? 'selected' : ''}`}><input type="radio" name="purchase-option" value={option.id} checked={optionId === option.id} onChange={() => {
                 setOptionId(option.id);

@@ -1,4 +1,5 @@
 import {getContactSettings,publicContactSettings,saveContactSettings} from './contactSettings';
+import {notificationSettings,queueOrderNotification,deliverOrderNotification,retryNotification} from './zaloNotifications';
 import {getPaymentSettings,savePaymentSettings,paymentReceipt,customerPayment} from './payments';
 import { catalogueAdmin } from './catalogueAdmin';
 import { getCatalogue } from './catalogue';
@@ -19,8 +20,16 @@ async function readJson(request: Request) {
   try { return JSON.parse(body); } catch { throw new ApiError(400, 'Dữ liệu không hợp lệ.'); }
 }
 const receipt = paymentReceipt;
+async function notifyOrder(env:Env,order:any,context?:{waitUntil(promise:Promise<unknown>):void}){
+  // Orders stay successful even if Zalo is unavailable. Repeated checkouts repair a missing queue entry.
+  try{
+    await queueOrderNotification(env,order);
+    const delivery=deliverOrderNotification(env,order.id).catch(()=>console.error('Zalo notification delivery failed'));
+    if(context)context.waitUntil(delivery);else await delivery;
+  }catch{console.error('Zalo notification queue failed');}
+}
 
-export async function api(request: Request, env: Env): Promise<Response> {
+export async function api(request: Request, env: Env, context?: {waitUntil(promise:Promise<unknown>):void}): Promise<Response> {
   const url = new URL(request.url);
   const actor = await adminIdentity(request, env);
   if (request.method === 'GET' && url.pathname === '/api/session') return json({ authenticated: actor.authenticated, ownerAuthenticated: actor.ownerAuthenticated, isAdmin: actor.isAdmin });
@@ -28,11 +37,30 @@ export async function api(request: Request, env: Env): Promise<Response> {
   if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method) && request.headers.get('Origin') !== url.origin) throw new ApiError(403, 'Nguồn gửi yêu cầu không hợp lệ. Vui lòng dùng website để đặt hàng.');
   if (!env.DB) throw new ApiError(503, 'Hệ thống đơn hàng đang được thiết lập. Vui lòng thử lại sau.');
 
+  if(url.pathname.startsWith('/api/admin/zalo-notifications')){
+    const retry=/^\/api\/admin\/zalo-notifications\/([0-9a-f-]{36})\/retry$/.exec(url.pathname);
+    if(retry&&request.method==='POST')return json(await retryNotification(env,retry[1]));
+    if(!/^\/api\/admin\/zalo-notifications(?:\/(?:test|recipient))?$/.test(url.pathname))throw new ApiError(404,'Không tìm thấy chức năng này.');
+    return json(await notificationSettings(request,env,request.method==='PATCH'?await readJson(request):{}));
+  }
   if (url.pathname === '/api/health' && request.method === 'GET') {
     await env.DB.prepare('SELECT 1 AS ok').first();
     return json({ok:true,database:true,uploads:Boolean(env.BUCKET),protocol:1});
   }
   if(url.pathname==='/api/contact-settings'&&request.method==='GET')return json(publicContactSettings(await getContactSettings(env)));
+  if(url.pathname==='/api/site-stats'&&['GET','POST'].includes(request.method)){
+    if(request.method==='POST'){
+      const body=await readJson(request);
+      if(typeof body.sessionId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.sessionId))throw new ApiError(400,'Phiên truy cập không hợp lệ.');
+      await env.DB.prepare('INSERT OR IGNORE INTO site_visits (session_id) VALUES (?)').bind(body.sessionId).run();
+    }
+    const [visits,sales,contributions]=await Promise.all([
+      env.DB.prepare('SELECT COUNT(*) AS count FROM site_visits').first(),
+      env.DB.prepare("SELECT COALESCE(SUM(CAST(json_extract(item.value, '$.quantity') AS INTEGER)), 0) AS count FROM orders, json_each(orders.items_json) AS item WHERE orders.payment_status = 'paid' AND orders.status != 'cancelled'").first(),
+      env.DB.prepare("SELECT COUNT(*) AS count FROM artwork_submissions WHERE submission_origin = 'contributor' AND status = 'accepted'").first(),
+    ]);
+    return json({visits:1000000+Number(visits?.count||0),sold:1000+Number(sales?.count||0),contributions:100+Number(contributions?.count||0)});
+  }
   if(url.pathname==='/api/admin/contact-settings'){
     if(request.method==='GET')return json(await getContactSettings(env));
     if(request.method==='PATCH')return json(await saveContactSettings(env,await readJson(request)));
@@ -74,6 +102,7 @@ export async function api(request: Request, env: Env): Promise<Response> {
     const existing = await env.DB.prepare('SELECT * FROM orders WHERE checkout_key = ?').bind(data.checkoutKey).first();
     if (existing) {
       if (existing.payload_hash !== fingerprint) throw new ApiError(409, 'Yêu cầu này đã được gửi với nội dung khác. Vui lòng kiểm tra đơn đã gửi.');
+      await notifyOrder(env,existing,context);
       return json(receipt(existing,settings));
     }
     if(['vietqr','transfer'].includes(data.paymentMethod)&&!settings.transferEnabled||data.paymentMethod==='cod'&&!settings.codEnabled)throw new ApiError(400,'Phương thức thanh toán hiện chưa khả dụng. Vui lòng chọn cách khác.');
@@ -91,10 +120,11 @@ export async function api(request: Request, env: Env): Promise<Response> {
     } catch (error) {
       // A retried request may race the original insert. Return its receipt once.
       const saved = await env.DB.prepare('SELECT * FROM orders WHERE checkout_key = ?').bind(data.checkoutKey).first();
-      if (saved?.payload_hash === fingerprint) return json(receipt(saved,settings));
+      if (saved?.payload_hash === fingerprint) {await notifyOrder(env,saved,context);return json(receipt(saved,settings));}
       throw error;
     }
     const saved = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
+    await notifyOrder(env,saved,context);
     return json(receipt(saved,settings), 201);
   }
 
@@ -134,10 +164,10 @@ export async function api(request: Request, env: Env): Promise<Response> {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, context?: {waitUntil(promise:Promise<unknown>):void}): Promise<Response> {
     try {
       const url = new URL(request.url);
-      if (url.pathname.startsWith('/api/')) return await api(request, env);
+      if (url.pathname.startsWith('/api/')) return await api(request, env, context);
       // Fetch the root asset internally. /index.html triggers the asset service's
       // canonical redirect to /, which would erase the browser's /admin route.
       if (url.pathname === '/admin' || url.pathname === '/admin/') url.pathname = '/';

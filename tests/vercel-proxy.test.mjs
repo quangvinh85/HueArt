@@ -121,3 +121,11 @@ test('Node API preserves raw multipart file bytes and boundary when helpers are 
   const req=Readable.from([raw]);Object.assign(req,{method:'POST',url:new URL(source.url).pathname+new URL(source.url).search,headers:{host:'hue-art2.vercel.app',origin:publicOrigin,'content-type':source.headers.get('Content-Type')}});const res=new CaptureResponse();await handler(req,res);await finished(res);assert.equal(res.statusCode,201);
  }finally{globalThis.fetch=originalFetch;for(const[key,value]of Object.entries(saved)){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
 });
+
+test('production proxy allows persisted counters and secured Zalo notification routes',async()=>{
+ for(const path of ['/api/site-stats','/api/admin/zalo-notifications','/api/admin/zalo-notifications/test','/api/admin/zalo-notifications/recipient','/api/admin/zalo-notifications/00000000-0000-4000-8000-000000000000/retry']){
+  const method=path.endsWith('test')||path.endsWith('recipient')||path.endsWith('retry')?'POST':'GET';
+  let called=false;const response=await proxyApi(new Request('https://shop.example'+path,{method,headers:{Origin:'https://shop.example'}}),config,async(url)=>{called=true;assert.equal(new URL(url).pathname,path);return Response.json({ok:true});});
+  assert.equal(response.status,200);assert.equal(called,true);
+ }
+});

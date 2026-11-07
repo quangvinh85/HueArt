@@ -277,3 +277,9 @@
 .submission-revenue-policy strong { color:#edc98d; }
 .submission-revenue-policy ul { padding-left:20px; margin:0; font-size:12px; color:#c0c8d3; line-height:1.9; }
 .submission-revenue-policy b { color:#edc98d; }
+
+.shop-site-stats { display:flex; justify-content:flex-end; gap:40px; padding-block:24px; border-top:1px solid #282a2c; }
+.shop-site-stats > div { display:flex; flex-direction:column; }
+.shop-site-stats strong { color:var(--gold); font-size:23px; font-variant-numeric:tabular-nums; line-height:1.4; }
+.shop-site-stats span { color:var(--muted); font-size:12px; }
+@media (max-width:520px) { .shop-site-stats { justify-content:space-between; gap:12px; } .shop-site-stats strong { font-size:19px; } .shop-site-stats span { font-size:10px; } }

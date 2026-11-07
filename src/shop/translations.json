@@ -1790,5 +1790,177 @@
   "Điều kiện cộng tác đã thay đổi. Vui lòng tải lại biểu mẫu để đọc và xác nhận.": [
     "The partnership terms have changed. Reload the form to read and confirm them.",
     "Les conditions du partenariat ont changé. Rechargez le formulaire pour les lire et les accepter."
+  ],
+  "Thống kê website": [
+    "Website statistics",
+    "Statistiques du site"
+  ],
+  "Lượt truy cập": [
+    "Visits",
+    "Visites"
+  ],
+  "Ảnh đã bán": [
+    "Photos sold",
+    "Photos vendues"
+  ],
+  "Tác phẩm cộng tác": [
+    "Contributed works",
+    "Œuvres en collaboration"
+  ],
+  "Thông báo đơn hàng qua Zalo": [
+    "Zalo order notifications",
+    "Notifications de commande Zalo"
+  ],
+  "Nhận chi tiết đơn hàng trên Zalo cá nhân qua Zalo Bot. Số điện thoại chat không đủ để tự gửi tin.": [
+    "Receive order details on your personal Zalo via a Zalo Bot. A chat phone number alone cannot send automatic messages.",
+    "Recevez les commandes sur votre Zalo personnel via un bot Zalo. Le numéro de téléphone du chat ne suffit pas pour envoyer automatiquement des messages."
+  ],
+  "Trong Zalo, tìm Zalo Bot Manager → Tạo bot. Zalo sẽ gửi Bot Token cho bạn.": [
+    "In Zalo, find Zalo Bot Manager → Create bot. Zalo will send you a Bot Token.",
+    "Dans Zalo, recherchez Zalo Bot Manager → Créer un bot. Zalo vous enverra un Bot Token."
+  ],
+  "Hướng dẫn tạo bot": [
+    "Bot setup guide",
+    "Guide de création du bot"
+  ],
+  "Nhập Bot Token bên dưới và lưu. Mở bot bằng tài khoản Zalo của admin, gửi một tin nhắn riêng, rồi bấm Nhận tài khoản Zalo.": [
+    "Enter and save the Bot Token below. Open the bot from the admin’s Zalo account, send a private message, then click Find Zalo account.",
+    "Saisissez et enregistrez le Bot Token ci-dessous. Ouvrez le bot avec le compte Zalo de l’administrateur, envoyez un message privé puis cliquez sur Trouver le compte Zalo."
+  ],
+  "Lưu người nhận, gửi thử để kiểm tra đúng tài khoản, sau đó bật thông báo và lưu lại.": [
+    "Save the recipient, send a test to verify the account, then enable notifications and save again.",
+    "Enregistrez le destinataire, envoyez un test pour vérifier le compte puis activez les notifications et enregistrez à nouveau."
+  ],
+  "Không tải được cài đặt thông báo.": [
+    "Could not load notification settings.",
+    "Impossible de charger les paramètres de notification."
+  ],
+  "Đã lưu cài đặt thông báo.": [
+    "Notification settings saved.",
+    "Paramètres de notification enregistrés."
+  ],
+  "Đã lưu token bảo mật. Để trống để giữ nguyên.": [
+    "Token saved securely. Leave blank to keep it.",
+    "Token enregistré en sécurité. Laissez vide pour le conserver."
+  ],
+  "Nhập Bot Token do Zalo cung cấp": [
+    "Enter the Bot Token provided by Zalo",
+    "Saisissez le Bot Token fourni par Zalo"
+  ],
+  "ID tài khoản nhận thông báo": [
+    "Notification recipient account ID",
+    "Identifiant du compte destinataire"
+  ],
+  "Nhận tài khoản Zalo": [
+    "Find Zalo account",
+    "Trouver le compte Zalo"
+  ],
+  "Đã nhận tài khoản: {0}. Vui lòng lưu và gửi thử.": [
+    "Account found: {0}. Save and send a test.",
+    "Compte trouvé : {0}. Enregistrez et envoyez un test."
+  ],
+  "Tự gửi chi tiết khi khách đặt hàng thành công": [
+    "Send details automatically after a successful order",
+    "Envoyer automatiquement les détails après une commande réussie"
+  ],
+  "Lưu cài đặt thông báo": [
+    "Save notification settings",
+    "Enregistrer les notifications"
+  ],
+  "Gửi tin thử": [
+    "Send test message",
+    "Envoyer un message test"
+  ],
+  "Đã gửi tin thử. Kiểm tra Zalo của admin.": [
+    "Test message sent. Check the admin’s Zalo.",
+    "Message test envoyé. Vérifiez le Zalo de l’administrateur."
+  ],
+  "Thông báo gần đây": [
+    "Recent notifications",
+    "Notifications récentes"
+  ],
+  "Tin lỗi không làm mất đơn hàng. Kiểm tra Zalo trước khi gửi lại vì lỗi mạng có thể xảy ra sau khi tin đã được nhận.": [
+    "Failed notifications do not lose orders. Check Zalo before retrying: a network failure can happen after a message was received.",
+    "Un échec de notification ne supprime pas la commande. Vérifiez Zalo avant de réessayer : une erreur réseau peut survenir après réception du message."
+  ],
+  "Chưa có thông báo đơn hàng.": [
+    "No order notifications yet.",
+    "Aucune notification de commande."
+  ],
+  "Chờ gửi": [
+    "Pending",
+    "En attente"
+  ],
+  "Đang gửi": [
+    "Sending",
+    "Envoi en cours"
+  ],
+  "Đã gửi": [
+    "Sent",
+    "Envoyé"
+  ],
+  "Gửi lỗi": [
+    "Delivery failed",
+    "Échec d’envoi"
+  ],
+  "Thông báo đang tắt": [
+    "Notifications disabled",
+    "Notifications désactivées"
+  ],
+  "Gửi lại": [
+    "Retry sending",
+    "Renvoyer"
+  ],
+  "Chưa có khóa bảo mật thông báo Zalo.": [
+    "Zalo notification encryption is not configured.",
+    "Le chiffrement des notifications Zalo n’est pas configuré."
+  ],
+  "Chưa xác định Zalo đã nhận tin. Kiểm tra Zalo trước khi gửi lại để tránh trùng tin.": [
+    "Zalo delivery could not be confirmed. Check Zalo before retrying to avoid duplicates.",
+    "La réception par Zalo n’a pas pu être confirmée. Vérifiez Zalo avant de réessayer pour éviter les doublons."
+  ],
+  "Zalo trả về phản hồi không hợp lệ.": [
+    "Zalo returned an invalid response.",
+    "Zalo a renvoyé une réponse invalide."
+  ],
+  "Zalo từ chối yêu cầu. Kiểm tra Bot Token, người nhận và quyền nhắn tin của bot.": [
+    "Zalo rejected the request. Check the Bot Token, recipient and bot messaging permissions.",
+    "Zalo a refusé la demande. Vérifiez le Bot Token, le destinataire et les droits du bot."
+  ],
+  "Lưu Bot Token trước khi kết nối người nhận.": [
+    "Save the Bot Token before connecting a recipient.",
+    "Enregistrez le Bot Token avant de connecter un destinataire."
+  ],
+  "Chưa nhận được tin nhắn riêng. Hãy nhắn cho bot từ Zalo của admin rồi thử lại.": [
+    "No private message received. Message the bot from the admin’s Zalo, then try again.",
+    "Aucun message privé reçu. Envoyez un message au bot depuis le Zalo de l’administrateur puis réessayez."
+  ],
+  "Lưu Bot Token và người nhận trước khi gửi thử.": [
+    "Save the Bot Token and recipient before sending a test.",
+    "Enregistrez le Bot Token et le destinataire avant le test."
+  ],
+  "Cài đặt thông báo Zalo không hợp lệ.": [
+    "Invalid Zalo notification settings.",
+    "Paramètres de notification Zalo invalides."
+  ],
+  "Bot Token không hợp lệ.": [
+    "Invalid Bot Token.",
+    "Bot Token invalide."
+  ],
+  "Cần Bot Token và người nhận trước khi bật thông báo.": [
+    "A Bot Token and recipient are required to enable notifications.",
+    "Un Bot Token et un destinataire sont nécessaires pour activer les notifications."
+  ],
+  "Không gửi được thông báo Zalo. Vui lòng kiểm tra kết nối.": [
+    "Could not send the Zalo notification. Check the connection.",
+    "Impossible d’envoyer la notification Zalo. Vérifiez la connexion."
+  ],
+  "Bật thông báo Zalo trước khi gửi lại.": [
+    "Enable Zalo notifications before retrying.",
+    "Activez les notifications Zalo avant de réessayer."
+  ],
+  "Tin đã gửi hoặc đang được xử lý. Vui lòng tải lại.": [
+    "Message already sent or being processed. Refresh the page.",
+    "Message déjà envoyé ou en cours de traitement. Actualisez la page."
   ]
 }

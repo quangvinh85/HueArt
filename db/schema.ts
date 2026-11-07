@@ -1,5 +1,9 @@
 import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
+export const siteVisits = sqliteTable('site_visits', {
+  sessionId: text('session_id').primaryKey(),
+});
+
 export const orders = sqliteTable('orders', {
   id: text('id').primaryKey(),
   orderNumber: text('order_number').notNull(),
@@ -74,3 +78,14 @@ export const shopSettings = sqliteTable('shop_settings', {
   version: integer('version').notNull().default(1),
   updatedAt: text('updated_at').notNull(),
 });
+
+export const orderNotifications=sqliteTable('order_notifications',{
+ orderId:text('order_id').primaryKey(),
+ status:text('status').notNull().default('pending'),
+ lastAttemptAt:text('last_attempt_at'),
+ nextChunk:integer('next_chunk').notNull().default(0),
+ attempts:integer('attempts').notNull().default(0),
+ lastError:text('last_error').notNull().default(''),
+ sentAt:text('sent_at'),
+ createdAt:text('created_at').notNull(),
+},table=>[index('order_notifications_created').on(table.createdAt)]);

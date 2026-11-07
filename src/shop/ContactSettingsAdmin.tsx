@@ -1,3 +1,4 @@
+import ZaloNotificationsAdmin from './ZaloNotificationsAdmin';
 import {useEffect,useState} from 'react';
 import {ExternalLink} from 'lucide-react';
 import {contactLinks,defaultContactSettings,type ContactSettings} from './contactSettings';
@@ -22,5 +23,6 @@ export default function ContactSettingsAdmin(){
    <p className="admin-note">{tr('Bật từng kênh rồi lưu. Khách bấm nút để mở ứng dụng hoặc trang chat tương ứng.')}</p>
    <button type="submit" className="shop-primary" disabled={busy}>{tr(busy?'Đang lưu…':'Lưu thay đổi')}</button>
   </form>}
+ <ZaloNotificationsAdmin />
  </section>;
 }

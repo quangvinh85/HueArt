@@ -95,3 +95,15 @@ Vercel Production và Preview cần biến build **`NODEJS_HELPERS=0`** để No
 Popup **Gửi tác phẩm** công bố mức phí tổng **20% doanh thu bán ảnh**: **10% cho quỹ Hội Nhiếp ảnh**, **10% chi phí quản trị**; tác giả nhận **80%**. Người gửi phải tích xác nhận điều kiện này, riêng với xác nhận quyền sử dụng ảnh. API kiểm tra phiên bản điều kiện và lưu tỷ lệ cố định cùng thời điểm đồng ý do máy chủ tạo; không tin tỷ lệ do client gửi.
 
 Trong hồ sơ **Tác phẩm gửi đến**, admin xem được tỷ lệ và thời điểm xác nhận. Hồ sơ cũ không bị tự đánh dấu đã đồng ý; ảnh admin tải trực tiếp có nguồn `admin` và không đi qua chương trình phí cộng tác viên. Phần này công bố/lưu thỏa thuận, không tự chuyển tiền hay chi trả doanh thu.
+
+### Storefront counters and Zalo order notifications
+
+The footer counters start at 1,000,000 visits, 1,000 photos sold and 100 contributed works. Visits count one UUID per browser tab session (no IP or personal information is stored); repeat requests with that UUID do not increment again. Sales add quantities from paid, non-cancelled orders. Contributions add accepted contributor uploads, excluding direct admin uploads. These figures include the requested starting offsets.
+
+In **Admin → Cài đặt chat → Thông báo đơn hàng qua Zalo**, create a bot in Zalo Bot Manager, save its Bot Token, send the bot a private message from the admin’s personal Zalo and use **Nhận tài khoản Zalo** to fill the recipient ID. Save, send a test, verify the correct account received it, then enable notifications and save. A phone number configured for the public chat button cannot send automated messages by itself. The account owner must complete bot creation in Zalo; no production token or recipient is prefilled.
+
+Bot Tokens are encrypted in D1 using AES-GCM and a purpose-specific key derived from the existing server-only `VERCEL_BRIDGE_TOKEN`. Keep that secret stable or re-enter the Bot Token after rotation. Admin API responses only expose `tokenConfigured`, never the token or ciphertext. No token is stored in localStorage or sent to storefront visitors.
+
+Successful checkouts create a durable notification record, then send in the Worker background (`waitUntil`). Messages include the customer’s contact information, address, note, all line items, USD/VND prices, shipping, total, payment method and current payment status. Long orders are split within Zalo’s 2,000-character limit. Concurrent/repeated checkout requests do not resend successful notifications. Zalo failures do not invalidate orders; recent delivery status and manual retry are available in admin. Before retrying a failed/unknown delivery, check Zalo: an upstream timeout can occur after receipt. Retry resumes after confirmed chunks. Interrupted sending jobs can be retried after 10 minutes. Messages are not sent until the owner configures and enables the bot.
+
+Official Bot API documentation: https://bot.zapps.me/docs/apis/sendMessage/

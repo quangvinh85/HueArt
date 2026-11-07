@@ -487,3 +487,93 @@ test('contributors must accept the current 20% revenue terms and cannot forge th
  const direct=await uploadAdmin(f,{submissionKey:crypto.randomUUID(),title:'Ảnh riêng admin',authorName:'Owner',collection:'imperial-echoes',rightsConfirmed:true,publish:true});assert.equal(direct.status,201);
  const own=f.sqlite.prepare("SELECT * FROM artwork_submissions WHERE submission_origin = 'admin'").get();assert.equal(own.revenue_terms_json,'{}');assert.equal((await f.request('/api/admin/submissions',{headers:owner})).data.submissions.length,1);
 });
+
+test('site statistics persist each session once and count only paid non-cancelled photo quantities', async () => {
+  const f=fixture();
+  assert.deepEqual((await f.request('/api/site-stats')).data,{visits:1000000,sold:1000,contributions:100});
+  const sessionId=crypto.randomUUID();
+  const visit=()=>f.request('/api/site-stats',{method:'POST',body:{sessionId}});
+  assert.equal((await visit()).data.visits,1000001);
+  assert.equal((await visit()).data.visits,1000001);
+  assert.equal((await f.request('/api/site-stats',{method:'POST',body:{sessionId:'invalid'}})).status,400);
+  assert.equal((await f.request('/api/site-stats',{method:'POST',body:{sessionId:crypto.randomUUID()},sameOrigin:false})).status,403);
+  const first=await f.request('/api/orders',{method:'POST',body:f.payload({customer:{name:'Nguyễn An',phone:'0901234567',address:'273 Điện Biên Phủ, Huế'},items:[{artworkId:artId,optionId:'framed-print',quantity:3}]})});
+  assert.equal(first.status,201);
+  assert.equal((await f.request('/api/site-stats')).data.sold,1000);
+  f.sqlite.prepare("UPDATE orders SET payment_status='paid'").run();
+  assert.equal((await f.request('/api/site-stats')).data.sold,1003);
+  f.sqlite.prepare("UPDATE orders SET status='cancelled'").run();
+  assert.equal((await f.request('/api/site-stats')).data.sold,1000);
+  assert.equal((await f.request('/api/site-stats')).data.visits,1000001);
+});
+
+test('Zalo bot settings are admin-only, encrypted, masked and validated before enabling',async()=>{
+ const f=fixture();f.env.VERCEL_BRIDGE_TOKEN='cd'.repeat(32);
+ const path='/api/admin/zalo-notifications',token='123456:test-token-local-only';
+ assert.equal((await f.request(path)).status,401);
+ assert.equal((await f.request(path,{headers:owner})).data.tokenConfigured,false);
+ assert.equal((await f.request(path,{method:'PATCH',headers:owner,body:{enabled:true,chatId:'',version:0}})).status,400);
+ const saved=await f.request(path,{method:'PATCH',headers:owner,body:{enabled:true,chatId:'admin-chat',token,version:0}});
+ assert.equal(saved.status,200);assert.equal(saved.data.tokenConfigured,true);assert.equal(JSON.stringify(saved.data).includes(token),false);
+ const row=f.sqlite.prepare("SELECT value_json FROM shop_settings WHERE key='zalo_notifications'").get();assert.equal(row.value_json.includes(token),false);
+ assert.equal(JSON.stringify((await f.request(path,{headers:owner})).data).includes('secret'),false);
+ assert.equal(JSON.stringify((await f.request('/api/contact-settings')).data).includes('token'),false);
+ assert.equal((await f.request(path,{method:'PATCH',headers:owner,body:{enabled:false,chatId:'admin-chat',version:0}})).status,409);
+ assert.equal((await f.request(path,{method:'PATCH',headers:owner,sameOrigin:false,body:{enabled:false,chatId:'admin-chat',version:1}})).status,403);
+});
+
+test('saved orders send full details to configured Zalo admin once; failed delivery preserves the order and supports retry',async()=>{
+ const f=fixture();f.env.VERCEL_BRIDGE_TOKEN='cd'.repeat(32);
+ const token='123456:test-token-local-only',path='/api/admin/zalo-notifications';
+ await f.request(path,{method:'PATCH',headers:owner,body:{enabled:true,chatId:'admin-chat',token,version:0}});
+ const originalFetch=globalThis.fetch,messages=[];let fail=false;
+ globalThis.fetch=async(url,init)=>{
+  assert.equal(url,`https://bot-api.zaloplatforms.com/bot${token}/sendMessage`);
+  if(fail)throw new Error('Connection failed '+token);
+  const body=JSON.parse(init.body);assert.equal(body.chat_id,'admin-chat');assert.ok(body.text.length<=2000);messages.push(body.text);
+  return Response.json({ok:true,result:{message_id:'local-test-only'}});
+ };
+ try{
+  const body=f.payload({customer:{name:'Khách Nguyễn An',phone:'0901234567',email:'test@example.com',address:'',note:'Liên hệ sau 18h'}});
+  const saved=await f.request('/api/orders',{method:'POST',body});assert.equal(saved.status,201);assert.equal(messages.length,1);
+  for(const detail of [saved.data.orderNumber,'Khách Nguyễn An','0901234567','test@example.com','5 USD','130.000 VND','Liên hệ sau 18h','Chưa thanh toán'])assert.ok(messages[0].includes(detail),detail);
+  await f.request('/api/orders',{method:'POST',body});assert.equal(messages.length,1);
+  let logs=(await f.request(path,{headers:owner})).data.deliveries;assert.equal(logs[0].status,'sent');
+  fail=true;const failed=await f.request('/api/orders',{method:'POST',body:f.payload()});assert.equal(failed.status,201);
+  logs=(await f.request(path,{headers:owner})).data.deliveries;const row=logs.find(item=>item.order_number===failed.data.orderNumber);assert.equal(row.status,'failed');assert.equal(row.last_error.includes(token),false);
+  fail=false;assert.equal((await f.request(`${path}/${row.order_id}/retry`,{method:'POST',headers:owner})).status,200);assert.equal(messages.length,2);
+  assert.equal((await f.request(`${path}/${row.order_id}/retry`,{method:'POST',headers:owner})).status,409);
+  assert.equal((await f.request(`${path}/${row.order_id}/retry`,{method:'POST'})).status,401);
+ }finally{globalThis.fetch=originalFetch;}
+});
+
+test('collaboration counter includes accepted contributor photos and excludes direct admin uploads',async()=>{
+ const f=fixture();
+ const metadata={submissionKey:crypto.randomUUID(),title:'Admin image',authorName:'Owner',collection:'imperial-echoes',rightsConfirmed:true,publish:true};
+ assert.equal((await uploadAdmin(f,metadata)).status,201);
+ assert.equal((await f.request('/api/site-stats')).data.contributions,100);
+ const response=await worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:uploadForm({...metadata,submissionKey:crypto.randomUUID(),authorPhone:'0901234567',revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1'})}),f.env);
+ assert.equal(response.status,201);assert.equal((await f.request('/api/site-stats')).data.contributions,100);
+ f.sqlite.prepare("UPDATE artwork_submissions SET status='accepted' WHERE submission_origin='contributor'").run();
+ assert.equal((await f.request('/api/site-stats')).data.contributions,101);
+ f.sqlite.prepare("UPDATE artwork_submissions SET status='rejected' WHERE submission_origin='contributor'").run();
+ assert.equal((await f.request('/api/site-stats')).data.contributions,100);
+});
+
+test('Zalo keeps every detail of long orders within the API message limit',async()=>{
+ const f=fixture();f.env.VERCEL_BRIDGE_TOKEN='cd'.repeat(32);
+ await f.request('/api/admin/zalo-notifications',{method:'PATCH',headers:owner,body:{enabled:true,chatId:'admin-chat',token:'123456:test-local-token',version:0}});
+ const originalFetch=globalThis.fetch,messages=[];
+ globalThis.fetch=async(url,init)=>{const body=JSON.parse(init.body);messages.push(body.text);assert.ok(body.text.length<=2000);return Response.json({ok:true,result:{message_id:'local-only'}});};
+ try{
+  const result=await f.request('/api/orders',{method:'POST',body:f.payload({customer:{name:'Nguyễn An',phone:'0901234567',email:'',address:'Địa chỉ thử nghiệm dài '.repeat(20),note:'Ghi chú thử nghiệm '.repeat(50)}})});
+  assert.equal(result.status,201); // Digital orders omit delivery addresses.
+  const row=f.sqlite.prepare('SELECT * FROM orders').get();
+  f.sqlite.prepare("UPDATE orders SET customer_address=?,customer_note=? WHERE id=?").run('Địa chỉ '.repeat(60),'Ghi chú '.repeat(120),row.id);
+  // Resume an unsent long notification through the same admin retry path.
+  f.sqlite.prepare("UPDATE order_notifications SET status='pending',next_chunk=0 WHERE order_id=?").run(row.id);messages.length=0;
+  assert.equal((await f.request(`/api/admin/zalo-notifications/${row.id}/retry`,{method:'POST',headers:owner})).status,200);
+  assert.ok(messages.length>1);assert.ok(messages.join('').includes('Quản lý đơn: https://hue-art2.vercel.app/admin'));
+  assert.equal(f.sqlite.prepare('SELECT status FROM order_notifications').get().status,'sent');
+ }finally{globalThis.fetch=originalFetch;}
+});
