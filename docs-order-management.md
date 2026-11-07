@@ -4,7 +4,7 @@
 - Quản lý đơn: `/admin` (đăng nhập bằng tài khoản chủ website).
 - Khách gửi đơn ngay trên website. Số điện thoại bắt buộc, email không bắt buộc.
 - Mỗi đơn được lưu ở D1 và trả về mã `DHT-YYYYMMDD-XXXXXXXX`.
-- Máy chủ tính giá: file + bản quyền 10 USD; file lớn 5 USD; bản in 40 × 60 cm có khung 7 USD. Phí vận chuyển chờ người bán báo riêng.
+- Máy chủ tính giá từ giá riêng đã duyệt của từng tác phẩm. Giá mặc định: file + bản quyền 10 USD; file lớn 5 USD; bản in 40 × 60 cm có khung 7 USD. Phí vận chuyển chờ người bán báo riêng.
 - Quản trị viên tìm/lọc đơn, cập nhật phí vận chuyển, trạng thái đơn, trạng thái thanh toán và ghi chú nội bộ. Lịch sử cập nhật được lưu theo từng đơn.
 - Chỉ đánh dấu đã thanh toán sau khi nhận tiền. Hệ thống chưa có cổng thanh toán hay tự gửi email/SMS.
 - Website giữ nguyên quyền truy cập Sites hiện có. Nếu Site đang riêng tư, khách bên ngoài chưa truy cập được cửa hàng cho đến khi chủ Site đổi quyền chia sẻ.

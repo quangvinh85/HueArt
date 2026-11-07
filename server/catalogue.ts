@@ -1,7 +1,9 @@
+import {storedArtworkPrices} from './artworkPricing';
 import { ARTWORKS } from '../src/data/artworks';
 import type { Artwork } from '../src/types';
 
 export function publishedArtwork(row: any): Artwork {
+  const pricesCents=storedArtworkPrices(row);
   const imageUrl = `/api/catalog/${row.id}/image`;
   return {
     id: `submission-${row.id}`,
@@ -23,7 +25,8 @@ export function publishedArtwork(row: any): Artwork {
     camera: { camera:'', lens:'', settings:'', locationName:row.location || '', coordinates:'', capturedAt:'' },
     imageUrl,
     highResUrl: imageUrl,
-    basePriceUSD: 5,
+    basePriceUSD: (pricesCents['high-resolution']||500)/100,
+    pricesCents,
     mood: row.collection === 'perfume-river' ? 'serene' : row.collection === 'living-traditions' ? 'vibrant' : 'imperial',
     palette: [],
     featured: true,
@@ -37,7 +40,7 @@ export async function getCatalogue(env: { DB?: any }): Promise<Artwork[]> {
 
 export async function getCatalogueEntries(env:{DB?:any}) {
   const [submissions,overrides] = env.DB ? await Promise.all([
-    env.DB.prepare("SELECT id, title, title_en, title_fr, location, story, collection, author_name, created_at, submission_origin FROM artwork_submissions WHERE status = 'accepted' ORDER BY updated_at DESC, id DESC").all(),
+    env.DB.prepare("SELECT id, title, title_en, title_fr, location, story, collection, author_name, created_at, submission_origin, pricing_json, admin_pricing_json FROM artwork_submissions WHERE status = 'accepted' ORDER BY updated_at DESC, id DESC").all(),
     env.DB.prepare('SELECT * FROM catalogue_overrides').all(),
   ]) : [{results:[]},{results:[]}];
   const adminIds=new Set(submissions.results.filter((row:any)=>row.submission_origin==='admin').map((row:any)=>'submission-'+row.id));

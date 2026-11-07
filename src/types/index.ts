@@ -39,6 +39,7 @@ export interface Artwork {
   imageUrl: string;
   highResUrl: string;
   basePriceUSD: number;
+  pricesCents?: Partial<Record<'copyright' | 'high-resolution' | 'framed-print', number>>;
   mood: 'imperial' | 'misty' | 'serene' | 'vibrant' | 'nocturnal';
   palette: string[];
   featured?: boolean;

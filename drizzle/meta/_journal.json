@@ -57,6 +57,13 @@
       "when": 1794040713350,
       "tag": "0007_chemical_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794043896397,
+      "tag": "0008_demonic_oracle",
+      "breakpoints": true
     }
   ]
 }

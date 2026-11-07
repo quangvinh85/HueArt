@@ -70,3 +70,11 @@ test('published-artwork carts survive reload while the live catalogue loads',()=
   assert.deepEqual(restoreCart(JSON.stringify([item]),artworks),[]);
   assert.deepEqual(restoreCart(JSON.stringify([{...item,artworkId:'submission-malformed'}]),artworks,true),[]);
 });
+
+test('cart totals and order text use approved per-artwork prices and keep default prices for legacy photos',()=>{
+ const priced=[...artworks,{id:'custom',titles:{vi:'Ảnh giá riêng'},pricesCents:{copyright:2234,'high-resolution':1234,'framed-print':899}}];
+ const items=[{artworkId:'custom',optionId:'copyright',quantity:1},{artworkId:'custom',optionId:'high-resolution',quantity:1},{artworkId:'custom',optionId:'framed-print',quantity:3}];
+ assert.equal(itemTotal(items[2],priced),26.97);assert.equal(cartTotal(items,priced),61.65);
+ assert.match(orderText(items,customer,priced),/61\.65 USD/);
+ assert.equal(cartTotal([...items,{artworkId:'hue',optionId:'high-resolution',quantity:1}],priced),66.65);
+});

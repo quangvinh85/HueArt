@@ -1,7 +1,7 @@
 import { ARTWORKS } from '../src/data/artworks';
 import type { Artwork } from '../src/types';
 import { PAYMENT_METHOD_LABELS, toVnd } from '../src/shop/paymentTypes';
-import { SALE_OPTIONS } from '../src/shop/catalog';
+import { SALE_OPTIONS, priceCents } from '../src/shop/catalog';
 
 export const ORDER_STATUSES = ['new', 'confirmed', 'processing', 'completed', 'cancelled'] as const;
 export const PAYMENT_STATUSES = ['unpaid', 'reported', 'partial', 'paid'] as const;
@@ -35,7 +35,7 @@ export function validateOrder(body: any, artworks: Artwork[] = ARTWORKS) {
     keys.add(key);
     const quantity = item.quantity;
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99 || (option.id !== 'framed-print' && quantity !== 1)) throw new ApiError(400, 'Số lượng không hợp lệ.');
-    return { artworkId: artwork.id, title: artwork.titles.vi, imageUrl: artwork.imageUrl, optionId: option.id, optionTitle: option.title, quantity, unitPriceCents: option.priceUSD * 100 };
+    return { artworkId: artwork.id, title: artwork.titles.vi, imageUrl: artwork.imageUrl, optionId: option.id, optionTitle: option.title, quantity, unitPriceCents: priceCents(artwork,option.id) };
   });
   const hasPrint = items.some(item => item.optionId === 'framed-print');
   const hasCopyright = items.some(item => item.optionId === 'copyright');

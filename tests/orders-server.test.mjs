@@ -577,3 +577,50 @@ test('Zalo keeps every detail of long orders within the API message limit',async
   assert.equal(f.sqlite.prepare('SELECT status FROM order_notifications').get().status,'sent');
  }finally{globalThis.fetch=originalFetch;}
 });
+
+test('author proposes three USD prices; approved catalogue and checkout use saved cents and the admin exchange rate',async()=>{
+ const f=fixture(),pricesCents={'copyright':2234,'high-resolution':1234,'framed-print':899};
+ const metadata={submissionKey:crypto.randomUUID(),title:'Tác phẩm có giá riêng',authorName:'Tác giả thử nghiệm',authorPhone:'0901234567',collection:'imperial-echoes',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1',pricesCents};
+ const submit=body=>worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:uploadForm(body)}),f.env);
+ const saved=await submit(metadata);assert.equal(saved.status,201);const record=await saved.json();const id=record.id||f.sqlite.prepare('SELECT id FROM artwork_submissions').get().id;
+ assert.deepEqual(JSON.parse(f.sqlite.prepare('SELECT pricing_json FROM artwork_submissions').get().pricing_json),pricesCents);
+ assert.equal((await f.request('/api/catalog')).data.artworks.some(art=>art.id==='submission-'+id),false);
+ const review=(await f.request('/api/admin/submissions',{headers:owner})).data.submissions[0];assert.deepEqual(review.pricesCents,pricesCents);
+ assert.equal((await submit({...metadata,pricesCents:{'framed-print':899,'high-resolution':1234,'copyright':2234}})).status,200);
+ assert.equal((await submit({...metadata,pricesCents:{...pricesCents,'high-resolution':1500}})).status,409);
+ assert.equal((await f.request('/api/admin/submissions/'+id,{method:'PATCH',headers:owner,body:{status:'accepted',version:1,adminNote:'Approved prices'}})).status,200);
+ const art=(await f.request('/api/catalog')).data.artworks.find(art=>art.id==='submission-'+id);assert.deepEqual(art.pricesCents,pricesCents);assert.equal(art.basePriceUSD,12.34);
+ const body=f.payload({customer:{name:'Khách mua thử',phone:'0901234567',address:'123 Huế'},rightsAccepted:true,items:[{artworkId:art.id,optionId:'copyright',quantity:1,unitPriceCents:1},{artworkId:art.id,optionId:'high-resolution',quantity:1,unitPriceCents:1},{artworkId:art.id,optionId:'framed-print',quantity:3,unitPriceCents:1}]});
+ const order=await f.request('/api/orders',{method:'POST',body});assert.equal(order.status,201);assert.equal(order.data.subtotalCents,6165);assert.equal(order.data.expectedAmountVnd,1602900);
+ const current=(await f.request('/api/admin/payment-settings',{headers:owner})).data;
+ assert.equal((await f.request('/api/admin/payment-settings',{method:'PATCH',headers:owner,body:{...current,exchangeRate:30000}})).status,200);
+ const second=await f.request('/api/orders',{method:'POST',body:{...body,checkoutKey:crypto.randomUUID()}});assert.equal(second.status,201);assert.equal(second.data.exchangeRate,30000);assert.equal(second.data.expectedAmountVnd,1849500);
+ assert.equal((await f.request('/api/orders',{method:'POST',body})).data.exchangeRate,26000);
+});
+
+test('author prices reject incomplete, negative, fractional-cent, excessive and unknown values before storing files',async()=>{
+ const f=fixture(),base={title:'Ảnh giá thử',authorName:'Tác giả',authorPhone:'0901234567',collection:'imperial-echoes',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1'};
+ for(const pricesCents of [[],null,{}, {'high-resolution':1000},{copyright:1000,'high-resolution':0,'framed-print':1000},{copyright:1000,'high-resolution':-1,'framed-print':1000},{copyright:1000,'high-resolution':100.5,'framed-print':1000},{copyright:1000,'high-resolution':1000001,'framed-print':1000},{copyright:1000,'high-resolution':'500','framed-print':1000},{copyright:1000,'high-resolution':500,'framed-print':1000,unknown:1000}]){
+  const response=await worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:uploadForm({...base,submissionKey:crypto.randomUUID(),pricesCents})}),f.env);assert.equal(response.status,400,JSON.stringify(pricesCents));
+ }
+ assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS count FROM artwork_submissions').get().count,0);
+});
+
+test('admin can save final prices before approval and publish atomically while preserving the author proposal and existing orders',async()=>{
+ const f=fixture(),proposed={copyright:1000,'high-resolution':500,'framed-print':700},final={copyright:2000,'high-resolution':1250,'framed-print':900};
+ const response=await worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:uploadForm({submissionKey:crypto.randomUUID(),title:'Ảnh admin chốt giá',authorName:'Tác giả thử nghiệm',authorPhone:'0901234567',collection:'imperial-echoes',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1',pricesCents:proposed})}),f.env);assert.equal(response.status,201);
+ const id=f.sqlite.prepare('SELECT id FROM artwork_submissions').get().id,path='/api/admin/submissions/'+id;
+ const save=(version,status,pricesCents,headers=owner)=>f.request(path,{method:'PATCH',headers,body:{version,status,adminNote:'Giá admin chốt',pricesCents}});
+ assert.equal((await save(1,'accepted',final,{})).status,401);
+ assert.equal((await save(1,'accepted',{...final,'framed-print':0})).status,400);
+ const draft=await save(1,'reviewing',final);assert.equal(draft.status,200);assert.deepEqual(draft.data.pricesCents,final);assert.deepEqual(draft.data.proposedPricesCents,proposed);
+ assert.equal((await f.request('/api/catalog')).data.artworks.some(item=>item.id==='submission-'+id),false);
+ assert.equal((await save(1,'accepted',final)).status,409);
+ const accepted=await save(2,'accepted',final);assert.equal(accepted.status,200);
+ assert.deepEqual((await f.request('/api/catalog')).data.artworks.find(item=>item.id==='submission-'+id).pricesCents,final);
+ const order=await f.request('/api/orders',{method:'POST',body:f.payload({items:[{artworkId:'submission-'+id,optionId:'high-resolution',quantity:1}]})});assert.equal(order.status,201);assert.equal(order.data.subtotalCents,1250);
+ assert.equal((await save(3,'accepted',{...final,'high-resolution':1500})).status,200);
+ assert.equal((await f.request('/api/catalog')).data.artworks.find(item=>item.id==='submission-'+id).pricesCents['high-resolution'],1500);
+ const stored=f.sqlite.prepare('SELECT * FROM orders WHERE order_number=?').get(order.data.orderNumber);assert.equal(stored.subtotal_cents,1250);assert.equal(JSON.parse(stored.items_json)[0].unitPriceCents,1250);
+ const row=f.sqlite.prepare('SELECT pricing_json,admin_pricing_json FROM artwork_submissions').get();assert.deepEqual(JSON.parse(row.pricing_json),proposed);assert.equal(JSON.parse(row.admin_pricing_json)['high-resolution'],1500);
+});

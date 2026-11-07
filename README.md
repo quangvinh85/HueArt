@@ -1,6 +1,6 @@
 # HueArt — NHIẾP ẢNH NGHỆ THUẬT HUẾ
 
-Cửa hàng ảnh Việt / Anh / Pháp, đặt hàng trực tiếp, gửi tác phẩm và trang quản lý `/admin`. Mỗi ảnh có ba lựa chọn: file + thỏa thuận chuyển quyền tác giả 10 USD, file lớn 5 USD, bản in 40 × 60 cm có khung 7 USD (vận chuyển báo riêng).
+Cửa hàng ảnh Việt / Anh / Pháp, đặt hàng trực tiếp, gửi tác phẩm và trang quản lý `/admin`. Mỗi ảnh có ba lựa chọn: file + thỏa thuận chuyển quyền tác giả, file lớn và bản in 40 × 60 cm có khung (vận chuyển báo riêng). Giá mặc định lần lượt là 10 / 5 / 7 USD; tác phẩm cộng tác dùng giá riêng do tác giả đề xuất và admin chốt khi duyệt.
 
 ## Deploy từ GitHub lên Vercel
 
@@ -107,3 +107,11 @@ Bot Tokens are encrypted in D1 using AES-GCM and a purpose-specific key derived 
 Successful checkouts create a durable notification record, then send in the Worker background (`waitUntil`). Messages include the customer’s contact information, address, note, all line items, USD/VND prices, shipping, total, payment method and current payment status. Long orders are split within Zalo’s 2,000-character limit. Concurrent/repeated checkout requests do not resend successful notifications. Zalo failures do not invalidate orders; recent delivery status and manual retry are available in admin. Before retrying a failed/unknown delivery, check Zalo: an upstream timeout can occur after receipt. Retry resumes after confirmed chunks. Interrupted sending jobs can be retried after 10 minutes. Messages are not sent until the owner configures and enables the bot.
 
 Official Bot API documentation: https://bot.zapps.me/docs/apis/sendMessage/
+
+### Giá tác phẩm cộng tác
+
+Biểu mẫu Gửi tác phẩm có ba ô giá USD riêng, tự hiển thị VND theo tỷ giá mới nhất trong Cài đặt thanh toán. Giá từ 0,01 đến 10.000 USD, tối đa hai chữ số thập phân. Tỷ giá phải tải thành công trước khi gửi; có nút thử lại khi mất kết nối.
+
+Admin → Tác phẩm gửi đến → Xem hồ sơ hiển thị giá tác giả đề xuất và ba ô **Giá bán admin chốt**. Admin có thể chỉnh giá, lưu lúc đang xem xét, hoặc chọn Đã chấp nhận và lưu để công khai giá đã chốt trong cùng một cập nhật có kiểm tra phiên bản. Giá gốc tác giả đề xuất được giữ riêng trong pricing_json; admin_pricing_json lưu giá bán đã chốt.
+
+Cửa hàng, lựa chọn mua, giỏ hàng và máy chủ đặt hàng cùng dùng giá đã chốt. Máy chủ không tin giá do khách gửi. Giá và tỷ giá của đơn đã tạo được lưu cố định. Ảnh/hồ sơ cũ không có giá riêng tiếp tục dùng giá mặc định 10 / 5 / 7 USD. Ba thẻ giới thiệu cách mua không hiển thị giá.

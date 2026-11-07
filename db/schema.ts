@@ -51,6 +51,8 @@ export const artworkSubmissions = sqliteTable('artwork_submissions', {
   location: text('location').notNull().default(''), story: text('story').notNull().default(''), collection: text('collection').notNull(),
   submissionOrigin:text('submission_origin').notNull().default('contributor'),
   revenueTermsJson:text('revenue_terms_json').notNull().default('{}'),
+  pricingJson:text('pricing_json').notNull().default('{}'),
+  adminPricingJson:text('admin_pricing_json').notNull().default('{}'),
   objectKey: text('object_key').notNull(), contentType: text('content_type').notNull(), status: text('status').notNull().default('pending'), adminNote: text('admin_note').notNull().default(''), version: integer('version').notNull().default(1),
   createdAt: text('created_at').notNull(), updatedAt: text('updated_at').notNull(),
 }, table => [uniqueIndex('artwork_submissions_reference').on(table.reference), uniqueIndex('artwork_submissions_key').on(table.submissionKey),index('artwork_submissions_requester').on(table.requesterHash,table.createdAt)]);

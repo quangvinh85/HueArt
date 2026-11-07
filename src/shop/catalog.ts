@@ -36,10 +36,15 @@ export interface ShopItem {
 }
 
 export const getOption = (id: SaleOptionId): SaleOption => SALE_OPTIONS.find(option => option.id === id)!;
+export function priceCents(artwork:Artwork|undefined,optionId:SaleOptionId):number {
+  const value=artwork?.pricesCents?.[optionId];
+  return typeof value==='number'&&Number.isInteger(value)&&value>0&&value<=1000000?value:getOption(optionId).priceUSD*100;
+}
+export const startingPriceCents=(artwork:Artwork)=>Math.min(...SALE_OPTIONS.map(option=>priceCents(artwork,option.id)));
 export const usd = (value: number) => `${value} USD`;
 export const itemKey = (item: ShopItem) => `${item.artworkId}:${item.optionId}`;
-export const itemTotal = (item: ShopItem) => getOption(item.optionId).priceUSD * item.quantity;
-export const cartTotal = (items: ShopItem[]) => items.reduce((total, item) => total + itemTotal(item), 0);
+export const itemTotal = (item: ShopItem, artworks: Artwork[] = []) => priceCents(artworks.find(art=>art.id===item.artworkId),item.optionId) * item.quantity / 100;
+export const cartTotal = (items: ShopItem[], artworks: Artwork[] = []) => items.reduce((total, item) => total + itemTotal(item,artworks), 0);
 
 export function addItem(items: ShopItem[], item: ShopItem): ShopItem[] {
   const previous = items.find(existing => itemKey(existing) === itemKey(item));
@@ -79,8 +84,8 @@ export function orderText(items: ShopItem[], customer: Customer, artworks: Artwo
     hasPrint ? `Địa chỉ nhận bản in: ${customer.address}` : '', '',
     ...items.map(item => {
       const art = artworks.find(art => art.id === item.artworkId)!;
-      return `${art.titles.vi} [${art.id}]\n${getOption(item.optionId).title} × ${item.quantity} — ${usd(itemTotal(item))}`;
-    }), '', `Tiền ảnh: ${usd(cartTotal(items))}`,
+      return `${art.titles.vi} [${art.id}]\n${getOption(item.optionId).title} × ${item.quantity} — ${usd(itemTotal(item,artworks))}`;
+    }), '', `Tiền ảnh: ${usd(cartTotal(items,artworks))}`,
     hasPrint ? 'Bản in 40 × 60 cm đã gồm khung. Phí vận chuyển chưa bao gồm, cần báo riêng để tôi xác nhận.' : 'Nhận file qua email, không có phí vận chuyển.',
     hasCopyright ? 'Tôi yêu cầu chuyển toàn bộ quyền tác giả đối với ảnh chọn gói File + bản quyền. Hai bên cần xác nhận khả năng chuyển quyền và thỏa thuận bằng văn bản trước khi thanh toán.' : '',
     customer.note ? `Ghi chú: ${customer.note}` : '', '',

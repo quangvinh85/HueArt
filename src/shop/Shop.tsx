@@ -8,7 +8,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { ArrowDown, ArrowRight, FileImage, Frame, Mail, MapPin, Minus, Plus, Search, Sparkles, Camera, ShieldCheck, ShoppingBag, Trash2 } from 'lucide-react';
 import { ARTWORKS } from '../data/artworks';
 import type { Artwork } from '../types';
-import { SALE_OPTIONS, addItem, cartTotal, getOption, itemKey, itemTotal, restoreCart, type Customer, type SaleOptionId, type ShopItem } from './catalog';
+import { SALE_OPTIONS, priceCents, startingPriceCents, addItem, cartTotal, getOption, itemKey, itemTotal, restoreCart, type Customer, type SaleOptionId, type ShopItem } from './catalog';
 import { ProtectedImage, useImageProtection } from './ProtectedImage';
 import { requestApi, submitOrder, type Receipt } from './ordersApi';
 import Modal from './Modal';
@@ -134,7 +134,7 @@ export default function Shop() {
     restore();window.addEventListener('hashchange',restore);return()=>window.removeEventListener('hashchange',restore);
   },[]);
 
-  const total = cartTotal(cart);
+  const total = cartTotal(cart,artworks);
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
   const filtered = useMemo(() => {
     const normalize = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
@@ -193,7 +193,7 @@ export default function Shop() {
         </div>
       </section>
       <section id="options" className="shop-container shop-pricing">
-        <div className="shop-section-title"><div><span className="shop-eyebrow">{tr("Giá rõ ràng, lựa chọn dễ dàng")}</span><h2>{tr("Ba cách sở hữu một bức ảnh")}</h2></div><p>{tr("Cùng một bảng giá cho mọi ảnh.")}</p></div>
+        <div className="shop-section-title"><div><span className="shop-eyebrow">{tr("Giá rõ ràng, lựa chọn dễ dàng")}</span><h2>{tr("Ba cách sở hữu một bức ảnh")}</h2></div><p>{tr("Giá bán được hiển thị trên từng tác phẩm.")}</p></div>
         <div className="shop-option-grid">{SALE_OPTIONS.map((option, index) => {
             const Icon = icons[index];
             return <article key={option.id} className="shop-price-card"><Icon size={23} /><div className="shop-price-heading"><h3>{tr(option.title)}</h3></div><p>{tr(option.description)}</p><a href="#gallery" onClick={() => setNotice(tr("Chọn một bức ảnh rồi chọn “{0}”.", tr(option.title)))}>{tr("Chọn ảnh ")}<ArrowRight size={15} /></a></article>;
@@ -205,7 +205,7 @@ export default function Shop() {
         <div className="shop-filters" aria-label={tr("Lọc bộ sưu tập")}>{categories.map(([id, label]) => <button key={id} aria-pressed={category === id} className={category === id ? 'active' : ''} onClick={() => setCategory(id)}>{tr(label)}</button>)}<span>{filtered.length}{tr(" ảnh")}</span></div>
         {catalogueLoading&&!artworks.length?<div className="shop-empty" role="status">{tr("Đang tải ảnh…")}</div>:filtered.length ? <div className="shop-art-grid">{filtered.slice(0,visibleCount).map(art => <article key={art.id} id={`artwork-${art.id}`} className="shop-art-card">
           <button className="shop-art-image" onClick={() => openArtwork(art)} aria-label={tr("Chọn mua {0}", art.titles[language])}><ProtectedImage src={art.imageUrl} alt={art.titles[language]} loading="lazy" /><span className="shop-art-caption">{tr("Xem ảnh & chọn mua ")}<ArrowRight size={15} /></span></button>
-          <div className="shop-art-info"><p className="shop-location"><MapPin size={12} />{art.locations[language]}</p>{art.photographer&&<p className="shop-photographer">{tr("Ảnh:")} {photographerName(art.photographer)}</p>}<h3><button onClick={() => openArtwork(art)}>{art.titles[language]}</button></h3><div className="shop-art-bottom"><span>{tr("Từ ")}<strong><Price cents={500}/></strong></span><button onClick={() => openArtwork(art)}>{tr("Chọn mua ")}<ArrowRight size={15} /></button></div></div>
+          <div className="shop-art-info"><p className="shop-location"><MapPin size={12} />{art.locations[language]}</p>{art.photographer&&<p className="shop-photographer">{tr("Ảnh:")} {photographerName(art.photographer)}</p>}<h3><button onClick={() => openArtwork(art)}>{art.titles[language]}</button></h3><div className="shop-art-bottom"><span>{tr("Từ ")}<strong><Price cents={startingPriceCents(art)}/></strong></span><button onClick={() => openArtwork(art)}>{tr("Chọn mua ")}<ArrowRight size={15} /></button></div></div>
         </article>)}</div> : <div className="shop-empty"><h3>{tr("Chưa tìm thấy ảnh phù hợp")}</h3><p>{tr("Thử tên địa điểm khác hoặc xem tất cả ảnh.")}</p><button className="shop-secondary" onClick={() => {
             setSearch('');
             setCategory('all');
@@ -220,9 +220,9 @@ export default function Shop() {
       <div className="shop-product"><div className="shop-product-photo"><ProtectedImage src={selected.imageUrl} alt={selected.titles[language]} view="detail" loading="eager" /><p><MapPin size={13} />{selected.locations[language]}</p></div><div className="shop-product-details"><h3>{selected.titles[language]}</h3><p className="shop-story">{selected.stories[language]}</p>{selected.photographer&&<p className="shop-photographer">{tr("Ảnh:")} {photographerName(selected.photographer)}</p>}<fieldset className="shop-purchase-options"><legend>{tr("Chọn loại mua")}</legend>{SALE_OPTIONS.map(option => <label key={option.id} className={`shop-radio-card ${optionId === option.id ? 'selected' : ''}`}><input type="radio" name="purchase-option" value={option.id} checked={optionId === option.id} onChange={() => {
                 setOptionId(option.id);
                 setQuantity(1);
-              }} /><span><strong>{tr(option.title)}</strong><small>{tr(option.short)}</small></span><b>{<Price cents={(option.priceUSD)*100}/>}</b></label>)}</fieldset><p className="shop-option-description">{tr(getOption(optionId).description)}</p>
+              }} /><span><strong>{tr(option.title)}</strong><small>{tr(option.short)}</small></span><b>{<Price cents={priceCents(selected,option.id)}/>}</b></label>)}</fieldset><p className="shop-option-description">{tr(getOption(optionId).description)}</p>
         {optionId === 'framed-print' && <div className="shop-quantity-row"><span>{tr("Số lượng bản in")}</span><div className="shop-quantity"><button aria-label={tr("Giảm số lượng")} onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity === 1}><Minus size={14} /></button><output>{quantity}</output><button aria-label={tr("Tăng số lượng")} onClick={() => setQuantity(Math.min(99, quantity + 1))} disabled={quantity === 99}><Plus size={14} /></button></div></div>}
-        <div className="shop-product-total"><span>{tr("Tiền ảnh")}{optionId === 'framed-print' ? tr(" · chưa gồm vận chuyển") : ''}</span><strong>{<Price cents={(getOption(optionId).priceUSD * quantity)*100}/>}</strong></div><button className="shop-primary shop-full" onClick={() => {
+        <div className="shop-product-total"><span>{tr("Tiền ảnh")}{optionId === 'framed-print' ? tr(" · chưa gồm vận chuyển") : ''}</span><strong>{<Price cents={priceCents(selected,optionId)*quantity}/>}</strong></div><button className="shop-primary shop-full" onClick={() => {
             setCart(items => addItem(items, {
               artworkId: selected.id,
               optionId,
@@ -236,7 +236,7 @@ export default function Shop() {
       {cart.length ? <><div className="shop-cart-items">{cart.map(item => {
             const art = artworks.find(art => art.id === item.artworkId);
         if(!art) return <div className="shop-cart-item" key={itemKey(item)}><div><p>{tr(catalogueLoading?'Đang tải thông tin ảnh…':catalogueError?'Không tải được bộ sưu tập. Vui lòng thử lại.':'Tác phẩm không còn trong danh sách bán.')}</p><small>{tr(getOption(item.optionId).title)}</small></div><button className="shop-icon" onClick={()=>removeItem(itemKey(item))} aria-label={tr('Xóa khỏi giỏ hàng')}><Trash2 size={16}/></button></div>;
-            return <div className="shop-cart-item" key={itemKey(item)}><ProtectedImage src={art.imageUrl} alt={art.titles[language]} view="thumb" /><div><h3>{art.titles[language]}</h3><p>{tr(getOption(item.optionId).title)}</p>{item.optionId === 'framed-print' ? <><small>{tr("Đã gồm khung · Chưa gồm vận chuyển")}</small><div className="shop-quantity"><button aria-label={tr("Giảm số lượng {0}", art.titles[language])} onClick={() => changeQuantity(itemKey(item), -1)}><Minus size={13} /></button><output>{item.quantity}</output><button aria-label={tr("Tăng số lượng {0}", art.titles[language])} onClick={() => changeQuantity(itemKey(item), 1)} disabled={item.quantity === 99}><Plus size={13} /></button></div></> : <small>{tr("1 file · Giao qua email")}</small>}</div><div className="shop-cart-price"><strong>{<Price cents={(itemTotal(item))*100}/>}</strong><button className="shop-icon" onClick={() => removeItem(itemKey(item))} aria-label={tr("Xóa {0}, {1}", art.titles[language], tr(getOption(item.optionId).title))}><Trash2 size={16} /></button></div></div>;
+            return <div className="shop-cart-item" key={itemKey(item)}><ProtectedImage src={art.imageUrl} alt={art.titles[language]} view="thumb" /><div><h3>{art.titles[language]}</h3><p>{tr(getOption(item.optionId).title)}</p>{item.optionId === 'framed-print' ? <><small>{tr("Đã gồm khung · Chưa gồm vận chuyển")}</small><div className="shop-quantity"><button aria-label={tr("Giảm số lượng {0}", art.titles[language])} onClick={() => changeQuantity(itemKey(item), -1)}><Minus size={13} /></button><output>{item.quantity}</output><button aria-label={tr("Tăng số lượng {0}", art.titles[language])} onClick={() => changeQuantity(itemKey(item), 1)} disabled={item.quantity === 99}><Plus size={13} /></button></div></> : <small>{tr("1 file · Giao qua email")}</small>}</div><div className="shop-cart-price"><strong>{<Price cents={(itemTotal(item,artworks))*100}/>}</strong><button className="shop-icon" onClick={() => removeItem(itemKey(item))} aria-label={tr("Xóa {0}, {1}", art.titles[language], tr(getOption(item.optionId).title))}><Trash2 size={16} /></button></div></div>;
           })}</div><div className="shop-summary">{catalogueError&&<button className="shop-secondary shop-full" onClick={()=>void loadCatalogue()}>{tr("Thử lại")}</button>}{hasUnavailableItem&&<p role="status">{tr(catalogueLoading?'Đang tải thông tin ảnh…':catalogueError?'Không tải được bộ sưu tập. Vui lòng thử lại.':'Vui lòng xóa tác phẩm không còn bán khỏi giỏ hàng để tiếp tục.')}</p>}<div><span>{tr("Tiền ảnh")}</span><strong>{<Price cents={(total)*100}/>}</strong></div><p>{hasPrint ? tr("Phí vận chuyển được báo riêng. Bạn có thể trả trước tiền ảnh sau khi gửi đơn.") : tr("Giao file qua email. Không có phí vận chuyển.")}</p><button className="shop-primary shop-full" disabled={hasUnavailableItem} onClick={() => {
             setReceipt(null);
             setOrderError('');
@@ -249,7 +249,7 @@ export default function Shop() {
         event.preventDefault();
         void sendOrder();
       }} aria-busy={submitting}>
-        <p>{tr("Đặt trực tiếp trên website, không cần Gmail. Người bán sẽ gọi điện hoặc liên hệ để xác nhận đơn và hướng dẫn thanh toán.")}</p><div className="shop-mini-summary">{cart.map(item => <div key={itemKey(item)}><span>{(artworks.find(art => art.id === item.artworkId)?.titles[language] || tr('Đang tải thông tin ảnh…'))}<small>{tr(getOption(item.optionId).title)}{tr(" × ")}{item.quantity}</small></span><b>{<Price cents={(itemTotal(item))*100}/>}</b></div>)}<div className="shop-mini-total"><strong>{tr("Tiền ảnh")}</strong><strong>{<Price cents={(total)*100}/>}</strong></div></div>
+        <p>{tr("Đặt trực tiếp trên website, không cần Gmail. Người bán sẽ gọi điện hoặc liên hệ để xác nhận đơn và hướng dẫn thanh toán.")}</p><div className="shop-mini-summary">{cart.map(item => <div key={itemKey(item)}><span>{(artworks.find(art => art.id === item.artworkId)?.titles[language] || tr('Đang tải thông tin ảnh…'))}<small>{tr(getOption(item.optionId).title)}{tr(" × ")}{item.quantity}</small></span><b>{<Price cents={(itemTotal(item,artworks))*100}/>}</b></div>)}<div className="shop-mini-total"><strong>{tr("Tiền ảnh")}</strong><strong>{<Price cents={(total)*100}/>}</strong></div></div>
         <label>{tr("Họ và tên ")}<span>*</span><input required disabled={submitting} minLength={2} autoComplete="name" maxLength={100} value={customer.name} onChange={event => setCustomer({
             ...customer,
             name: event.target.value

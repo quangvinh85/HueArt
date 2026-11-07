@@ -563,10 +563,6 @@
     "I am buying the file with full copyright transfer. Both parties will confirm the transfer in writing before payment.",
     "J’achète le fichier avec transfert intégral des droits d’auteur. Les deux parties confirmeront ce transfert par écrit avant paiement."
   ],
-  "Tôi là tác giả hoặc có quyền gửi ảnh này để quản trị viên xem xét. Việc gửi ảnh không tự chuyển quyền tác giả.": [
-    "I am the creator or authorized to submit this photo for review. Submission does not transfer copyright.",
-    "Je suis l’auteur ou autorisé à soumettre cette photo. L’envoi ne transfère pas les droits d’auteur."
-  ],
   "Tăng số lượng": [
     "Increase quantity",
     "Augmenter la quantité"
@@ -1962,5 +1958,81 @@
   "Chọn Ảnh mà bạn thích": [
     "Choose a photo you love",
     "Choisissez une photo qui vous plaît"
+  ],
+  "Giá bán được hiển thị trên từng tác phẩm.": [
+    "Prices are shown for each photograph.",
+    "Les prix sont indiqués pour chaque photographie."
+  ],
+  "Giá bán tác phẩm": [
+    "Artwork prices",
+    "Prix de l’œuvre"
+  ],
+  "Giá {0} (USD) *": [
+    "{0} price (USD) *",
+    "Prix {0} (USD) *"
+  ],
+  "Đơn vị tiền tệ": [
+    "Currency",
+    "Devise"
+  ],
+  "Giá tác phẩm không hợp lệ.": [
+    "Invalid artwork price.",
+    "Prix de l’œuvre invalide."
+  ],
+  "Giá USD phải từ 0,01 đến 10.000, tối đa 2 chữ số thập phân.": [
+    "USD prices must be between 0.01 and 10,000 with up to 2 decimal places.",
+    "Les prix en USD doivent être compris entre 0,01 et 10 000, avec au maximum 2 décimales."
+  ],
+  "Tỷ giá do admin cấu hình: 1 USD = {0} VND": [
+    "Exchange rate set by the admin: 1 USD = {0} VND",
+    "Taux défini par l’administrateur : 1 USD = {0} VND"
+  ],
+  "Giá bán trước phí cộng tác 20%; tác giả nhận 80%. Giá chỉ được công khai sau khi admin chấp nhận tác phẩm.": [
+    "Prices are before the 20% partnership fee; the photographer receives 80%. Prices are published only after admin approval.",
+    "Les prix s’entendent avant les frais de partenariat de 20 % ; l’auteur reçoit 80 %. Ils sont publiés après validation de l’administrateur."
+  ],
+  "Giá bán tác giả đề xuất": [
+    "Prices proposed by the photographer",
+    "Prix proposés par l’auteur"
+  ],
+  "Hồ sơ này dùng giá mặc định của cửa hàng.": [
+    "This submission uses the store’s default prices.",
+    "Cette proposition utilise les prix par défaut de la boutique."
+  ],
+  "Chưa tải được tỷ giá. Vui lòng bấm Thử lại trong phần giá bán.": [
+    "The exchange rate has not loaded. Click Retry in the pricing section.",
+    "Le taux de change n’a pas été chargé. Cliquez sur Réessayer dans la section des prix."
+  ],
+  "Đang tải tỷ giá…": [
+    "Loading exchange rate…",
+    "Chargement du taux de change…"
+  ],
+  "Nhập giá USD để xem quy đổi VND.": [
+    "Enter a USD price to see its VND equivalent.",
+    "Saisissez un prix en USD pour voir son équivalent en VND."
+  ],
+  "Không tải được tỷ giá.": [
+    "Could not load the exchange rate.",
+    "Impossible de charger le taux de change."
+  ],
+  "Nhập giá USD riêng cho từng loại mua. Giá VND được tự quy đổi theo tỷ giá trong admin.": [
+    "Enter a separate USD price for each purchase type. VND prices are converted automatically using the admin’s exchange rate.",
+    "Saisissez un prix en USD pour chaque type d’achat. Les prix en VND sont convertis automatiquement selon le taux défini par l’administrateur."
+  ],
+  "Vui lòng nhập đủ giá cho cả ba loại mua.": [
+    "Enter prices for all three purchase types.",
+    "Saisissez les prix des trois types d’achat."
+  ],
+  "Giá bán admin chốt": [
+    "Final prices set by admin",
+    "Prix définitifs fixés par l’administrateur"
+  ],
+  "Admin có thể chỉnh cả ba giá trước khi duyệt. Cửa hàng dùng giá admin chốt khi trạng thái là Đã chấp nhận.": [
+    "The admin can edit all three prices before approval. The store uses these final prices when the submission is Accepted.",
+    "L’administrateur peut modifier les trois prix avant validation. La boutique utilise ces prix définitifs lorsque la proposition est Acceptée."
+  ],
+  "Tôi là tác giả hoặc có quyền gửi ảnh này để quản trị viên xem xét. Việc gửi ảnh không tự chuyển quyền tác giả. Tôi chịu trách nhiệm pháp lý về bản quyền tác phẩm.": [
+    "I am the creator or authorized to submit this photo for review. Submission does not transfer copyright. I take legal responsibility for the copyright of this work.",
+    "Je suis l’auteur ou autorisé à soumettre cette photo. L’envoi ne transfère pas les droits d’auteur. J’assume la responsabilité juridique concernant les droits d’auteur de cette œuvre."
   ]
 }
