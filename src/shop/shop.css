@@ -269,3 +269,9 @@
 .shop-modal-close { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; min-width:44px; padding:10px 12px; flex-shrink:0; background:#e8c380; border:1px solid #ffe3ad; border-radius:7px; color:#19130a; font-size:12px; font-weight:700; box-shadow:0 0 0 3px #e8c38014,0 3px 12px #0005; }
 .shop-modal-close:hover { background:#ffe0a4; }
 .shop-modal-close:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+.submission-revenue-policy { padding:18px 20px; border:1px solid #dfb87170; border-radius:5px; background:#dfb87109; }
+.submission-revenue-policy h3 { font-size:20px; margin:0 0 12px; }
+.submission-revenue-policy > p { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:0 0 12px; font-size:13px; }
+.submission-revenue-policy strong { color:#edc98d; }
+.submission-revenue-policy ul { padding-left:20px; margin:0; font-size:12px; color:#c0c8d3; line-height:1.9; }
+.submission-revenue-policy b { color:#edc98d; }

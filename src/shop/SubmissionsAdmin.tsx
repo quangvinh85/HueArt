@@ -26,6 +26,7 @@ interface Submission {
   adminNote: string;
   version: number;
   createdAt: string;
+  revenueTerms:{totalFeePercent:number;associationFundPercent:number;administrationPercent:number;photographerPercent:number;version:string;acceptedAt:string}|null;
 }
 export default function SubmissionsAdmin() {
   const {
@@ -82,7 +83,7 @@ export default function SubmissionsAdmin() {
               }}>{tr("Xem hồ sơ")}</button></td></tr>)}</tbody></table>{!items.length && <div className="shop-empty"><p>{busy ? tr("Đang tải…") : tr("Chưa có tác phẩm gửi đến.")}</p></div>}</div>
     {selected && <Modal title={selected.reference} wide onClose={() => {
       if (!busy) setSelected(null);
-    }}><div className="shop-checkout"><div className="submission-preview"><ProtectedImage src={selected.imageUrl} alt={selected.title} view="detail" loading="eager" /></div><h3>{selected.title}</h3>{items.some(item=>item.id===selected.id&&item.status==='accepted')&&<a className="shop-secondary" href={`/#artwork-submission-${selected.id}`} target="_blank" rel="noopener noreferrer">{tr('Xem trên cửa hàng')}</a>}{selected.titleEn && <p>{selected.titleEn}</p>}{selected.titleFr && <p>{selected.titleFr}</p>}<p>{selected.authorName} · {selected.authorPhone} · {selected.authorEmail}</p><p>{selected.location}</p><p>{selected.story}</p><label>{tr("Trạng thái")}<select value={selected.status} disabled={busy} onChange={event => setSelected({
+    }}><div className="shop-checkout"><div className="submission-preview"><ProtectedImage src={selected.imageUrl} alt={selected.title} view="detail" loading="eager" /></div><h3>{selected.title}</h3><div className="admin-note">{selected.revenueTerms?<><strong>{tr('Đã đồng ý phí cộng tác {0}%',selected.revenueTerms.totalFeePercent)}</strong><p>{tr('Quỹ Hội Nhiếp ảnh: {0}% · Quản trị: {1}% · Tác giả: {2}%',selected.revenueTerms.associationFundPercent,selected.revenueTerms.administrationPercent,selected.revenueTerms.photographerPercent)}</p><time>{dateTime(selected.revenueTerms.acceptedAt,language)}</time></>:tr('Hồ sơ này chưa ghi nhận xác nhận mức phí 20%.')}</div>{items.some(item=>item.id===selected.id&&item.status==='accepted')&&<a className="shop-secondary" href={`/#artwork-submission-${selected.id}`} target="_blank" rel="noopener noreferrer">{tr('Xem trên cửa hàng')}</a>}{selected.titleEn && <p>{selected.titleEn}</p>}{selected.titleFr && <p>{selected.titleFr}</p>}<p>{selected.authorName} · {selected.authorPhone} · {selected.authorEmail}</p><p>{selected.location}</p><p>{selected.story}</p><label>{tr("Trạng thái")}<select value={selected.status} disabled={busy} onChange={event => setSelected({
             ...selected,
             status: event.target.value as Submission['status']
           })}>{Object.entries(labels).map(([id, label]) => <option key={id} value={id}>{tr(label)}</option>)}</select></label><label>{tr("Ghi chú nội bộ")}<textarea rows={3} maxLength={2000} value={selected.adminNote} disabled={busy} onChange={event => setSelected({

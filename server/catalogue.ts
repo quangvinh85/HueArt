@@ -37,9 +37,10 @@ export async function getCatalogue(env: { DB?: any }): Promise<Artwork[]> {
 
 export async function getCatalogueEntries(env:{DB?:any}) {
   const [submissions,overrides] = env.DB ? await Promise.all([
-    env.DB.prepare("SELECT id, title, title_en, title_fr, location, story, collection, author_name, created_at FROM artwork_submissions WHERE status = 'accepted' ORDER BY updated_at DESC, id DESC").all(),
+    env.DB.prepare("SELECT id, title, title_en, title_fr, location, story, collection, author_name, created_at, submission_origin FROM artwork_submissions WHERE status = 'accepted' ORDER BY updated_at DESC, id DESC").all(),
     env.DB.prepare('SELECT * FROM catalogue_overrides').all(),
   ]) : [{results:[]},{results:[]}];
+  const adminIds=new Set(submissions.results.filter((row:any)=>row.submission_origin==='admin').map((row:any)=>'submission-'+row.id));
   const saved=new Map<string,any>(overrides.results.map((row:any)=>[row.artwork_id,row]));
   return [...submissions.results.map(publishedArtwork),...ARTWORKS].map((artwork:Artwork)=>{
     const row=saved.get(artwork.id);
@@ -48,6 +49,6 @@ export async function getCatalogueEntries(env:{DB?:any}) {
     if(metadata.titles){merged.title=metadata.titles.vi;merged.vietnameseTitle=metadata.titles.vi;}
     if(metadata.locations)merged.location=metadata.locations.vi;
     if(metadata.stories)merged.story=metadata.stories.vi;
-    return {artwork:merged as Artwork,metadata,source:artwork.id.startsWith('submission-')?'submission':'original',hidden:Boolean(row?.hidden),deleted:Boolean(row?.deleted_at),deletedAt:row?.deleted_at||null,version:row?.version||0};
+    return {artwork:merged as Artwork,metadata,source:adminIds.has(artwork.id)?'admin':artwork.id.startsWith('submission-')?'submission':'original',hidden:Boolean(row?.hidden),deleted:Boolean(row?.deleted_at),deletedAt:row?.deleted_at||null,version:row?.version||0};
   });
 }

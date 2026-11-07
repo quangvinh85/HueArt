@@ -1738,5 +1738,57 @@
   "Vui lòng nhập tên tác phẩm và tác giả hợp lệ.": [
     "Please enter a valid photo title and photographer name.",
     "Veuillez saisir un titre et un nom d’auteur valides."
+  ],
+  "Gửi ảnh của bạn để được xét duyệt và cộng tác bán ảnh cùng HueArt. Xem rõ tỷ lệ phân chia doanh thu bên dưới trước khi gửi.": [
+    "Submit your photographs for review and sell them in partnership with HueArt. Review the revenue split below before submitting.",
+    "Proposez vos photographies pour examen et vente avec HueArt. Consultez le partage des revenus ci-dessous avant l’envoi."
+  ],
+  "Phân chia doanh thu bán ảnh": [
+    "Photo sales revenue sharing",
+    "Partage des revenus des ventes"
+  ],
+  "Tác giả nhận {0}%": [
+    "Photographer receives {0}%",
+    "L’auteur reçoit {0} %"
+  ],
+  "Phí cộng tác tổng cộng {0}%": [
+    "Total partnership fee: {0}%",
+    "Frais de partenariat : {0} % au total"
+  ],
+  "dành cho quỹ Hội Nhiếp ảnh": [
+    "for the Photography Association fund",
+    "pour le fonds de l’Association photographique"
+  ],
+  "dành cho chi phí quản trị website": [
+    "for website administration costs",
+    "pour les frais d’administration du site"
+  ],
+  "Tôi đã đọc và đồng ý phí cộng tác 20% doanh thu bán ảnh: 10% cho quỹ Hội Nhiếp ảnh và 10% cho chi phí quản trị; tác giả nhận 80% còn lại.": [
+    "I have read and agree to the 20% photo sales fee: 10% for the Photography Association fund and 10% for administration; the photographer receives the remaining 80%.",
+    "J’ai lu et j’accepte les frais de 20 % des ventes : 10 % pour le fonds de l’Association photographique et 10 % pour l’administration ; l’auteur reçoit les 80 % restants."
+  ],
+  "Vui lòng đọc và đồng ý mức phí cộng tác 20% trước khi gửi tác phẩm.": [
+    "Please read and agree to the 20% partnership fee before submitting.",
+    "Veuillez lire et accepter les frais de partenariat de 20 % avant l’envoi."
+  ],
+  "Đã đồng ý phí cộng tác {0}%": [
+    "Agreed to the {0}% partnership fee",
+    "Frais de partenariat de {0} % acceptés"
+  ],
+  "Quỹ Hội Nhiếp ảnh: {0}% · Quản trị: {1}% · Tác giả: {2}%": [
+    "Association fund: {0}% · Administration: {1}% · Photographer: {2}%",
+    "Fonds de l’Association : {0} % · Administration : {1} % · Auteur : {2} %"
+  ],
+  "Hồ sơ này chưa ghi nhận xác nhận mức phí 20%.": [
+    "This submission has no recorded agreement to the 20% fee.",
+    "Cette proposition ne comporte pas d’accord enregistré sur les frais de 20 %."
+  ],
+  "Ảnh admin tải lên": [
+    "Admin upload",
+    "Photo de l’administrateur"
+  ],
+  "Điều kiện cộng tác đã thay đổi. Vui lòng tải lại biểu mẫu để đọc và xác nhận.": [
+    "The partnership terms have changed. Reload the form to read and confirm them.",
+    "Les conditions du partenariat ont changé. Rechargez le formulaire pour les lire et les accepter."
   ]
 }

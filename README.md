@@ -89,3 +89,9 @@ Trong `/admin` → **Thư viện ảnh** → **Thêm ảnh**, chọn JPG/PNG/Web
 Upload yêu cầu phiên admin và Origin hợp lệ. File gốc được lưu trong R2; trạng thái ẩn được thiết lập trước khi đưa ảnh vào danh mục để tránh xuất bản thoáng qua. Yêu cầu gửi lại cùng nội dung và khóa không tạo ảnh trùng. Gửi tác phẩm từ cửa hàng vẫn ở trạng thái chờ duyệt, không thể tự xuất bản bằng cách thêm cờ admin trong dữ liệu.
 
 Vercel Production và Preview cần biến build **`NODEJS_HELPERS=0`** để Node adapter đọc được nguyên vẹn multipart/file bytes. Adapter tự xử lý JSON và giới hạn dung lượng. Giới hạn upload từ Vercel vẫn là 3 MB mỗi ảnh; trên Sites là 8 MB. Không commit credential; `NODEJS_HELPERS` chỉ là cấu hình không bí mật.
+
+## Phí cộng tác viên gửi ảnh
+
+Popup **Gửi tác phẩm** công bố mức phí tổng **20% doanh thu bán ảnh**: **10% cho quỹ Hội Nhiếp ảnh**, **10% chi phí quản trị**; tác giả nhận **80%**. Người gửi phải tích xác nhận điều kiện này, riêng với xác nhận quyền sử dụng ảnh. API kiểm tra phiên bản điều kiện và lưu tỷ lệ cố định cùng thời điểm đồng ý do máy chủ tạo; không tin tỷ lệ do client gửi.
+
+Trong hồ sơ **Tác phẩm gửi đến**, admin xem được tỷ lệ và thời điểm xác nhận. Hồ sơ cũ không bị tự đánh dấu đã đồng ý; ảnh admin tải trực tiếp có nguồn `admin` và không đi qua chương trình phí cộng tác viên. Phần này công bố/lưu thỏa thuận, không tự chuyển tiền hay chi trả doanh thu.

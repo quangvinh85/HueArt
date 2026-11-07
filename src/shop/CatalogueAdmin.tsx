@@ -12,7 +12,7 @@ type Entry={artwork:Artwork;source:string;hidden:boolean;deleted:boolean;version
 type Result={items:Entry[];total:number;page:number;pageSize:number;stats:{total:number;visible:number;hidden:number;trash:number}};
 const collections=[['imperial-echoes','Di sản Huế'],['perfume-river','Sông nước'],['living-traditions','Đời sống'],['poetic-monochrome','Ảnh đen trắng']];
 const notifyCatalogue=()=>{try{localStorage.setItem('hueart_catalog_updated',String(Date.now()));}catch{}};
-function previewSource(item:Entry){return item.source==='submission'&&(item.hidden||item.deleted)?`/api/admin/submissions/${item.artwork.id.slice(11)}/image`:item.artwork.imageUrl;}
+function previewSource(item:Entry){return item.source!=='original'&&(item.hidden||item.deleted)?`/api/admin/submissions/${item.artwork.id.slice(11)}/image`:item.artwork.imageUrl;}
 
 export default function CatalogueAdmin(){
  const {language,tr}=useShopLanguage();
@@ -43,8 +43,8 @@ export default function CatalogueAdmin(){
   {notice&&<p className="admin-success" role="status">{notice}</p>}{error&&!selected&&<p className="shop-order-error" role="alert">{tr(error)}</p>}
   <div className="admin-photo-grid" aria-busy={loading}>{result?.items.map(item=><article className="admin-photo-card" key={item.artwork.id}>
    <button type="button" className="admin-photo-open" disabled={saving} onClick={()=>{setError('');setEditLanguage('vi');setConfirmTrash(false);setSelected(structuredClone(item));}}>
-    {item.source==='submission'&&(item.hidden||item.deleted)?<span className="admin-photo-placeholder"><EyeOff size={24}/></span>:<ProtectedImage src={item.artwork.imageUrl} alt={item.artwork.titles[language]} view="thumb"/>}
-    <span><strong>{item.artwork.titles[language]}</strong><small>{item.artwork.photographer||tr('Đặng Huy Trứ')}</small><small>{tr(item.source==='original'?'Ảnh có sẵn':'Tác phẩm đã duyệt')}</small></span>
+    {item.source!=='original'&&(item.hidden||item.deleted)?<span className="admin-photo-placeholder"><EyeOff size={24}/></span>:<ProtectedImage src={item.artwork.imageUrl} alt={item.artwork.titles[language]} view="thumb"/>}
+    <span><strong>{item.artwork.titles[language]}</strong><small>{item.artwork.photographer||tr('Đặng Huy Trứ')}</small><small>{tr(item.source==='original'?'Ảnh có sẵn':item.source==='admin'?'Ảnh admin tải lên':'Tác phẩm đã duyệt')}</small></span>
    </button><div className="admin-photo-actions"><span className="admin-badge">{tr(item.deleted?'Thùng rác':item.hidden?'Đã ẩn':'Đang hiển thị')}</span>{item.deleted?<button type="button" className="shop-secondary" disabled={saving} onClick={()=>void mutate(item,'restore')}><Undo2 size={14}/>{tr('Khôi phục')}</button>:<button type="button" className="shop-secondary" disabled={saving} onClick={()=>{setError('');setEditLanguage('vi');setConfirmTrash(false);setSelected(structuredClone(item));}}>{tr('Chỉnh sửa')}</button>}</div>
   </article>)}</div>
   {!result?.items.length&&<div className="shop-empty"><ImageIcon size={30}/><p>{loading?tr('Đang tải…'):tr('Không có ảnh phù hợp.')}</p></div>}

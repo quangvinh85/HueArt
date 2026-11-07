@@ -147,7 +147,7 @@ test('admin keeps its URL when the asset service canonicalizes /index.html', asy
 test('submission stores a private image once and permits admin review only', async () => {
   const f=fixture();
   const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvhoAAAAASUVORK5CYII=','base64');
-  const metadata={submissionKey:crypto.randomUUID(),title:'Huế trong tôi',titleEn:'My Hue',titleFr:'Mon Hué',authorName:'Tác giả An',authorPhone:'0901234567',authorEmail:'',collection:'imperial-echoes',rightsConfirmed:true};
+  const metadata={submissionKey:crypto.randomUUID(),title:'Huế trong tôi',titleEn:'My Hue',titleFr:'Mon Hué',authorName:'Tác giả An',authorPhone:'0901234567',authorEmail:'',collection:'imperial-echoes',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1'};
   const upload=async(bytes=png)=>{
     const form=new FormData();form.append('image',new File([bytes],'photo.png',{type:'image/png'}));form.append('metadata',JSON.stringify(metadata));
     return worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:form}),f.env);
@@ -168,7 +168,7 @@ test('submission stores a private image once and permits admin review only', asy
 
 test('submission rejects disguised SVG, missing rights confirmation and cross-origin writes', async()=>{
   const f=fixture();
-  const form=new FormData();form.append('image',new File(['<svg onload="alert(1)"></svg>'],'photo.png',{type:'image/png'}));form.append('metadata',JSON.stringify({submissionKey:crypto.randomUUID(),title:'Huế',authorName:'Tác giả',authorPhone:'0901234567',collection:'imperial-echoes',rightsConfirmed:true}));
+  const form=new FormData();form.append('image',new File(['<svg onload="alert(1)"></svg>'],'photo.png',{type:'image/png'}));form.append('metadata',JSON.stringify({submissionKey:crypto.randomUUID(),title:'Huế',authorName:'Tác giả',authorPhone:'0901234567',collection:'imperial-echoes',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1'}));
   assert.equal((await worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:form}),f.env)).status,400);
   assert.equal((await worker.fetch(new Request(origin+'/api/submissions',{method:'POST',body:form}),f.env)).status,403);
   assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS count FROM artwork_submissions').get().count,0);
@@ -268,7 +268,7 @@ test('accepting a submitted photo publishes it, enables all purchase options and
   const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvhoAAAAASUVORK5CYII=','base64');
   const form=new FormData();
   form.append('image',new File([png],'new-art.png',{type:'image/png'}));
-  form.append('metadata',JSON.stringify({submissionKey:crypto.randomUUID(),title:'Tác phẩm đã duyệt',titleEn:'Approved artwork',titleFr:'Œuvre acceptée',authorName:'Nguyễn An',authorPhone:'0901234567',authorEmail:'private@example.com',location:'Huế',story:'Câu chuyện tác phẩm',collection:'imperial-echoes',rightsConfirmed:true}));
+  form.append('metadata',JSON.stringify({submissionKey:crypto.randomUUID(),title:'Tác phẩm đã duyệt',titleEn:'Approved artwork',titleFr:'Œuvre acceptée',authorName:'Nguyễn An',authorPhone:'0901234567',authorEmail:'private@example.com',location:'Huế',story:'Câu chuyện tác phẩm',collection:'imperial-echoes',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1'}));
   const submitted=await worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:form}),f.env);assert.equal(submitted.status,201);
   const id=f.sqlite.prepare('SELECT id FROM artwork_submissions').get().id;
   const artworkId='submission-'+id;
@@ -405,7 +405,7 @@ test('copyright payment waits for admin confirmation of the written agreement',a
  const placed=(await f.request('/api/orders',{method:'POST',body:f.payload({paymentMethod:'vietqr',rightsAccepted:true,items:[{artworkId:artId,optionId:'copyright',quantity:1}]})})).data;
  assert.equal(placed.awaitingRights,true);assert.equal(placed.canPay,false);assert.equal(placed.qrPayload,null);
  let order=(await f.request('/api/admin/orders',{headers:owner})).data.orders[0];
- assert.equal((await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:{version:order.version,status:'confirmed',paymentStatus:'unpaid',shippingCents:0,receivedAmountVnd:0,rightsConfirmed:true}})).status,200);
+ assert.equal((await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:{version:order.version,status:'confirmed',paymentStatus:'unpaid',shippingCents:0,receivedAmountVnd:0,rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1'}})).status,200);
  const ready=(await f.request('/api/order-payment/'+placed.orderNumber,{headers:{'X-HueArt-Checkout-Key':placed.paymentAccessKey}})).data;
  assert.equal(ready.canPay,true);assert.equal(ready.expectedAmountVnd,260000);
 });
@@ -435,7 +435,7 @@ function uploadForm(metadata,bytes=adminUploadPng){const form=new FormData();for
 async function uploadAdmin(f,metadata,headers=owner,originHeader=origin,bytes=adminUploadPng){return worker.fetch(new Request(origin+'/api/admin/artworks',{method:'POST',headers:{Origin:originHeader,...headers},body:uploadForm(metadata,bytes)}),f.env);}
 
 test('admin can add and immediately sell a photo without submitting a contact phone; retries create only one record',async()=>{
- const f=fixture(),metadata={submissionKey:crypto.randomUUID(),title:'Ảnh admin mới',titleEn:'Admin photo',titleFr:'Photo admin',authorName:'Đặng Huy Trứ',collection:'imperial-echoes',rightsConfirmed:true,publish:true};
+ const f=fixture(),metadata={submissionKey:crypto.randomUUID(),title:'Ảnh admin mới',titleEn:'Admin photo',titleFr:'Photo admin',authorName:'Đặng Huy Trứ',collection:'imperial-echoes',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1',publish:true};
  assert.equal((await uploadAdmin(f,metadata,{})).status,401);
  assert.equal((await uploadAdmin(f,metadata,ownerIdentity)).status,403);
  assert.equal((await uploadAdmin(f,metadata,owner,'https://other.example')).status,403);
@@ -449,7 +449,7 @@ test('admin can add and immediately sell a photo without submitting a contact ph
 });
 
 test('admin can save a photo hidden from both the public catalogue and image endpoint',async()=>{
- const f=fixture(),metadata={submissionKey:crypto.randomUUID(),title:'Ảnh admin lưu ẩn',authorName:'Đặng Huy Trứ',collection:'perfume-river',rightsConfirmed:true,publish:false};
+ const f=fixture(),metadata={submissionKey:crypto.randomUUID(),title:'Ảnh admin lưu ẩn',authorName:'Đặng Huy Trứ',collection:'perfume-river',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1',publish:false};
  const saved=await uploadAdmin(f,metadata);assert.equal(saved.status,201);const receipt=await saved.json();
  assert.equal((await f.request('/api/catalog')).data.artworks.some(art=>art.id===receipt.artworkId),false);
  assert.equal((await f.request('/api/catalog/'+receipt.artworkId.slice(11)+'/image')).status,404);
@@ -460,7 +460,7 @@ test('admin can save a photo hidden from both the public catalogue and image end
 });
 
 test('direct library upload rejects invalid files and public contributions cannot forge admin publication',async()=>{
- const f=fixture(),metadata={submissionKey:crypto.randomUUID(),title:'Ảnh thử',authorName:'Đặng Huy Trứ',collection:'imperial-echoes',rightsConfirmed:true,publish:true};
+ const f=fixture(),metadata={submissionKey:crypto.randomUUID(),title:'Ảnh thử',authorName:'Đặng Huy Trứ',collection:'imperial-echoes',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1',publish:true};
  assert.equal((await uploadAdmin(f,metadata,owner,origin,Buffer.from('<svg>not a photo</svg>'))).status,400);
  assert.equal((await uploadAdmin(f,{...metadata,publish:'yes'})).status,400);
  assert.equal((await uploadAdmin(f,{...metadata,rightsConfirmed:false})).status,400);
@@ -471,7 +471,19 @@ test('direct library upload rejects invalid files and public contributions canno
 test('a committed upload keeps its original image if the database write response is lost',async()=>{
  const f=fixture(),prepare=f.env.DB.prepare.bind(f.env.DB);
  f.env.DB.prepare=sql=>{const statement=prepare(sql);if(sql.startsWith('INSERT INTO artwork_submissions')){const run=statement.run.bind(statement);statement.run=async()=>{await run();throw new Error('Simulated lost database response');};}return statement;};
- const response=await uploadAdmin(f,{submissionKey:crypto.randomUUID(),title:'Ảnh giữ nguyên',authorName:'Test owner',collection:'imperial-echoes',rightsConfirmed:true,publish:true});assert.equal(response.status,200);const saved=await response.json();
+ const response=await uploadAdmin(f,{submissionKey:crypto.randomUUID(),title:'Ảnh giữ nguyên',authorName:'Test owner',collection:'imperial-echoes',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1',publish:true});assert.equal(response.status,200);const saved=await response.json();
  const image=await worker.fetch(new Request(origin+'/api/catalog/'+saved.artworkId.slice(11)+'/image'),f.env);assert.equal(image.status,200);assert.deepEqual(Buffer.from(await image.arrayBuffer()),adminUploadPng);
  assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS count FROM artwork_submissions').get().count,1);
+});
+
+test('contributors must accept the current 20% revenue terms and cannot forge the recorded percentages',async()=>{
+ const f=fixture(),base={submissionKey:crypto.randomUUID(),title:'Ảnh cộng tác',authorName:'Test photographer',authorPhone:'0901234567',collection:'imperial-echoes',rightsConfirmed:true};
+ const submit=data=>worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:uploadForm(data)}),f.env);
+ assert.equal((await submit(base)).status,400);
+ assert.equal((await submit({...base,revenueTermsAccepted:true,revenueTermsVersion:'old'})).status,409);
+ const before=Date.now();const saved=await submit({...base,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v1',revenueTerms:{totalFeePercent:0,photographerPercent:100,acceptedAt:'1900-01-01'}});assert.equal(saved.status,201);
+ const row=f.sqlite.prepare('SELECT * FROM artwork_submissions').get(),terms=JSON.parse(row.revenue_terms_json);assert.equal(row.submission_origin,'contributor');assert.equal(terms.totalFeePercent,20);assert.equal(terms.associationFundPercent,10);assert.equal(terms.administrationPercent,10);assert.equal(terms.photographerPercent,80);assert.ok(new Date(terms.acceptedAt).getTime()>=before);
+ const reviewed=(await f.request('/api/admin/submissions',{headers:owner})).data.submissions[0];assert.equal(reviewed.revenueTerms.totalFeePercent,20);
+ const direct=await uploadAdmin(f,{submissionKey:crypto.randomUUID(),title:'Ảnh riêng admin',authorName:'Owner',collection:'imperial-echoes',rightsConfirmed:true,publish:true});assert.equal(direct.status,201);
+ const own=f.sqlite.prepare("SELECT * FROM artwork_submissions WHERE submission_origin = 'admin'").get();assert.equal(own.revenue_terms_json,'{}');assert.equal((await f.request('/api/admin/submissions',{headers:owner})).data.submissions.length,1);
 });

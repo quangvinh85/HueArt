@@ -1,0 +1,2 @@
+ALTER TABLE `artwork_submissions` ADD `submission_origin` text DEFAULT 'contributor' NOT NULL;--> statement-breakpoint
+ALTER TABLE `artwork_submissions` ADD `revenue_terms_json` text DEFAULT '{}' NOT NULL;

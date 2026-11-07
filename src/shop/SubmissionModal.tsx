@@ -1,3 +1,4 @@
+import {REVENUE_POLICY} from './revenueTerms';
 import { MAX_UPLOAD_MB } from './platform';
 import { useShopLanguage } from './language';
 import { useEffect, useRef, useState } from 'react';
@@ -26,6 +27,7 @@ export default function SubmissionModal({
     story: '',
     collection: 'imperial-echoes'
   });
+  const [revenueTermsAccepted,setRevenueTermsAccepted]=useState(false);
   const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -34,7 +36,7 @@ export default function SubmissionModal({
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
     setSubmissionKey(crypto.randomUUID());
-  }, [file, fields, rightsConfirmed]);
+  }, [file, fields, rightsConfirmed,revenueTermsAccepted]);
   useEffect(() => {
     if (!file) {
       setPreview('');
@@ -63,6 +65,7 @@ export default function SubmissionModal({
       setError(tr("Vui lòng chọn ảnh tác phẩm."));
       return;
     }
+    if(!revenueTermsAccepted){setError(tr('Vui lòng đọc và đồng ý mức phí cộng tác 20% trước khi gửi tác phẩm.'));return;}
     setBusy(true);
     setError('');
     try {
@@ -71,7 +74,7 @@ export default function SubmissionModal({
       data.append('metadata', JSON.stringify({
         ...fields,
         submissionKey,
-        rightsConfirmed
+        rightsConfirmed,revenueTermsAccepted,revenueTermsVersion:REVENUE_POLICY.version
       }));
       const response = await fetch('/api/submissions', {
         method: 'POST',
@@ -95,7 +98,8 @@ export default function SubmissionModal({
       event.preventDefault();
       void submit();
     }}>
-      <div className="submission-collab-intro"><span className="shop-eyebrow">{tr("Dành cho nhiếp ảnh gia")}</span><h3>{tr("Cộng tác bán ảnh cùng HueArt")}</h3><p>{tr("Gửi ảnh của bạn để được xét duyệt và trao đổi cơ hội hợp tác bán ảnh. Điều kiện hợp tác và phân chia doanh thu sẽ được hai bên thống nhất trước khi đăng bán.")}</p></div>
+      <div className="submission-collab-intro"><span className="shop-eyebrow">{tr("Dành cho nhiếp ảnh gia")}</span><h3>{tr("Cộng tác bán ảnh cùng HueArt")}</h3><p>{tr("Gửi ảnh của bạn để được xét duyệt và cộng tác bán ảnh cùng HueArt. Xem rõ tỷ lệ phân chia doanh thu bên dưới trước khi gửi.")}</p></div>
+      <section className="submission-revenue-policy" aria-labelledby="submission-revenue-title"><h3 id="submission-revenue-title">{tr('Phân chia doanh thu bán ảnh')}</h3><p><strong>{tr('Tác giả nhận {0}%',REVENUE_POLICY.photographerPercent)}</strong><span>{tr('Phí cộng tác tổng cộng {0}%',REVENUE_POLICY.totalFeePercent)}</span></p><ul><li><b>{REVENUE_POLICY.associationFundPercent}%</b> {tr('dành cho quỹ Hội Nhiếp ảnh')}</li><li><b>{REVENUE_POLICY.administrationPercent}%</b> {tr('dành cho chi phí quản trị website')}</li></ul></section>
       <label className="submission-upload" onDragOver={event => event.preventDefault()} onDrop={event => {
         event.preventDefault();
         if (!busy) selectFile(event.dataTransfer.files[0]);
@@ -103,6 +107,7 @@ export default function SubmissionModal({
       {preview && <div className="submission-preview"><ProtectedImage src={preview} alt={fields.title || tr("Ảnh tác phẩm")} /><small>{file?.name}</small></div>}
       <div className="submission-fields"><label>{tr("Tên tác phẩm (Tiếng Việt) *")}<input required minLength={2} maxLength={160} value={fields.title} disabled={busy} onChange={event => change('title', event.target.value)} /></label><label>{tr("Tên tiếng Anh (không bắt buộc)")}<input maxLength={160} value={fields.titleEn} disabled={busy} onChange={event => change('titleEn', event.target.value)} /></label><label>{tr("Tên tiếng Pháp (không bắt buộc)")}<input maxLength={160} value={fields.titleFr} disabled={busy} onChange={event => change('titleFr', event.target.value)} /></label><label>{tr("Thuộc bộ sưu tập")}<select value={fields.collection} disabled={busy} onChange={event => change('collection', event.target.value)}><option value="imperial-echoes">{tr("Di sản Huế")}</option><option value="perfume-river">{tr("Sông nước")}</option><option value="living-traditions">{tr("Đời sống")}</option><option value="poetic-monochrome">{tr("Ảnh đen trắng")}</option></select></label><label>{tr("Họ tên tác giả *")}<input required autoComplete="name" minLength={2} maxLength={100} value={fields.authorName} disabled={busy} onChange={event => change('authorName', event.target.value)} /></label><label>{tr("Số điện thoại liên hệ *")}<input required autoComplete="tel" type="tel" minLength={7} maxLength={30} value={fields.authorPhone} disabled={busy} onChange={event => change('authorPhone', event.target.value)} /></label><label>{tr("Email (không bắt buộc)")}<input autoComplete="email" type="email" maxLength={150} value={fields.authorEmail} disabled={busy} onChange={event => change('authorEmail', event.target.value)} /></label><label>{tr("Địa điểm chụp")}<input maxLength={200} value={fields.location} disabled={busy} onChange={event => change('location', event.target.value)} /></label></div>
       <label>{tr("Câu chuyện về tác phẩm")}<textarea maxLength={2000} rows={3} value={fields.story} disabled={busy} onChange={event => change('story', event.target.value)} /></label><label className="shop-consent"><input type="checkbox" required checked={rightsConfirmed} disabled={busy} onChange={event => setRightsConfirmed(event.target.checked)} /><span>{tr("Tôi là tác giả hoặc có quyền gửi ảnh này để quản trị viên xem xét. Việc gửi ảnh không tự chuyển quyền tác giả.")}</span></label>
+      <label className="shop-consent"><input type="checkbox" required checked={revenueTermsAccepted} disabled={busy} onChange={event=>setRevenueTermsAccepted(event.target.checked)}/><span>{tr('Tôi đã đọc và đồng ý phí cộng tác 20% doanh thu bán ảnh: 10% cho quỹ Hội Nhiếp ảnh và 10% cho chi phí quản trị; tác giả nhận 80% còn lại.')}</span></label>
       {error && <p className="shop-order-error" role="alert">{tr(error)}</p>}<button className="shop-primary" type="button" disabled={busy} onClick={() => void submit()}><Camera size={17} />{busy ? tr("Đang gửi tác phẩm…") : tr("Gửi tác phẩm")}</button>
     </form>}
   </Modal>;
