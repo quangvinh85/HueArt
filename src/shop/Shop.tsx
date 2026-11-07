@@ -200,7 +200,7 @@ export default function Shop() {
           })}</div>
       </section>
       <section id="gallery" className="shop-container shop-gallery">
-        <div className="shop-section-title"><div><span className="shop-eyebrow">{tr("Bộ sưu tập")}</span><h2>{tr("Chọn một góc Huế của bạn")}</h2></div><label className="shop-search"><Search size={17} /><input aria-label={tr("Tìm ảnh theo tên hoặc địa điểm")} placeholder={tr("Tìm ảnh, địa điểm…")} value={search} onChange={event => setSearch(event.target.value)} /></label></div>
+        <div className="shop-section-title"><div><span className="shop-eyebrow">{tr("Bộ sưu tập")}</span><h2>{tr("Chọn Ảnh mà bạn thích")}</h2></div><label className="shop-search"><Search size={17} /><input aria-label={tr("Tìm ảnh theo tên hoặc địa điểm")} placeholder={tr("Tìm ảnh, địa điểm…")} value={search} onChange={event => setSearch(event.target.value)} /></label></div>
         {catalogueError&&<div className="shop-order-error" role="alert">{tr(catalogueError)}<button className="shop-text-button" onClick={()=>void loadCatalogue()}>{tr('Thử lại')}</button></div>}
         <div className="shop-filters" aria-label={tr("Lọc bộ sưu tập")}>{categories.map(([id, label]) => <button key={id} aria-pressed={category === id} className={category === id ? 'active' : ''} onClick={() => setCategory(id)}>{tr(label)}</button>)}<span>{filtered.length}{tr(" ảnh")}</span></div>
         {catalogueLoading&&!artworks.length?<div className="shop-empty" role="status">{tr("Đang tải ảnh…")}</div>:filtered.length ? <div className="shop-art-grid">{filtered.slice(0,visibleCount).map(art => <article key={art.id} id={`artwork-${art.id}`} className="shop-art-card">

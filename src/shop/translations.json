@@ -111,10 +111,6 @@
     "Choose a photograph to get started.",
     "Choisissez une photographie pour commencer."
   ],
-  "Chọn một góc Huế của bạn": [
-    "Find your own view of Hue",
-    "Trouvez votre regard sur Hué"
-  ],
   "Chọn thêm ảnh": [
     "Choose more photos",
     "Choisir d’autres photos"
@@ -1962,5 +1958,9 @@
   "Tin đã gửi hoặc đang được xử lý. Vui lòng tải lại.": [
     "Message already sent or being processed. Refresh the page.",
     "Message déjà envoyé ou en cours de traitement. Actualisez la page."
+  ],
+  "Chọn Ảnh mà bạn thích": [
+    "Choose a photo you love",
+    "Choisissez une photo qui vous plaît"
   ]
 }
