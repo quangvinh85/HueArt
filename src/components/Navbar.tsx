@@ -51,10 +51,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="text-left group flex flex-col justify-center cursor-pointer focus:outline-none"
         >
           <span className="font-serif text-sm sm:text-base leading-snug text-[#8a919e]">
-            Nhiếp ảnh Nghệ thuật
+            NHIẾP ẢNH NGHỆ THUẬT
           </span>
           <span className="font-serif text-xl sm:text-2xl leading-snug font-light text-[#f5f0e6] group-hover:text-[#dfb871] transition-colors">
-            Đặng Huy Trứ
+            HUẾ
           </span>
         </button>
 

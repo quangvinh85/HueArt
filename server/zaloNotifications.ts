@@ -33,7 +33,7 @@ export async function notificationSettings(request:Request,env:Env,body:any){
  }
  if(path.endsWith('/test')&&request.method==='POST'){
   if(!current.secret||!current.chatId)throw new ApiError(400,'Lưu Bot Token và người nhận trước khi gửi thử.');
-  await botCall(await decrypt(env,current.secret),'sendMessage',{chat_id:current.chatId,text:'HueArt: Kết nối thông báo đơn hàng thành công. Tài khoản này sẽ nhận chi tiết đơn hàng khi bật thông báo trong admin.'});return {ok:true};
+  await botCall(await decrypt(env,current.secret),'sendMessage',{chat_id:current.chatId,text:'NHIẾP ẢNH NGHỆ THUẬT HUẾ: Kết nối thông báo đơn hàng thành công. Tài khoản này sẽ nhận chi tiết đơn hàng khi bật thông báo trong admin.'});return {ok:true};
  }
  if(request.method!=='PATCH'||path!=='/api/admin/zalo-notifications')throw new ApiError(405,'Phương thức không được hỗ trợ.');
  if(body?.version!==current.version)throw new ApiError(409,'Cài đặt đã thay đổi. Vui lòng tải lại.');

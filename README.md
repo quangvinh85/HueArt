@@ -1,4 +1,4 @@
-# HueArt — Nhiếp ảnh Nghệ thuật Đặng Huy Trứ
+# HueArt — NHIẾP ẢNH NGHỆ THUẬT HUẾ
 
 Cửa hàng ảnh Việt / Anh / Pháp, đặt hàng trực tiếp, gửi tác phẩm và trang quản lý `/admin`. Mỗi ảnh có ba lựa chọn: file + thỏa thuận chuyển quyền tác giả 10 USD, file lớn 5 USD, bản in 40 × 60 cm có khung 7 USD (vận chuyển báo riêng).
 

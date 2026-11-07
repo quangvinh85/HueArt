@@ -98,7 +98,7 @@ export default function SubmissionModal({
       event.preventDefault();
       void submit();
     }}>
-      <div className="submission-collab-intro"><span className="shop-eyebrow">{tr("Dành cho nhiếp ảnh gia")}</span><h3>{tr("Cộng tác bán ảnh cùng HueArt")}</h3><p>{tr("Gửi ảnh của bạn để được xét duyệt và cộng tác bán ảnh cùng HueArt. Xem rõ tỷ lệ phân chia doanh thu bên dưới trước khi gửi.")}</p></div>
+      <div className="submission-collab-intro"><span className="shop-eyebrow">{tr("Dành cho nhiếp ảnh gia")}</span><h3>{tr("Cộng tác bán ảnh cùng NHIẾP ẢNH NGHỆ THUẬT HUẾ")}</h3><p>{tr("Gửi ảnh của bạn để được xét duyệt và cộng tác bán ảnh cùng NHIẾP ẢNH NGHỆ THUẬT HUẾ. Xem rõ tỷ lệ phân chia doanh thu bên dưới trước khi gửi.")}</p></div>
       <section className="submission-revenue-policy" aria-labelledby="submission-revenue-title"><h3 id="submission-revenue-title">{tr('Phân chia doanh thu bán ảnh')}</h3><p><strong>{tr('Tác giả nhận {0}%',REVENUE_POLICY.photographerPercent)}</strong><span>{tr('Phí cộng tác tổng cộng {0}%',REVENUE_POLICY.totalFeePercent)}</span></p><ul><li><b>{REVENUE_POLICY.associationFundPercent}%</b> {tr('dành cho quỹ Hội Nhiếp ảnh')}</li><li><b>{REVENUE_POLICY.administrationPercent}%</b> {tr('dành cho chi phí quản trị website')}</li></ul></section>
       <label className="submission-upload" onDragOver={event => event.preventDefault()} onDrop={event => {
         event.preventDefault();

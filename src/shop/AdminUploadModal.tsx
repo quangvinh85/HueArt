@@ -7,7 +7,7 @@ import Modal from './Modal';
 export default function AdminUploadModal({onClose,onUploaded}:{onClose:()=>void;onUploaded:()=>void}){
  const {tr}=useShopLanguage();
  const [file,setFile]=useState<File|null>(null),[preview,setPreview]=useState(''),[publish,setPublish]=useState(true),[rights,setRights]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
- const [fields,setFields]=useState({title:'',titleEn:'',titleFr:'',authorName:'Đặng Huy Trứ',location:'',story:'',collection:'imperial-echoes'});
+ const [fields,setFields]=useState({title:'',titleEn:'',titleFr:'',authorName:'NHIẾP ẢNH NGHỆ THUẬT HUẾ',location:'',story:'',collection:'imperial-echoes'});
  const formRef=useRef<HTMLFormElement>(null);
  const attempt=useRef<{file:File|null;signature:string;key:string}>({file:null,signature:'',key:''});
  useEffect(()=>{if(!file){setPreview('');return;}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url);},[file]);

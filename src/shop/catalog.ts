@@ -73,7 +73,7 @@ export function orderText(items: ShopItem[], customer: Customer, artworks: Artwo
   const hasPrint = items.some(item => item.optionId === 'framed-print');
   const hasCopyright = items.some(item => item.optionId === 'copyright');
   return [
-    'YÊU CẦU ĐẶT ẢNH — Nhiếp ảnh Nghệ thuật Đặng Huy Trứ',
+    'YÊU CẦU ĐẶT ẢNH — NHIẾP ẢNH NGHỆ THUẬT HUẾ',
     '', `Họ tên: ${customer.name}`, `Email nhận file / liên hệ: ${customer.email}`,
     customer.phone ? `Điện thoại: ${customer.phone}` : '',
     hasPrint ? `Địa chỉ nhận bản in: ${customer.address}` : '', '',

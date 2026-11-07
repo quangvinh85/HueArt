@@ -54,6 +54,6 @@ export function ProtectedImage({ className = '', view='card', src='', loading='l
   const preview=failedSource===src?{src}:imagePreview(src,view);
   return <span className={`shop-protected-image ${className}`} data-protected-image onContextMenu={stopImageAction} onDragStart={stopImageAction}>
     <img {...props} {...preview} loading={loading} decoding="async" onError={()=>setFailedSource(src)} draggable={false} onContextMenu={stopImageAction} onDragStart={stopImageAction} />
-    <span className="shop-image-watermarks" aria-hidden="true">{Array.from({ length: 4 }, (_, index) => <span key={index}>© ĐẶNG HUY TRỨ</span>)}</span>
+    <span className="shop-image-watermarks" aria-hidden="true">{Array.from({ length: 4 }, (_, index) => <span key={index}>© NHIẾP ẢNH NGHỆ THUẬT HUẾ</span>)}</span>
   </span>;
 }

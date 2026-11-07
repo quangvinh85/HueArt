@@ -305,7 +305,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     hero: {
       tag: "Nhiếp Ảnh Mỹ Thuật Phiên Bản Giới Hạn",
       titlePart1: "Artistic photography",
-      titleHighlight: "ĐẶNG HUY TRỨ",
+      titleHighlight: "NHIẾP ẢNH NGHỆ THUẬT HUẾ",
       description: "Những tuyệt tác nhiếp ảnh chuẩn bảo tàng quốc tế, lưu giữ vẻ đẹp trầm mặc của dòng Hương giang, rêu phong hoàng thành và hồn cốt văn hóa nghìn năm của xứ Huế thơ mộng.",
       exploreBtn: "Khám Phá Bộ Sưu Tập",
       roomBtn: "Ướm Tranh Lên Tường",
@@ -523,7 +523,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     },
     footer: {
       brandText: "Các phiên bản nhiếp ảnh mỹ thuật tôn vinh vẻ đẹp trầm mặc và thi vị của Huế, Việt Nam. Chế tác thủ công dành cho các nhà sưu tập tinh hoa trên toàn thế giới.",
-      atelierLocation: "Nhiếp ảnh Nghệ thuật Đặng Huy Trứ",
+      atelierLocation: "NHIẾP ẢNH NGHỆ THUẬT HUẾ",
       portfoliosTitle: "Bộ Sưu Tập Tiêu Biểu",
       gazetteTitle: "Tập San Người Sưu Tầm",
       gazetteDesc: "Đăng ký nhận thư mời riêng cho các đợt phát hành phiên bản giới hạn mới và ghi chép mỹ thuật từ cố đô Huế.",
@@ -593,7 +593,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     hero: {
       tag: "Limited Edition Fine Art Photography",
       titlePart1: "Artistic photography",
-      titleHighlight: "ĐẶNG HUY TRỨ",
+      titleHighlight: "NHIẾP ẢNH NGHỆ THUẬT HUẾ",
       description: "Rare, museum-grade photographic prints capturing the melancholic mist of the Perfume River, weathered terracotta dynasties, and living artisanal heritage of Vietnam’s royal capital.",
       exploreBtn: "Explore The Collection",
       roomBtn: "Interactive Wall Preview",
@@ -811,7 +811,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     },
     footer: {
       brandText: "Fine-art photography editions inspired by the poetic beauty of Hue, Vietnam. Dedicated to capturing the soul of imperial monuments, ancient craft villages, and misty waters for discerning international collectors.",
-      atelierLocation: "Nhiếp ảnh Nghệ thuật Đặng Huy Trứ",
+      atelierLocation: "NHIẾP ẢNH NGHỆ THUẬT HUẾ",
       portfoliosTitle: "Curated Portfolios",
       gazetteTitle: "The Collector's Gazette",
       gazetteDesc: "Receive private invitations to new limited-edition releases, printmaking notes, and historical dispatches from Hue.",
@@ -881,7 +881,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     hero: {
       tag: "Photographie d'Art en Édition Limitée",
       titlePart1: "Artistic photography",
-      titleHighlight: "ĐẶNG HUY TRỨ",
+      titleHighlight: "NHIẾP ẢNH NGHỆ THUẬT HUẾ",
       description: "Tirages photographiques rares de qualité musée, capturant la brume mélancolique de la Rivière des Parfums, les dynasties de terre cuite patinée et l'héritage artisanal vivant de l'ancienne capitale royale du Viêt Nam.",
       exploreBtn: "Explorer la Collection",
       roomBtn: "Aperçu Mural Interactif",
@@ -1099,7 +1099,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     },
     footer: {
       brandText: "Éditions photographiques d'art dédiées à la beauté poétique de Hué, Viêt Nam. Conçues pour les collectionneurs et amateurs d'art du monde entier.",
-      atelierLocation: "Nhiếp ảnh Nghệ thuật Đặng Huy Trứ",
+      atelierLocation: "NHIẾP ẢNH NGHỆ THUẬT HUẾ",
       portfoliosTitle: "Portfolios Sélectionnés",
       gazetteTitle: "La Gazette du Collectionneur",
       gazetteDesc: "Recevez les invitations privées lors des sorties d'éditions limitées et les carnets de création de Hué.",
