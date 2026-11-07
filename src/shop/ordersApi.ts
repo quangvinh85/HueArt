@@ -1,18 +1,20 @@
+import type {PaymentMethod,PaymentReceipt} from './paymentTypes';
 import { translateText } from './language';
 import type { Language } from '../i18n/translations';
 import type { Customer, ShopItem } from './catalog';
 export const STATUS_LABELS = { new: 'Đơn mới', confirmed: 'Đã xác nhận', processing: 'Đang xử lý', completed: 'Hoàn tất', cancelled: 'Đã hủy' } as const;
-export const PAYMENT_LABELS = { unpaid: 'Chưa thanh toán', paid: 'Đã thanh toán' } as const;
+export const PAYMENT_LABELS = { unpaid: 'Chưa thanh toán', reported: 'Khách báo đã chuyển · Chờ xác minh', partial: 'Đã nhận một phần', paid: 'Đã thanh toán' } as const;
 export type OrderStatus = keyof typeof STATUS_LABELS;
 export type PaymentStatus = keyof typeof PAYMENT_LABELS;
-export interface Receipt { orderNumber: string; subtotalCents: number; shippingCents: number | null; status: OrderStatus; createdAt: string; }
+export type Receipt = PaymentReceipt;
 export interface OrderItem { artworkId: string; title: string; imageUrl: string; optionId: string; optionTitle: string; quantity: number; unitPriceCents: number; }
 export interface Order {
   id: string; orderNumber: string; customer: Customer; items: OrderItem[]; subtotalCents: number; shippingCents: number | null; totalCents: number | null;
+  paymentMethod:PaymentMethod;exchangeRate:number;receivedAmountVnd:number;reportedAmountVnd:number;paymentReference:string;paymentClaimedAt:string|null;rightsConfirmed:boolean;paymentLink:string;
   hasPrint: boolean; hasCopyright: boolean; rightsAccepted: boolean; status: OrderStatus; paymentStatus: PaymentStatus; adminNote: string; version: number;
   createdAt: string; updatedAt: string; history: { at: string; action: string; status: OrderStatus; paymentStatus: PaymentStatus; shippingCents?: number | null }[];
 }
-export interface OrdersResult { orders: Order[]; total: number; page: number; pageSize: number; stats: { total: number; newOrders: number; processing: number; paidCents: number }; }
+export interface OrdersResult { orders: Order[]; total: number; page: number; pageSize: number; stats: { total: number; newOrders: number; processing: number; paidCents: number;receivedVnd:number }; }
 export const money = (cents: number, language: Language = 'vi') => `${(cents / 100).toLocaleString(language === 'vi' ? 'vi-VN' : language === 'fr' ? 'fr-FR' : 'en-US', { maximumFractionDigits: 2 })} USD`;
 export const dateTime = (date: string, language: Language = 'vi') => new Intl.DateTimeFormat(language === 'vi' ? 'vi-VN' : language === 'fr' ? 'fr-FR' : 'en-GB', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(date));
 
@@ -28,8 +30,8 @@ export async function requestApi<T>(path: string, init: RequestInit = {}): Promi
 
 let pendingCheckout: { fingerprint: string; checkoutKey: string } | null = null;
 
-export async function submitOrder(items: ShopItem[], customer: Customer, rightsAccepted: boolean): Promise<Receipt> {
-  const payload = { items, customer, rightsAccepted };
+export async function submitOrder(items: ShopItem[], customer: Customer, rightsAccepted: boolean,paymentMethod:PaymentMethod='contact'): Promise<Receipt> {
+  const payload = { items, customer, rightsAccepted,paymentMethod };
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(payload)));
   const fingerprint = Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('');
   let checkoutKey = pendingCheckout?.fingerprint === fingerprint ? pendingCheckout.checkoutKey : crypto.randomUUID();

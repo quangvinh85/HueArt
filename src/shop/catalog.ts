@@ -23,7 +23,7 @@ export const SALE_OPTIONS = [
     priceUSD: 7,
     short: 'Một bản ảnh in kèm khung',
     description: 'Bản ảnh in kích thước 40 × 60 cm, đã bao gồm khung. Chưa bao gồm phí vận chuyển; phí sẽ được báo riêng theo địa chỉ nhận hàng.',
-    delivery: 'Thống nhất khung, cách cắt ảnh và phí vận chuyển trước khi thanh toán.',
+    delivery: 'Có thể trả trước tiền ảnh; thống nhất khung, cách cắt ảnh và phí vận chuyển riêng.',
   },
 ] as const;
 

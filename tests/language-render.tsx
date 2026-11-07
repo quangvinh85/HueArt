@@ -1,3 +1,4 @@
+import Price from '../src/shop/Price';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {strict as assert} from 'node:assert';
@@ -32,3 +33,6 @@ for(const option of SALE_OPTIONS){
 assert.equal(translateText('Giỏ hàng ({0})','en',3),'Cart (3)');
 assert.equal(translateText('Giỏ hàng ({0})','fr',3),'Panier (3)');
 console.log('Language rendering passed: Vietnamese default and invalid-language fallback, English/French UI and artwork titles, sale descriptions and interpolation.');
+
+language='vi';assert.match(renderToStaticMarkup(<LanguageProvider><Price cents={500}/></LanguageProvider>),/5 USD.*<small>~ 130.000 VND<\/small>/);
+assert.match(renderToStaticMarkup(<LanguageProvider><Price cents={500} rate={30000}/></LanguageProvider>),/150.000 VND/);

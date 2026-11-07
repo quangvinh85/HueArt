@@ -1278,5 +1278,329 @@
   "Thao tác không hợp lệ.": [
     "Invalid action.",
     "Action non valide."
+  ],
+  "Cài đặt thanh toán": [
+    "Payment settings",
+    "Paramètres de paiement"
+  ],
+  "Tài khoản nhận tiền, phương thức thanh toán và tỷ giá USD/VND.": [
+    "Receiving account, payment methods and USD/VND exchange rate.",
+    "Compte bénéficiaire, modes de paiement et taux USD/VND."
+  ],
+  "Tỷ giá: 1 USD bằng bao nhiêu VND?": [
+    "Exchange rate: how many VND per USD?",
+    "Taux : combien de VND pour 1 USD ?"
+  ],
+  "Mặc định 26.000 VND/USD. Đơn mới dùng tỷ giá mới; đơn cũ giữ tỷ giá lúc đặt.": [
+    "Default: 26,000 VND/USD. New orders use the new rate; existing orders keep their original rate.",
+    "Par défaut : 26 000 VND/USD. Les nouvelles commandes utilisent le nouveau taux ; les anciennes conservent leur taux initial."
+  ],
+  "Bật chuyển khoản và VietQR": [
+    "Enable bank transfer and VietQR",
+    "Activer le virement bancaire et VietQR"
+  ],
+  "Chọn ngân hàng": [
+    "Choose a bank",
+    "Choisir une banque"
+  ],
+  "Ngân hàng khác / Nhập thông tin": [
+    "Other bank / Enter details",
+    "Autre banque / Saisir les informations"
+  ],
+  "Tên ngân hàng": [
+    "Bank name",
+    "Nom de la banque"
+  ],
+  "Ngân hàng": [
+    "Bank",
+    "Banque"
+  ],
+  "Mã BIN ngân hàng (6 chữ số)": [
+    "Bank BIN (6 digits)",
+    "BIN bancaire (6 chiffres)"
+  ],
+  "Số tài khoản": [
+    "Account number",
+    "Numéro de compte"
+  ],
+  "Tên chủ tài khoản": [
+    "Account holder name",
+    "Nom du titulaire"
+  ],
+  "Chủ tài khoản": [
+    "Account holder",
+    "Titulaire du compte"
+  ],
+  "Cho phép COD với đơn có bản in": [
+    "Allow cash on delivery for orders containing prints",
+    "Autoriser le paiement à la livraison pour les commandes avec tirage"
+  ],
+  "VietQR được tạo trực tiếp từ tài khoản, số tiền và mã đơn. Hãy kiểm tra tên người nhận trong ứng dụng ngân hàng trước khi bật. Đổi tài khoản chỉ áp dụng cho đơn mới.": [
+    "VietQR uses the account, amount and order number. Verify the recipient in your banking app before enabling it. Account changes apply only to new orders.",
+    "VietQR utilise le compte, le montant et le numéro de commande. Vérifiez le bénéficiaire dans votre application bancaire avant activation. Les changements de compte concernent les nouvelles commandes."
+  ],
+  "Đã lưu cài đặt thanh toán.": [
+    "Payment settings saved.",
+    "Paramètres de paiement enregistrés."
+  ],
+  "Không tải được cài đặt.": [
+    "Could not load settings.",
+    "Impossible de charger les paramètres."
+  ],
+  "Không lưu được cài đặt.": [
+    "Could not save settings.",
+    "Impossible d’enregistrer les paramètres."
+  ],
+  "Liên hệ thanh toán sau": [
+    "Arrange payment later",
+    "Convenir du paiement plus tard"
+  ],
+  "Thanh toán qua VietQR": [
+    "Pay with VietQR",
+    "Payer avec VietQR"
+  ],
+  "Thanh toán qua {0} VietQR": [
+    "Pay via {0} VietQR",
+    "Payer via {0} VietQR"
+  ],
+  "Chuyển khoản": [
+    "Bank transfer",
+    "Virement bancaire"
+  ],
+  "Thu hộ (COD)": [
+    "Cash on delivery (COD)",
+    "Paiement à la livraison"
+  ],
+  "Chỉ áp dụng cho đơn có bản in.": [
+    "Available for orders containing prints only.",
+    "Disponible uniquement pour les commandes avec tirage."
+  ],
+  "Chuyển khoản hiện chưa khả dụng. Bạn có thể chọn COD cho bản in hoặc liên hệ người bán.": [
+    "Bank transfer is currently unavailable. Choose cash on delivery for prints or contact the seller.",
+    "Le virement est actuellement indisponible. Choisissez le paiement à la livraison pour les tirages ou contactez le vendeur."
+  ],
+  "Chọn VietQR hoặc chuyển khoản để xem mã QR và nội dung thanh toán sau khi gửi đơn.": [
+    "Choose VietQR or bank transfer to see payment details after placing your order.",
+    "Choisissez VietQR ou le virement pour afficher les informations après la commande."
+  ],
+  "Khách báo đã chuyển · Chờ xác minh": [
+    "Transfer reported · Awaiting verification",
+    "Virement signalé · À vérifier"
+  ],
+  "Đã nhận một phần": [
+    "Partially paid",
+    "Partiellement payée"
+  ],
+  "Khách báo đã chuyển khoản": [
+    "Customer reported a transfer",
+    "Virement signalé par le client"
+  ],
+  "Khách báo chuyển": [
+    "Customer reported",
+    "Signalé par le client"
+  ],
+  "Số tiền thực nhận (VND)": [
+    "Amount actually received (VND)",
+    "Montant réellement reçu (VND)"
+  ],
+  "Đã nhận và xác nhận": [
+    "Received and verified",
+    "Reçu et confirmé"
+  ],
+  "Đã xác nhận thỏa thuận chuyển quyền bằng văn bản": [
+    "Written copyright transfer agreement confirmed",
+    "Accord écrit de cession des droits confirmé"
+  ],
+  "Mã giao dịch": [
+    "Transaction reference",
+    "Référence de transaction"
+  ],
+  "Mã giao dịch (nếu có)": [
+    "Transaction reference (optional)",
+    "Référence de transaction (facultative)"
+  ],
+  "Mở biên nhận thanh toán của khách": [
+    "Open customer payment receipt",
+    "Ouvrir le reçu du client"
+  ],
+  "Chỉ xác nhận đã nhận tiền sau khi đối chiếu tài khoản ngân hàng hoặc tiền COD thực nhận.": [
+    "Confirm payment only after checking your bank account or cash actually collected.",
+    "Confirmez le paiement après vérification du compte bancaire ou des espèces réellement reçues."
+  ],
+  "USD kèm giá VND tham khảo · 1 USD = {0}": [
+    "USD with VND equivalent · 1 USD = {0}",
+    "USD et équivalent VND · 1 USD = {0}"
+  ],
+  "Có thể trả trước tiền ảnh; thống nhất khung, cách cắt ảnh và phí vận chuyển riêng.": [
+    "You may prepay for the photo; arrange framing, cropping and shipping separately.",
+    "Vous pouvez prépayer la photo ; convenez séparément du cadre, du recadrage et de la livraison."
+  ],
+  "Phí vận chuyển được báo riêng. Bạn có thể trả trước tiền ảnh sau khi gửi đơn.": [
+    "Shipping is quoted separately. You may prepay for the photo after placing the order.",
+    "La livraison est facturée séparément. Vous pouvez prépayer la photo après la commande."
+  ],
+  "Gửi đơn & xem thanh toán": [
+    "Place order & view payment",
+    "Commander et voir le paiement"
+  ],
+  "Đơn được lưu trước khi hiển thị thanh toán. Website không tự trừ tiền khi bạn gửi đơn.": [
+    "Your order is saved before payment details appear. Placing an order does not automatically charge you.",
+    "La commande est enregistrée avant l’affichage du paiement. Commander ne vous débite pas automatiquement."
+  ],
+  "Đơn đã được lưu. Bạn có thể thanh toán trước hoặc chờ người bán liên hệ.": [
+    "Your order is saved. You may pay in advance or wait for the seller to contact you.",
+    "Votre commande est enregistrée. Vous pouvez payer à l’avance ou attendre le contact du vendeur."
+  ],
+  "Thanh toán trước tiền ảnh": [
+    "Prepay for the photo",
+    "Prépayer la photo"
+  ],
+  "Thông tin thanh toán": [
+    "Payment details",
+    "Informations de paiement"
+  ],
+  "Khoản này chỉ gồm tiền ảnh. Phí vận chuyển sẽ được báo và thanh toán riêng.": [
+    "This amount covers the photo only. Shipping will be quoted and paid separately.",
+    "Ce montant couvre uniquement la photo. La livraison sera facturée et payée séparément."
+  ],
+  "Nội dung chuyển khoản": [
+    "Transfer reference",
+    "Libellé du virement"
+  ],
+  "Quét QR bằng ứng dụng ngân hàng hoặc chuyển khoản với đúng số tiền và mã đơn ở trên.": [
+    "Scan the QR with your banking app or transfer the exact amount using the order number above.",
+    "Scannez le QR avec votre application bancaire ou virez le montant exact avec le numéro de commande ci-dessus."
+  ],
+  "Tôi đã hoàn tất chuyển khoản số tiền ở trên.": [
+    "I have completed the transfer for the amount above.",
+    "J’ai effectué le virement du montant ci-dessus."
+  ],
+  "Thông báo tôi đã chuyển khoản": [
+    "Report completed transfer",
+    "Signaler mon virement"
+  ],
+  "Người bán đang đối chiếu khoản chuyển. Thông báo của bạn chưa phải xác nhận đã nhận tiền.": [
+    "The seller is checking the transfer. Your report is not yet confirmation that the payment was received.",
+    "Le vendeur vérifie le virement. Votre signalement ne confirme pas encore la réception du paiement."
+  ],
+  "Đơn có chuyển quyền tác giả: vui lòng chờ người bán xác nhận thỏa thuận bằng văn bản trước khi thanh toán.": [
+    "This order includes copyright transfer. Wait for the seller to confirm the written agreement before paying.",
+    "Cette commande comprend une cession de droits. Attendez la confirmation de l’accord écrit avant de payer."
+  ],
+  "Đơn đã hủy. Vui lòng không chuyển tiền cho đơn này.": [
+    "This order is cancelled. Please do not send payment.",
+    "Cette commande est annulée. Veuillez ne pas payer."
+  ],
+  "Xem thông tin chuyển khoản để trả trước": [
+    "View bank details to prepay",
+    "Voir les coordonnées pour prépayer"
+  ],
+  "Đã ghi nhận khoản trả trước. Người bán sẽ liên hệ để chốt phí vận chuyển còn lại.": [
+    "Your prepayment is recorded. The seller will confirm the remaining shipping charge.",
+    "Votre acompte est enregistré. Le vendeur confirmera les frais de livraison restants."
+  ],
+  "Mở biên nhận trong tab riêng": [
+    "Open receipt in a new tab",
+    "Ouvrir le reçu dans un nouvel onglet"
+  ],
+  "Cập nhật thanh toán": [
+    "Refresh payment status",
+    "Actualiser le paiement"
+  ],
+  "Không tải được thông tin thanh toán.": [
+    "Could not load payment details.",
+    "Impossible de charger les informations de paiement."
+  ],
+  "Đang tải thông tin thanh toán…": [
+    "Loading payment details…",
+    "Chargement des informations de paiement…"
+  ],
+  "Không gửi được thông báo thanh toán.": [
+    "Could not report the payment.",
+    "Impossible de signaler le paiement."
+  ],
+  "Mã VietQR thanh toán đơn hàng": [
+    "VietQR code for this order",
+    "Code VietQR pour cette commande"
+  ],
+  "Lưu mã QR": [
+    "Save QR code",
+    "Enregistrer le QR"
+  ],
+  "Không tạo được QR. Bạn có thể chuyển khoản bằng thông tin bên dưới.": [
+    "Could not generate the QR. Use the bank details below.",
+    "Impossible de générer le QR. Utilisez les coordonnées bancaires ci-dessous."
+  ],
+  "Đang tạo mã QR…": [
+    "Generating QR code…",
+    "Génération du QR…"
+  ],
+  "Cài đặt đã thay đổi. Vui lòng tải lại.": [
+    "Settings have changed. Please reload.",
+    "Les paramètres ont changé. Veuillez recharger."
+  ],
+  "Cài đặt thanh toán không hợp lệ.": [
+    "Invalid payment settings.",
+    "Paramètres de paiement non valides."
+  ],
+  "Vui lòng nhập đầy đủ ngân hàng, mã BIN 6 chữ số, số tài khoản và tên chủ tài khoản.": [
+    "Enter the bank, 6-digit BIN, account number and account holder name.",
+    "Saisissez la banque, le BIN à 6 chiffres, le numéro de compte et le titulaire."
+  ],
+  "Thông tin tạo mã QR không hợp lệ.": [
+    "Invalid QR payment details.",
+    "Informations de paiement QR non valides."
+  ],
+  "Không tìm thấy thông tin thanh toán.": [
+    "Payment details not found.",
+    "Informations de paiement introuvables."
+  ],
+  "Đơn này chưa thể tiếp nhận thông báo thanh toán.": [
+    "This order cannot accept a payment report right now.",
+    "Cette commande ne peut pas recevoir de signalement de paiement actuellement."
+  ],
+  "Phương thức thanh toán không hợp lệ.": [
+    "Invalid payment method.",
+    "Mode de paiement non valide."
+  ],
+  "Phương thức thanh toán hiện chưa khả dụng. Vui lòng chọn cách khác.": [
+    "This payment method is unavailable. Please choose another.",
+    "Ce mode de paiement est indisponible. Veuillez en choisir un autre."
+  ],
+  "Bạn đã gửi nhiều thông báo. Vui lòng chờ quản trị viên kiểm tra.": [
+    "Too many reports. Please wait for the administrator to check.",
+    "Trop de signalements. Veuillez attendre la vérification."
+  ],
+  "Đơn đã thay đổi. Vui lòng tải lại thông tin thanh toán.": [
+    "The order has changed. Please refresh payment details.",
+    "La commande a changé. Veuillez actualiser le paiement."
+  ],
+  "Số tiền đã nhận không hợp lệ.": [
+    "Invalid received amount.",
+    "Montant reçu non valide."
+  ],
+  "Số tiền đã nhận chưa đủ để xác nhận thanh toán toàn bộ.": [
+    "The received amount is insufficient to confirm full payment.",
+    "Le montant reçu est insuffisant pour confirmer le paiement intégral."
+  ],
+  "Vui lòng kiểm tra số tiền thanh toán một phần.": [
+    "Please check the partially paid amount.",
+    "Veuillez vérifier le montant du paiement partiel."
+  ],
+  "Đơn đã nhận tiền cần chọn thanh toán một phần hoặc đã thanh toán.": [
+    "Choose partially paid or paid for an order with received funds.",
+    "Choisissez paiement partiel ou payé pour une commande ayant reçu des fonds."
+  ],
+  "Hủy": [
+    "Cancel",
+    "Annuler"
+  ],
+  "File từ": [
+    "Files from",
+    "Fichiers dès"
+  ],
+  "Bản in có khung": [
+    "Framed print",
+    "Tirage encadré"
   ]
 }

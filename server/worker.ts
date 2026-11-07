@@ -1,3 +1,4 @@
+import {getPaymentSettings,savePaymentSettings,paymentReceipt,customerPayment} from './payments';
 import { catalogueAdmin } from './catalogueAdmin';
 import { getCatalogue } from './catalogue';
 import { adminAuth, adminIdentity } from './adminAuth';
@@ -16,7 +17,7 @@ async function readJson(request: Request) {
   if (new TextEncoder().encode(body).length > 32768) throw new ApiError(413, 'Nội dung đơn hàng quá dài.');
   try { return JSON.parse(body); } catch { throw new ApiError(400, 'Dữ liệu không hợp lệ.'); }
 }
-function receipt(row: any) { return { orderNumber: row.order_number, subtotalCents: row.subtotal_cents, shippingCents: row.shipping_cents, status: row.status, createdAt: row.created_at }; }
+const receipt = paymentReceipt;
 
 export async function api(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
@@ -30,6 +31,15 @@ export async function api(request: Request, env: Env): Promise<Response> {
     await env.DB.prepare('SELECT 1 AS ok').first();
     return json({ok:true,database:true,uploads:Boolean(env.BUCKET),protocol:1});
   }
+  if(url.pathname==='/api/payment-settings'&&request.method==='GET'){
+    const settings=await getPaymentSettings(env);
+    return json({...settings,bank:settings.transferEnabled?settings.bank:{bankName:'',bankBin:'',accountNumber:'',accountName:''}});
+  }
+  if(url.pathname==='/api/admin/payment-settings'){
+    if(request.method==='GET')return json(await getPaymentSettings(env));
+    if(request.method==='PATCH')return json(await savePaymentSettings(env,await readJson(request)));
+  }
+  if(url.pathname.startsWith('/api/order-payment/'))return json(await customerPayment(request,env,readJson));
   if (url.pathname.startsWith('/api/admin/catalog')) return catalogueAdmin(request,env,request.method==='PATCH'?await readJson(request):undefined);
   if (url.pathname === '/api/catalog' && request.method === 'GET') return json({ artworks: await getCatalogue(env) });
   const publicImage = /^\/api\/catalog\/([0-9a-f-]{36})\/image$/.exec(url.pathname);
@@ -49,13 +59,18 @@ export async function api(request: Request, env: Env): Promise<Response> {
   if (url.pathname === '/api/curator' && request.method === 'POST') return json(await curate(await readJson(request), env));
 
   if (url.pathname === '/api/orders' && request.method === 'POST') {
-    const data = validateOrder(await readJson(request), await getCatalogue(env));
-    const fingerprint = await sha256(JSON.stringify(data));
+    const body=await readJson(request);
+    const bodyMethodPresent=body.paymentMethod!==undefined;
+    const data = validateOrder(body, await getCatalogue(env));
+    const settings=await getPaymentSettings(env);
+    const {paymentMethod:ignoredMethod,...legacyData}=data;
+    const fingerprint = await sha256(JSON.stringify(bodyMethodPresent?data:legacyData));
     const existing = await env.DB.prepare('SELECT * FROM orders WHERE checkout_key = ?').bind(data.checkoutKey).first();
     if (existing) {
       if (existing.payload_hash !== fingerprint) throw new ApiError(409, 'Yêu cầu này đã được gửi với nội dung khác. Vui lòng kiểm tra đơn đã gửi.');
-      return json(receipt(existing));
+      return json(receipt(existing,settings));
     }
+    if(['vietqr','transfer'].includes(data.paymentMethod)&&!settings.transferEnabled||data.paymentMethod==='cod'&&!settings.codEnabled)throw new ApiError(400,'Phương thức thanh toán hiện chưa khả dụng. Vui lòng chọn cách khác.');
     const requester = await sha256(actor.rateKey + ':hueart-orders');
     const cutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     const recent = await env.DB.prepare('SELECT COUNT(*) AS count FROM orders WHERE requester_hash = ? AND created_at > ?').bind(requester, cutoff).first();
@@ -66,15 +81,15 @@ export async function api(request: Request, env: Env): Promise<Response> {
     const orderNumber = `DHT-${localDate}-${id.slice(0, 8).toUpperCase()}`;
     const history = JSON.stringify([{ at: now, status: 'new', paymentStatus: 'unpaid', action: 'created' }]);
     try {
-      await env.DB.prepare('INSERT INTO orders (id, order_number, checkout_key, payload_hash, requester_hash, customer_name, customer_phone, customer_email, customer_address, customer_note, items_json, subtotal_cents, shipping_cents, has_print, has_copyright, rights_accepted, status, payment_status, admin_note, history_json, version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id, orderNumber, data.checkoutKey, fingerprint, requester, data.name, data.phone, data.email, data.address, data.note, JSON.stringify(data.items), data.subtotalCents, data.hasPrint ? null : 0, Number(data.hasPrint), Number(data.hasCopyright), Number(data.rightsAccepted), 'new', 'unpaid', '', history, 1, now, now).run();
+      await env.DB.prepare('INSERT INTO orders (id, order_number, checkout_key, payload_hash, requester_hash, customer_name, customer_phone, customer_email, customer_address, customer_note, items_json, subtotal_cents, shipping_cents, has_print, has_copyright, rights_accepted, status, payment_status, admin_note, history_json, version, created_at, updated_at, payment_method, exchange_rate, bank_snapshot_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id, orderNumber, data.checkoutKey, fingerprint, requester, data.name, data.phone, data.email, data.address, data.note, JSON.stringify(data.items), data.subtotalCents, data.hasPrint ? null : 0, Number(data.hasPrint), Number(data.hasCopyright), Number(data.rightsAccepted), 'new', 'unpaid', '', history, 1, now, now,data.paymentMethod,settings.exchangeRate,JSON.stringify(settings.transferEnabled?settings.bank:{})).run();
     } catch (error) {
       // A retried request may race the original insert. Return its receipt once.
       const saved = await env.DB.prepare('SELECT * FROM orders WHERE checkout_key = ?').bind(data.checkoutKey).first();
-      if (saved?.payload_hash === fingerprint) return json(receipt(saved));
+      if (saved?.payload_hash === fingerprint) return json(receipt(saved,settings));
       throw error;
     }
     const saved = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
-    return json(receipt(saved), 201);
+    return json(receipt(saved,settings), 201);
   }
 
   if (url.pathname === '/api/admin/orders' && request.method === 'GET') {
@@ -93,9 +108,9 @@ export async function api(request: Request, env: Env): Promise<Response> {
     const [rows, count, stats] = await Promise.all([
       env.DB.prepare(`SELECT * FROM orders${where} ORDER BY created_at DESC, id DESC LIMIT 20 OFFSET ?`).bind(...params, (page - 1) * 20).all(),
       env.DB.prepare(`SELECT COUNT(*) AS count FROM orders${where}`).bind(...params).first(),
-      env.DB.prepare("SELECT COUNT(*) AS total, SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) AS new_orders, SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) AS processing, SUM(CASE WHEN payment_status = 'paid' AND status != 'cancelled' THEN subtotal_cents + COALESCE(shipping_cents, 0) ELSE 0 END) AS paid_cents FROM orders").first(),
+      env.DB.prepare("SELECT COUNT(*) AS total, SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) AS new_orders, SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) AS processing, SUM(CASE WHEN payment_status = 'paid' AND status != 'cancelled' THEN subtotal_cents + COALESCE(shipping_cents, 0) ELSE 0 END) AS paid_cents, SUM(CASE WHEN status != 'cancelled' THEN received_amount_vnd ELSE 0 END) AS received_vnd FROM orders").first(),
     ]);
-    return json({ orders: rows.results.map(serializeOrder), total: Number(count?.count || 0), page, pageSize: 20, stats: { total: Number(stats?.total || 0), newOrders: Number(stats?.new_orders || 0), processing: Number(stats?.processing || 0), paidCents: Number(stats?.paid_cents || 0) } });
+    return json({ orders: rows.results.map(serializeOrder), total: Number(count?.count || 0), page, pageSize: 20, stats: { total: Number(stats?.total || 0), newOrders: Number(stats?.new_orders || 0), processing: Number(stats?.processing || 0), paidCents: Number(stats?.paid_cents || 0),receivedVnd:Number(stats?.received_vnd||0) } });
   }
 
   const match = /^\/api\/admin\/orders\/([0-9a-f-]{36})$/.exec(url.pathname);
@@ -104,8 +119,8 @@ export async function api(request: Request, env: Env): Promise<Response> {
     if (!row) throw new ApiError(404, 'Không tìm thấy đơn hàng.');
     const data = validateUpdate(await readJson(request), row);
     const now = new Date().toISOString();
-    const history = [...JSON.parse(row.history_json), { at: now, action: 'updated', actorId: actor.userId, status: data.status, paymentStatus: data.paymentStatus, shippingCents: data.shippingCents }];
-    const result = await env.DB.prepare('UPDATE orders SET status = ?, payment_status = ?, shipping_cents = ?, admin_note = ?, history_json = ?, version = version + 1, updated_at = ? WHERE id = ? AND version = ?').bind(data.status, data.paymentStatus, data.shippingCents, data.adminNote, JSON.stringify(history), now, row.id, row.version).run();
+    const history = [...JSON.parse(row.history_json), { at: now, action: 'updated', actorId: actor.userId, status: data.status, paymentStatus: data.paymentStatus, shippingCents: data.shippingCents,receivedAmountVnd:data.receivedAmountVnd,rightsConfirmed:data.rightsConfirmed }];
+    const result = await env.DB.prepare('UPDATE orders SET status = ?, payment_status = ?, shipping_cents = ?, received_amount_vnd = ?, rights_confirmed = ?, admin_note = ?, history_json = ?, version = version + 1, updated_at = ? WHERE id = ? AND version = ?').bind(data.status, data.paymentStatus, data.shippingCents,data.receivedAmountVnd,Number(data.rightsConfirmed), data.adminNote, JSON.stringify(history), now, row.id, row.version).run();
     if (!result.meta.changes) throw new ApiError(409, 'Đơn vừa được cập nhật ở cửa sổ khác. Vui lòng tải lại.');
     return json(serializeOrder(await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(row.id).first()));
   }

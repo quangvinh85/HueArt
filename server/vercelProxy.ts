@@ -1,5 +1,5 @@
 export interface VercelBackendConfig { backendUrl?: string; serviceToken?: string; bridgeToken?: string; }
-const allowedPath = /^\/api\/(?:health|session|curator|catalog(?:\/[0-9a-f-]{36}\/image)?|orders|submissions|admin-auth\/(?:login|logout)|admin\/(?:catalog(?:\/[a-z0-9-]{1,100})?|orders(?:\/[0-9a-f-]{36})?|submissions(?:\/[0-9a-f-]{36}(?:\/image)?)?))$/;
+const allowedPath = /^\/api\/(?:health|session|curator|payment-settings|order-payment\/DHT-[0-9]{8}-[A-F0-9]{8}(?:\/report)?|catalog(?:\/[0-9a-f-]{36}\/image)?|orders|submissions|admin-auth\/(?:login|logout)|admin\/(?:payment-settings|catalog(?:\/[a-z0-9-]{1,100})?|orders(?:\/[0-9a-f-]{36})?|submissions(?:\/[0-9a-f-]{36}(?:\/image)?)?))$/;
 const json=(error:string,status:number)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 export const MAX_VERCEL_BODY=3*1024*1024+65536;
 
@@ -19,6 +19,8 @@ export async function proxyApi(request:Request,config:VercelBackendConfig,send:t
     'OAI-Sites-Authorization':'Bearer '+config.serviceToken,
     Authorization:'Bearer '+config.bridgeToken,
   });
+  const checkoutKey=request.headers.get('X-HueArt-Checkout-Key')||'';
+  if(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(checkoutKey))headers.set('X-HueArt-Checkout-Key',checkoutKey);
   const contentType=request.headers.get('Content-Type');if(contentType)headers.set('Content-Type',contentType);
   const adminCookie=request.headers.get('Cookie')?.split(';').map(part=>part.trim()).find(part=>/^__Host-hueart_admin=[0-9a-f]{64}$/.test(part));
   if(adminCookie)headers.set('Cookie',adminCookie);

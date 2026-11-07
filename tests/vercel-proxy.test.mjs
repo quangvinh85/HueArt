@@ -69,6 +69,12 @@ test('Vercel can log in, manage orders and log out without Sites browser identit
  assert.equal((await(await proxy('/api/session',null,cookie)).json()).isAdmin,true);
  const order=await proxy('/api/orders',{checkoutKey:crypto.randomUUID(),items:[{artworkId:'meridian-gate-twilight',optionId:'high-resolution',quantity:1}],customer:{name:'Khách Vercel',phone:'0901234567'},rightsAccepted:false});assert.equal(order.status,201);
  const orders=await(await proxy('/api/admin/orders',null,cookie)).json();assert.equal(orders.total,1);assert.equal(orders.orders[0].customer.name,'Khách Vercel');
+ const settingsRequest=new Request(publicOrigin+'/api/admin/payment-settings',{method:'PATCH',headers:{Origin:publicOrigin,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify({version:0,exchangeRate:26000,transferEnabled:true,codEnabled:true,bank:{bankName:'Test bank',bankBin:'970422',accountNumber:'0000000123456',accountName:'TEST ONLY'}})});
+ assert.equal((await proxyApi(settingsRequest,config,send)).status,200);
+ assert.equal((await(await proxy('/api/payment-settings')).json()).transferEnabled,true);
+ const customerKey=sqlite.prepare('SELECT checkout_key FROM orders').get().checkout_key,orderNumber=orders.orders[0].orderNumber;
+ const reportRequest=new Request(publicOrigin+'/api/order-payment/'+orderNumber+'/report',{method:'POST',headers:{Origin:publicOrigin,'X-HueArt-Checkout-Key':customerKey,'Content-Type':'application/json'},body:JSON.stringify({method:'transfer',reference:'TEST-REF'})});
+ const report=await proxyApi(reportRequest,config,send);assert.equal(report.status,200);assert.equal((await report.json()).paymentStatus,'reported');
  const library=await(await proxy('/api/admin/catalog',null,cookie)).json();assert.equal(library.stats.visible,12);
  const mutation=new Request(publicOrigin+'/api/admin/catalog/meridian-gate-twilight',{method:'PATCH',headers:{Origin:publicOrigin,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify({action:'trash',version:0})});
  assert.equal((await proxyApi(mutation,config,send)).status,200);

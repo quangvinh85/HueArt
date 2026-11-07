@@ -200,3 +200,35 @@
 .shop-photographer { color:#9ca3af; font-size:11px; margin:0 0 8px; }
 .shop-load-more { display:flex; justify-content:center; padding-top:28px; }
 .shop-art-grid > article { content-visibility:auto; contain-intrinsic-size:auto 450px; }
+
+.shop-dual-price { display:inline-flex; flex-direction:column; gap:3px; line-height:1.3; vertical-align:middle; }
+.shop-dual-price > small { display:block; color:#9ca7b5; font-size:clamp(10px,.7em,14px); font-weight:400; white-space:nowrap; }
+.shop-payment-options { border:0; padding:0; margin:0; }
+.shop-payment-options legend { padding:0; margin-bottom:12px; font-size:16px; font-weight:600; }
+.shop-payment-option { display:flex; align-items:center; gap:12px; padding:16px; border:1px solid #343943; cursor:pointer; margin-top:-1px; background:#11151b; }
+.shop-payment-option.selected { border-color:#dfb871; position:relative; background:#dfb8710b; }
+.shop-payment-option.unavailable { opacity:.5; cursor:default; }
+.shop-checkout .shop-payment-option input[type=radio] { width:16px; height:16px; padding:0; margin:0; flex:0 0 16px; accent-color:#dfb871; }
+.shop-payment-option > span { flex:1; font-size:13px; }
+.shop-payment-option small { display:block; margin-top:5px; color:#9ca7b5; font-size:11px; }
+.shop-payment-option > svg { color:#dfb871; flex-shrink:0; }
+.shop-payment-options > p { margin:10px 0 0; }
+.shop-payment-status { display:flex; gap:12px; padding:16px; border:1px solid #414b5b; background:#151a22; align-items:start; font-size:13px; }
+.shop-payment-status > div { flex:1; }
+.shop-payment-status p { margin:7px 0 0; color:#aab4c2; font-size:12px; }
+.shop-payment-status.payment-paid { border-color:#417761; }
+.shop-payment-status.payment-reported { border-color:#a18045; }
+.shop-bank-panel { border:1px solid #434c5c; padding:18px; background:#11161e; }
+.shop-bank-panel h3 { font-size:22px; margin:0 0 12px; }
+.shop-bank-amount { color:#dfb871; font-size:24px; }
+.shop-bank-panel dl { display:grid; grid-template-columns:130px minmax(0,1fr); gap:12px; font-size:12px; }
+.shop-bank-panel dt { color:#9ca7b5; }
+.shop-bank-panel dd { margin:0; overflow-wrap:anywhere; }
+.shop-bank-panel code { color:#dfb871; font-size:13px; }
+.shop-vietqr { display:flex; align-items:center; flex-direction:column; padding:16px 0; gap:8px; }
+.shop-vietqr img { max-width:100%; height:auto; border-radius:6px; background:white; }
+.shop-payment-report { border-top:1px solid #343943; padding-top:16px; display:flex; flex-direction:column; gap:14px; }
+.shop-payment-report > label { font-size:12px; }
+@media(max-width:520px) { .shop-bank-panel { padding:14px; } .shop-bank-panel dl { grid-template-columns:105px minmax(0,1fr); gap:10px; } }
+.shop-hero-prices { display:flex; gap:24px; align-items:start; }
+.shop-hero-prices > span { display:flex; gap:6px; align-items:start; }

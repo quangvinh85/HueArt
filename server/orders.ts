@@ -1,9 +1,10 @@
 import { ARTWORKS } from '../src/data/artworks';
 import type { Artwork } from '../src/types';
+import { PAYMENT_METHOD_LABELS, toVnd } from '../src/shop/paymentTypes';
 import { SALE_OPTIONS } from '../src/shop/catalog';
 
 export const ORDER_STATUSES = ['new', 'confirmed', 'processing', 'completed', 'cancelled'] as const;
-export const PAYMENT_STATUSES = ['unpaid', 'paid'] as const;
+export const PAYMENT_STATUSES = ['unpaid', 'reported', 'partial', 'paid'] as const;
 export type OrderStatus = typeof ORDER_STATUSES[number];
 export type PaymentStatus = typeof PAYMENT_STATUSES[number];
 export class ApiError extends Error {
@@ -40,8 +41,10 @@ export function validateOrder(body: any, artworks: Artwork[] = ARTWORKS) {
   const hasCopyright = items.some(item => item.optionId === 'copyright');
   if (hasPrint && address.length < 5) throw new ApiError(400, 'Vui lòng nhập địa chỉ nhận bản in.');
   if (hasCopyright && body.rightsAccepted !== true) throw new ApiError(400, 'Vui lòng xác nhận thỏa thuận chuyển quyền tác giả.');
+  const paymentMethod=body.paymentMethod??'contact';
+  if(!Object.hasOwn(PAYMENT_METHOD_LABELS,paymentMethod)||paymentMethod==='cod'&&!hasPrint)throw new ApiError(400,'Phương thức thanh toán không hợp lệ.');
   const subtotalCents = items.reduce((total, item) => total + item.unitPriceCents * item.quantity, 0);
-  return { checkoutKey, name, phone, email, address: hasPrint ? address : '', note, items, hasPrint, hasCopyright, subtotalCents, rightsAccepted: hasCopyright };
+  return { checkoutKey, paymentMethod, name, phone, email, address: hasPrint ? address : '', note, items, hasPrint, hasCopyright, subtotalCents, rightsAccepted: hasCopyright };
 }
 
 export function validateUpdate(body: any, order: any) {
@@ -53,9 +56,16 @@ export function validateUpdate(body: any, order: any) {
   if (order.has_print ? shippingCents !== null && (!Number.isInteger(shippingCents) || shippingCents < 0 || shippingCents > 1000000) : shippingCents !== 0) throw new ApiError(400, 'Phí vận chuyển không hợp lệ.');
   if (paymentStatus === 'paid' && shippingCents === null) throw new ApiError(400, 'Cần chốt phí vận chuyển trước khi xác nhận đã thanh toán.');
   if (status === 'completed' && (paymentStatus !== 'paid' || shippingCents === null)) throw new ApiError(400, 'Cần xác nhận thanh toán và phí vận chuyển trước khi hoàn tất đơn.');
-  return { status, paymentStatus, shippingCents, adminNote: text(body.adminNote, 2000) };
+  const totalVnd=shippingCents===null?null:toVnd(order.subtotal_cents+shippingCents,order.exchange_rate||26000);
+  const receivedAmountVnd=body.receivedAmountVnd??(paymentStatus==='paid'?totalVnd:order.received_amount_vnd||0);
+  const rightsConfirmed=body.rightsConfirmed??Boolean(order.rights_confirmed);
+  if(!Number.isSafeInteger(receivedAmountVnd)||receivedAmountVnd<0||receivedAmountVnd>10000000000000||typeof rightsConfirmed!=='boolean')throw new ApiError(400,'Số tiền đã nhận không hợp lệ.');
+  if(paymentStatus==='paid'&&(totalVnd===null||receivedAmountVnd<totalVnd))throw new ApiError(400,'Số tiền đã nhận chưa đủ để xác nhận thanh toán toàn bộ.');
+  if(paymentStatus==='partial'&&(receivedAmountVnd<=0||totalVnd!==null&&receivedAmountVnd>=totalVnd))throw new ApiError(400,'Vui lòng kiểm tra số tiền thanh toán một phần.');
+  if(paymentStatus==='unpaid'&&receivedAmountVnd!==0)throw new ApiError(400,'Đơn đã nhận tiền cần chọn thanh toán một phần hoặc đã thanh toán.');
+  return { status, paymentStatus, shippingCents, receivedAmountVnd,rightsConfirmed:order.has_copyright?rightsConfirmed:false,adminNote: text(body.adminNote, 2000) };
 }
 
 export function serializeOrder(row: any) {
-  return { id: row.id, orderNumber: row.order_number, customer: { name: row.customer_name, phone: row.customer_phone, email: row.customer_email, address: row.customer_address, note: row.customer_note }, items: JSON.parse(row.items_json), subtotalCents: row.subtotal_cents, shippingCents: row.shipping_cents, totalCents: row.shipping_cents === null ? null : row.subtotal_cents + row.shipping_cents, hasPrint: Boolean(row.has_print), hasCopyright: Boolean(row.has_copyright), rightsAccepted: Boolean(row.rights_accepted), status: row.status, paymentStatus: row.payment_status, adminNote: row.admin_note, version: row.version, createdAt: row.created_at, updatedAt: row.updated_at, history: JSON.parse(row.history_json) };
+  return { id: row.id, orderNumber: row.order_number, customer: { name: row.customer_name, phone: row.customer_phone, email: row.customer_email, address: row.customer_address, note: row.customer_note }, items: JSON.parse(row.items_json), subtotalCents: row.subtotal_cents, shippingCents: row.shipping_cents, totalCents: row.shipping_cents === null ? null : row.subtotal_cents + row.shipping_cents, hasPrint: Boolean(row.has_print), hasCopyright: Boolean(row.has_copyright), rightsAccepted: Boolean(row.rights_accepted), status: row.status, paymentStatus: row.payment_status, paymentMethod:row.payment_method||'contact',exchangeRate:row.exchange_rate||26000,receivedAmountVnd:row.received_amount_vnd||0,reportedAmountVnd:row.reported_amount_vnd||0,paymentClaimedAt:row.payment_claimed_at||null,paymentReference:row.payment_reference||'',rightsConfirmed:Boolean(row.rights_confirmed),paymentLink:'/#pay='+row.order_number+'&key='+row.checkout_key,adminNote: row.admin_note, version: row.version, createdAt: row.created_at, updatedAt: row.updated_at, history: JSON.parse(row.history_json) };
 }

@@ -19,6 +19,14 @@ export const orders = sqliteTable('orders', {
   rightsAccepted: integer('rights_accepted').notNull().default(0),
   status: text('status').notNull().default('new'),
   paymentStatus: text('payment_status').notNull().default('unpaid'),
+  paymentMethod: text('payment_method').notNull().default('contact'),
+  exchangeRate: integer('exchange_rate').notNull().default(26000),
+  bankSnapshotJson: text('bank_snapshot_json').notNull().default('{}'),
+  paymentClaimedAt: text('payment_claimed_at'),
+  paymentReference: text('payment_reference').notNull().default(''),
+  reportedAmountVnd: integer('reported_amount_vnd').notNull().default(0),
+  receivedAmountVnd: integer('received_amount_vnd').notNull().default(0),
+  rightsConfirmed: integer('rights_confirmed').notNull().default(0),
   adminNote: text('admin_note').notNull().default(''),
   historyJson: text('history_json').notNull(),
   version: integer('version').notNull().default(1),
@@ -54,6 +62,13 @@ export const catalogueOverrides = sqliteTable('catalogue_overrides', {
   metadataJson: text('metadata_json').notNull().default('{}'),
   hidden: integer('hidden').notNull().default(0),
   deletedAt: text('deleted_at'),
+  version: integer('version').notNull().default(1),
+  updatedAt: text('updated_at').notNull(),
+});
+
+export const shopSettings = sqliteTable('shop_settings', {
+  key: text('key').primaryKey(),
+  valueJson: text('value_json').notNull(),
   version: integer('version').notNull().default(1),
   updatedAt: text('updated_at').notNull(),
 });

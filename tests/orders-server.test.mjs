@@ -339,3 +339,73 @@ test('catalogue edits, visibility, trash and restore preserve order snapshots an
  assert.equal((await f.request('/api/catalog')).data.artworks.find(a=>a.id===artId).titles.vi,'Tên ảnh mới');
  assert.equal((await f.request('/api/orders',{method:'POST',body:f.payload()})).status,201);
 });
+
+const bankFixture={bankName:'MB Bank test',bankBin:'970422',accountNumber:'0000000123456',accountName:'TEST ONLY'};
+async function enableBank(f){return f.request('/api/admin/payment-settings',{method:'PATCH',headers:owner,body:{version:0,exchangeRate:26000,transferEnabled:true,codEnabled:true,bank:bankFixture}});}
+
+test('payment settings require admin, validate bank details and preserve order rate snapshots',async()=>{
+ const f=fixture();
+ assert.equal((await f.request('/api/payment-settings')).data.exchangeRate,26000);
+ assert.equal((await f.request('/api/admin/payment-settings')).status,401);
+ assert.equal((await f.request('/api/admin/payment-settings',{method:'PATCH',headers:owner,body:{version:0,exchangeRate:26000,transferEnabled:true,codEnabled:true,bank:{}}})).status,400);
+ assert.equal((await f.request('/api/orders',{method:'POST',body:f.payload({paymentMethod:'vietqr'})})).status,400);
+ assert.equal((await enableBank(f)).status,200);
+ const first=await f.request('/api/orders',{method:'POST',body:f.payload({paymentMethod:'vietqr',exchangeRate:1,paymentStatus:'paid'})});
+ assert.equal(first.data.expectedAmountVnd,130000);assert.equal(first.data.paymentStatus,'unpaid');assert.equal(first.data.receivedAmountVnd,0);assert.ok(first.data.qrPayload.includes('A000000727'));assert.ok(first.data.qrPayload.includes('5406130000'));assert.ok(first.data.qrPayload.includes(first.data.orderNumber));
+ const changed={version:1,exchangeRate:30000,transferEnabled:true,codEnabled:true,bank:{...bankFixture,accountNumber:'0000000987654'}};
+ assert.equal((await f.request('/api/admin/payment-settings',{method:'PATCH',headers:owner,body:changed})).status,200);
+ assert.equal((await f.request('/api/admin/payment-settings',{method:'PATCH',headers:owner,body:changed})).status,409);
+ const previous=await f.request('/api/order-payment/'+first.data.orderNumber,{headers:{'X-HueArt-Checkout-Key':first.data.paymentAccessKey}});
+ assert.equal(previous.data.expectedAmountVnd,130000);assert.equal(previous.data.bank.accountNumber,bankFixture.accountNumber);
+ const next=await f.request('/api/orders',{method:'POST',body:f.payload({paymentMethod:'transfer'})});assert.equal(next.data.expectedAmountVnd,150000);
+});
+
+test('customer payment reports are private, idempotent and never mark an order as paid',async()=>{
+ const f=fixture();await enableBank(f);
+ const placed=(await f.request('/api/orders',{method:'POST',body:f.payload({paymentMethod:'vietqr'})})).data;
+ const path='/api/order-payment/'+placed.orderNumber,headers={'X-HueArt-Checkout-Key':placed.paymentAccessKey};
+ assert.equal((await f.request(path)).status,404);assert.equal((await f.request(path,{headers:{'X-HueArt-Checkout-Key':crypto.randomUUID()}})).status,404);
+ assert.doesNotMatch(JSON.stringify((await f.request(path,{headers})).data),/Nguyễn An|0901234567|customer_name|customer_phone/);
+ assert.equal((await f.request(path+'/report',{method:'POST',headers,sameOrigin:false,body:{method:'vietqr'}})).status,403);
+ const report=await f.request(path+'/report',{method:'POST',headers,body:{method:'vietqr',reference:'TEST-TXN',paymentStatus:'paid',receivedAmountVnd:999999999}});
+ assert.equal(report.status,200);assert.equal(report.data.paymentStatus,'reported');assert.equal(report.data.receivedAmountVnd,0);assert.equal(report.data.reportedAmountVnd,130000);assert.equal(report.data.canPay,false);
+ assert.equal((await f.request(path+'/report',{method:'POST',headers,body:{method:'vietqr'}})).status,200);
+ let order=(await f.request('/api/admin/orders',{headers:owner})).data.orders[0];assert.equal(order.version,2);assert.equal(order.paymentReference,'TEST-TXN');assert.equal(order.history.filter(x=>x.action==='payment_reported').length,1);
+ const update={version:order.version,status:'confirmed',paymentStatus:'paid',shippingCents:0,receivedAmountVnd:0,rightsConfirmed:false};
+ assert.equal((await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:update})).status,400);
+ update.receivedAmountVnd=130000;
+ assert.equal((await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:update})).status,200);
+ const verified=(await f.request(path,{headers})).data;assert.equal(verified.paymentStatus,'paid');assert.equal(verified.receivedAmountVnd,130000);assert.equal(verified.expectedAmountVnd,0);assert.equal(verified.qrPayload,null);
+ assert.equal((await f.request(path+'/report',{method:'POST',headers,body:{method:'vietqr'}})).status,400);
+ assert.equal((await f.request('/api/admin/orders',{headers:owner})).data.stats.receivedVnd,130000);
+});
+
+test('framed prints accept a verified deposit and a separate shipping balance; COD requires a print',async()=>{
+ const f=fixture();await enableBank(f);
+ assert.equal((await f.request('/api/orders',{method:'POST',body:f.payload({paymentMethod:'cod'})})).status,400);
+ const body=f.payload({paymentMethod:'transfer',items:[{artworkId:artId,optionId:'framed-print',quantity:1}],customer:{name:'Test print',phone:'0901234567',address:'Hue test address'}});
+ const placed=(await f.request('/api/orders',{method:'POST',body})).data;
+ assert.equal(placed.shippingCents,null);assert.equal(placed.expectedAmountVnd,182000);
+ const path='/api/order-payment/'+placed.orderNumber,headers={'X-HueArt-Checkout-Key':placed.paymentAccessKey};
+ await f.request(path+'/report',{method:'POST',headers,body:{method:'transfer'}});
+ let order=(await f.request('/api/admin/orders',{headers:owner})).data.orders[0];
+ const deposit=await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:{version:order.version,status:'confirmed',paymentStatus:'partial',shippingCents:null,receivedAmountVnd:182000}});assert.equal(deposit.status,200);
+ assert.equal((await f.request(path,{headers})).data.canPay,false);
+ order=deposit.data;
+ const quoted=await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:{version:order.version,status:'confirmed',paymentStatus:'partial',shippingCents:100,receivedAmountVnd:182000}});assert.equal(quoted.status,200);
+ assert.equal((await f.request(path,{headers})).data.expectedAmountVnd,26000);
+ assert.equal((await f.request(path+'/report',{method:'POST',headers,body:{method:'transfer'}})).data.reportedAmountVnd,26000);
+ order=(await f.request('/api/admin/orders',{headers:owner})).data.orders[0];
+ assert.equal((await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:{version:order.version,status:'completed',paymentStatus:'paid',shippingCents:100,receivedAmountVnd:208000}})).status,200);
+ assert.equal((await f.request('/api/orders',{method:'POST',body:{...body,checkoutKey:crypto.randomUUID(),paymentMethod:'cod'}})).status,201);
+});
+
+test('copyright payment waits for admin confirmation of the written agreement',async()=>{
+ const f=fixture();await enableBank(f);
+ const placed=(await f.request('/api/orders',{method:'POST',body:f.payload({paymentMethod:'vietqr',rightsAccepted:true,items:[{artworkId:artId,optionId:'copyright',quantity:1}]})})).data;
+ assert.equal(placed.awaitingRights,true);assert.equal(placed.canPay,false);assert.equal(placed.qrPayload,null);
+ let order=(await f.request('/api/admin/orders',{headers:owner})).data.orders[0];
+ assert.equal((await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:{version:order.version,status:'confirmed',paymentStatus:'unpaid',shippingCents:0,receivedAmountVnd:0,rightsConfirmed:true}})).status,200);
+ const ready=(await f.request('/api/order-payment/'+placed.orderNumber,{headers:{'X-HueArt-Checkout-Key':placed.paymentAccessKey}})).data;
+ assert.equal(ready.canPay,true);assert.equal(ready.expectedAmountVnd,260000);
+});

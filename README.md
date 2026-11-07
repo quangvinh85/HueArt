@@ -63,3 +63,15 @@ GitHub Actions còn đóng gói API bằng builder Vercel chính thức và ch�
 Trong `/admin`, tab **Thư viện ảnh** liệt kê cả ảnh có sẵn lẫn tác phẩm gửi lên đã được duyệt. Có tìm kiếm, bộ lọc và phân trang 12 ảnh. Admin sửa tên / địa điểm / câu chuyện theo ba ngôn ngữ, tác giả và bộ sưu tập; ẩn/hiện; chuyển ảnh vào thùng rác và khôi phục. Tác phẩm chưa được duyệt vẫn nằm ở tab **Tác phẩm gửi đến**. Ẩn/xóa chặn đơn mới và bỏ ảnh khỏi cửa hàng; đơn cũ giữ nguyên thông tin lúc đặt. Ảnh trong thùng rác chưa bị xóa vĩnh viễn khỏi kho.
 
 Mỗi lần build tạo WebP 160/480/960/1440 px từ ảnh có sẵn, giữ file gốc nguyên vẹn. Admin dùng ảnh nhỏ 160 px, cửa hàng dùng `srcset` theo kích thước màn hình, chỉ tải ảnh gần màn hình và chỉ dựng thêm ảnh khi bấm “Xem thêm ảnh”. Vercel Image Optimization xử lý ảnh gửi lên đã duyệt; chỉ cho phép đường dẫn ảnh công khai của HueArt, không dùng trình tối ưu công khai cho ảnh quản trị riêng tư. Xem trước ảnh đã ẩn hoặc chưa duyệt chỉ tải khi mở chi tiết. Cache ảnh đã tối ưu trên Vercel có thể còn tối đa 60 giây sau khi ẩn; danh mục và đặt hàng kiểm tra trạng thái hiện tại trên máy chủ.
+
+## Thanh toán và USD/VND
+
+Vào `/admin` → **Cài đặt thanh toán** để nhập ngân hàng (BIN), số tài khoản, tên chủ tài khoản và bật chuyển khoản/VietQR. Không dùng tài khoản mẫu hoặc tài khoản cũ trong các component không còn hoạt động. Trước khi admin cấu hình, cửa hàng vẫn nhận đơn liên hệ thanh toán sau và COD cho đơn có bản in.
+
+Giá bán tiếp tục được tính bằng USD; giao diện có giá VND nhỏ hơn, mặc định **1 USD = 26.000 VND**. Tỷ giá và tài khoản nhận tiền được lưu theo đơn. Thay đổi cài đặt áp dụng cho đơn mới; không thay đổi số tiền và tài khoản đã chỉ định cho đơn trước đó. Với đơn cũ chưa từng có thông tin ngân hàng, thông tin hiện tại được dùng khi khách bắt đầu thanh toán.
+
+Sau khi lưu đơn, khách có thể quét VietQR (tạo ngay trong trình duyệt, không gửi dữ liệu sang dịch vụ tạo ảnh QR), chuyển khoản hoặc chờ người bán liên hệ. QR chứa đúng số tiền VND và mã đơn. Đơn in chưa có phí vận chuyển có thể trả trước tiền ảnh; phần vận chuyển được chốt và thu sau. Đơn chuyển quyền tác giả chỉ mở hướng dẫn chuyển khoản sau khi admin xác nhận thỏa thuận bằng văn bản.
+
+Nút **Thông báo tôi đã chuyển khoản** chỉ tạo trạng thái **Khách báo đã chuyển · Chờ xác minh**, không tự đánh dấu đã nhận tiền. Admin đối chiếu tài khoản hoặc tiền COD, nhập số tiền thực nhận và chọn **Đã nhận một phần** hoặc **Đã thanh toán**. Lịch sử giữ các lần báo chuyển và xác nhận. Website chưa kết nối webhook ngân hàng để đối soát tự động.
+
+Biên nhận có liên kết riêng chứa khóa ngẫu nhiên trong URL fragment (không gửi trong URL HTTP). API yêu cầu khóa qua header `X-HueArt-Checkout-Key`, không trả thông tin cá nhân khách; quyền xem/sửa danh sách đơn vẫn chỉ thuộc admin. Không công khai liên kết biên nhận của khách.

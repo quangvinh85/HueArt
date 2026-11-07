@@ -29,6 +29,13 @@
       "when": 1794023024076,
       "tag": "0003_ancient_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794024095891,
+      "tag": "0004_nappy_wolfpack",
+      "breakpoints": true
     }
   ]
 }
