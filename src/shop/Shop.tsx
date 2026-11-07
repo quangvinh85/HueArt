@@ -196,7 +196,7 @@ export default function Shop() {
         <div className="shop-section-title"><div><span className="shop-eyebrow">{tr("Giá rõ ràng, lựa chọn dễ dàng")}</span><h2>{tr("Ba cách sở hữu một bức ảnh")}</h2></div><p>{tr("Cùng một bảng giá cho mọi ảnh.")}</p></div>
         <div className="shop-option-grid">{SALE_OPTIONS.map((option, index) => {
             const Icon = icons[index];
-            return <article key={option.id} className="shop-price-card"><Icon size={23} /><div className="shop-price-heading"><h3>{tr(option.title)}</h3><strong>{<Price cents={(option.priceUSD)*100}/>}</strong></div><p>{tr(option.description)}</p><a href="#gallery" onClick={() => setNotice(tr("Chọn một bức ảnh rồi chọn “{0}”.", tr(option.title)))}>{tr("Chọn ảnh ")}<ArrowRight size={15} /></a></article>;
+            return <article key={option.id} className="shop-price-card"><Icon size={23} /><div className="shop-price-heading"><h3>{tr(option.title)}</h3></div><p>{tr(option.description)}</p><a href="#gallery" onClick={() => setNotice(tr("Chọn một bức ảnh rồi chọn “{0}”.", tr(option.title)))}>{tr("Chọn ảnh ")}<ArrowRight size={15} /></a></article>;
           })}</div>
       </section>
       <section id="gallery" className="shop-container shop-gallery">
