@@ -5,18 +5,21 @@ export default function Modal({
   title,
   onClose,
   children,
-  wide = false
+  wide = false,
+  closeOnBackdrop = false
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  closeOnBackdrop?: boolean;
 }) {
   const {
     language,
     tr
   } = useShopLanguage();
   const ref = useRef<HTMLDivElement>(null);
+  const pointerStartedOnBackdrop = useRef(false);
   useEffect(() => {
     const previousFocus = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
@@ -42,9 +45,9 @@ export default function Modal({
       previousFocus?.focus();
     };
   }, []);
-  return <div className="shop-overlay">
+  return <div className="shop-overlay" onPointerDown={event=>{pointerStartedOnBackdrop.current=event.target===event.currentTarget;}} onClick={event=>{if(closeOnBackdrop&&pointerStartedOnBackdrop.current&&event.target===event.currentTarget)onClose();pointerStartedOnBackdrop.current=false;}}>
     <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="shop-dialog-title" className={`shop-dialog ${wide ? 'shop-dialog-wide' : ''}`}>
-      <div className="shop-dialog-header"><h2 id="shop-dialog-title">{title}</h2><button className="shop-icon" onClick={onClose} aria-label={tr("Đóng")}><X size={21} /></button></div>
+      <div className="shop-dialog-header"><h2 id="shop-dialog-title">{title}</h2><button type="button" className="shop-modal-close" onClick={onClose} aria-label={tr("Đóng")}><span>{tr("Đóng")}</span><X size={22} strokeWidth={2.5} aria-hidden="true"/></button></div>
       {children}
     </div>
   </div>;

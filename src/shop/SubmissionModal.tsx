@@ -90,7 +90,7 @@ export default function SubmissionModal({
   };
   return <Modal title={tr("Gửi tác phẩm")} onClose={() => {
     if (!busy) onClose();
-  }} wide>
+  }} wide closeOnBackdrop>
     {reference ? <div className="shop-checkout"><div className="shop-draft-status"><Check size={28} /><div><h3>{tr("Đã tiếp nhận tác phẩm")}</h3><p>{tr("Ảnh và hồ sơ đã được lưu để quản trị viên xem xét. Tác phẩm chưa được công khai trên website.")}</p></div></div><div className="shop-order-recipient"><span>{tr("Mã hồ sơ")}</span><strong>{reference}</strong></div><button className="shop-primary" onClick={onClose}>{tr("Đóng")}</button></div> : <form className="shop-checkout submission-form" ref={formRef} onSubmit={event => {
       event.preventDefault();
       void submit();

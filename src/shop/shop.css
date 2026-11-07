@@ -264,3 +264,8 @@
 @keyframes shop-contribute-shine { 0%,15% { transform:translateX(-120%); opacity:0; } 25% { opacity:1; } 48%,100% { transform:translateX(120%); opacity:0; } }
 @keyframes shop-contribute-twinkle { 0%,100% { opacity:.5; transform:scale(.85); } 50% { opacity:1; transform:scale(1.1); } }
 @media(prefers-reduced-motion:reduce) { .shop-contribute-button::before,.shop-contribute-button .shop-contribute-sparkle { animation:none; } .shop-contribute-button::before { opacity:0; } }
+
+.shop-dialog-header { position:sticky; top:0; z-index:3; background:#15171d; }
+.shop-modal-close { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; min-width:44px; padding:10px 12px; flex-shrink:0; background:#e8c380; border:1px solid #ffe3ad; border-radius:7px; color:#19130a; font-size:12px; font-weight:700; box-shadow:0 0 0 3px #e8c38014,0 3px 12px #0005; }
+.shop-modal-close:hover { background:#ffe0a4; }
+.shop-modal-close:focus-visible { outline:3px solid #fff; outline-offset:3px; }
