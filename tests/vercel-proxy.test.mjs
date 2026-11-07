@@ -67,7 +67,8 @@ test('Vercel can log in, manage orders and log out without Sites browser identit
  assert.equal((await proxy('/api/admin/orders')).status,403);
  assert.equal((await proxy('/api/admin-auth/login',{username:'fixture-owner',password:'wrong'})).status,401);
  const login=await proxy('/api/admin-auth/login',{username:'fixture-owner',password});assert.equal(login.status,200);
- const cookie=login.headers.get('Set-Cookie').split(';')[0];
+ const cookies=login.headers.getSetCookie();assert.ok(cookies.some(value=>value.includes('SameSite=Lax')&&value.includes('HttpOnly')&&value.includes('Secure')));
+ const cookie=cookies.find(value=>value.includes('Max-Age=28800')).split(';')[0];
  assert.equal((await(await proxy('/api/session',null,cookie)).json()).isAdmin,true);
  const order=await proxy('/api/orders',{checkoutKey:crypto.randomUUID(),items:[{artworkId:'meridian-gate-twilight',optionId:'high-resolution',quantity:1}],customer:{name:'Khách Vercel',phone:'0901234567'},rightsAccepted:false});assert.equal(order.status,201);
  const orders=await(await proxy('/api/admin/orders',null,cookie)).json();assert.equal(orders.total,1);assert.equal(orders.orders[0].customer.name,'Khách Vercel');

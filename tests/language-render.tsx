@@ -12,15 +12,15 @@ let language: string|null = null;
 Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:(key:string)=>key==='hueart_language'?language:null,setItem:()=>{},removeItem:()=>{}}});
 const render=(saved:string|null)=>{language=saved;return renderToStaticMarkup(<LanguageProvider><Shop/></LanguageProvider>);};
 assert.match(render(null),/Gửi tác phẩm/);
-assert.match(render(null),/Giám tuyển AI/);
+assert.match(render(null),/Trợ lý AI/);
 assert.match(render('invalid'),/Ba cách sở hữu một bức ảnh/);
 assert.match(render('en'),/Submit artwork/);
-assert.match(render('en'),/AI curator/);
+assert.match(render('en'),/AI assistant/);
 assert.match(render('en'),/High-resolution file/);
 assert.match(ARTWORKS[0].titles.en,/Echoes of the Imperial Meridian Gate/);
 assert.doesNotMatch(render('en'),/images\/hue\//);
 assert.match(render('fr'),/Soumettre une œuvre/);
-assert.match(render('fr'),/Conseil IA/);
+assert.match(render('fr'),/Assistant IA/);
 assert.match(render('fr'),/Fichier haute résolution/);
 assert.match(ARTWORKS[0].titles.fr,/Échos de la Porte du Midi Impériale/);
 for(const option of SALE_OPTIONS){

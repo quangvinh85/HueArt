@@ -1,0 +1,1 @@
+ALTER TABLE `admin_sessions` ADD `security_epoch` integer DEFAULT 0 NOT NULL;

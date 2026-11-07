@@ -178,7 +178,7 @@ export default function Shop() {
   return <RateContext.Provider value={paymentSettings.exchangeRate}><div className="shop">
     <header className="shop-header">
       <a className="shop-brand shop-club-brand" href="#home" aria-label="NHIẾP ẢNH NGHỆ THUẬT HUẾ"><span>NHIẾP ẢNH NGHỆ THUẬT</span><strong>HUẾ</strong></a>
-      <nav aria-label={tr("Điều hướng chính")}><a href="#gallery">{tr("Chọn ảnh")}</a><a href="#options">{tr("Bảng giá")}</a><a href="#contact">{tr("Liên hệ")}</a></nav><div className="shop-feature-actions"><button className="shop-contribute-button" aria-label={tr("Gửi tác phẩm để cộng tác bán ảnh")} onClick={() => setSubmissionOpen(true)}><Camera size={18} aria-hidden="true"/><span><strong>{tr("Gửi tác phẩm")}</strong><small>{tr("Cộng tác bán ảnh")}</small></span><Sparkles className="shop-contribute-sparkle" size={11} aria-hidden="true"/></button><button onClick={() => setCuratorOpen(true)}><Sparkles size={15} /><span>{tr("Giám tuyển AI")}</span></button></div><LanguageSwitcher />
+      <nav aria-label={tr("Điều hướng chính")}><a href="#gallery">{tr("Chọn ảnh")}</a><a href="#options">{tr("Bảng giá")}</a><a href="#contact">{tr("Liên hệ")}</a></nav><div className="shop-feature-actions"><button className="shop-contribute-button" aria-label={tr("Gửi tác phẩm để cộng tác bán ảnh")} onClick={() => setSubmissionOpen(true)}><Camera size={18} aria-hidden="true"/><span><strong>{tr("Gửi tác phẩm")}</strong><small>{tr("Cộng tác bán ảnh")}</small></span><Sparkles className="shop-contribute-sparkle" size={11} aria-hidden="true"/></button><button onClick={() => setCuratorOpen(true)}><Sparkles size={15} /><span>{tr("Trợ lý AI")}</span></button></div><LanguageSwitcher />
       <button className="shop-cart-button" onClick={() => setPanel('cart')} aria-label={tr("Giỏ hàng, {0} sản phẩm", count)}><ShoppingBag size={18} /><span>{tr("Giỏ hàng")}</span><b>{count}</b></button>
     </header>
     <main id="home">
@@ -189,7 +189,6 @@ export default function Shop() {
           <h1>NHIẾP ẢNH<br /><em>NGHỆ THUẬT HUẾ</em></h1>
           <p>{tr("Mang 1 tác phẩm nghệ thuật về với bạn")}</p>
           <a href="#gallery" className="shop-primary">{tr("Chọn ảnh ngay ")}<ArrowDown size={16} /></a>
-          <span className="shop-hero-note">{tr("File từ 5 USD · Bản in có khung 7 USD")}</span>
         </div>
       </section>
       <section id="options" className="shop-container shop-pricing">

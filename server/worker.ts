@@ -1,6 +1,7 @@
-import {mediaMigration} from './mediaMigration';
+import {adminSecurity} from './twoFactor';
+import {readBoundedBytes,limitRequest} from './limits';
 import {secureResponse} from './securityHeaders';
-import {previewKey,adminOriginalAssets} from './media';
+import {previewKey} from './media';
 import {customerDownloads,downloadFile} from './downloads';
 import {getContactSettings,publicContactSettings,saveContactSettings} from './contactSettings';
 import {notificationSettings,queueOrderNotification,deliverOrderNotification,retryNotification} from './zaloNotifications';
@@ -13,13 +14,13 @@ import { curate } from './curator';
 import { ApiError, ORDER_STATUSES, PAYMENT_STATUSES, serializeOrder, validateOrder, validateUpdate } from './orders';
 
 interface Statement { bind(...values: unknown[]): Statement; first<T = any>(): Promise<T | null>; all<T = any>(): Promise<{ results: T[] }>; run(): Promise<{ meta: { changes: number } }> }
-interface Env { DB: { prepare(query: string): Statement }; ASSETS: { fetch(request: Request): Promise<Response> }; ADMIN_EMAIL: string; BUCKET?: any; GEMINI_API_KEY?: string; ADMIN_USERNAME?: string; ADMIN_PASSWORD_HASH?: string; VERCEL_BRIDGE_TOKEN?: string; MEDIA_MIGRATION_TOKEN_HASH?:string; MEDIA_MIGRATION_EXPIRES_AT?:string; }
+interface Env { DB: { prepare(query: string): Statement }; ASSETS: { fetch(request: Request): Promise<Response> }; ADMIN_EMAIL: string; BUCKET?: any; GEMINI_API_KEY?: string; ADMIN_USERNAME?: string; ADMIN_PASSWORD_HASH?: string; VERCEL_BRIDGE_TOKEN?: string; }
 const json = (data: unknown, status = 200) => Response.json(data, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
 const sha256 = async (input: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input)))).map(byte => byte.toString(16).padStart(2, '0')).join('');
 async function readJson(request: Request) {
   if (!request.headers.get('Content-Type')?.includes('application/json')) throw new ApiError(415, 'Yêu cầu phải là JSON.');
   if (Number(request.headers.get('Content-Length')) > 32768) throw new ApiError(413, 'Nội dung đơn hàng quá dài.');
-  const body = await request.text();
+  const body = new TextDecoder().decode(await readBoundedBytes(request,32768));
   if (new TextEncoder().encode(body).length > 32768) throw new ApiError(413, 'Nội dung đơn hàng quá dài.');
   try { return JSON.parse(body); } catch { throw new ApiError(400, 'Dữ liệu không hợp lệ.'); }
 }
@@ -35,13 +36,13 @@ async function notifyOrder(env:Env,order:any,context?:{waitUntil(promise:Promise
 
 export async function api(request: Request, env: Env, context?: {waitUntil(promise:Promise<unknown>):void}): Promise<Response> {
   const url = new URL(request.url);
-  if(url.pathname.startsWith('/api/internal/media-'))return mediaMigration(request,env);
   const actor = await adminIdentity(request, env);
   if (request.method === 'GET' && url.pathname === '/api/session') return json({ authenticated: actor.authenticated, ownerAuthenticated: actor.ownerAuthenticated, isAdmin: actor.isAdmin });
   if (url.pathname.startsWith('/api/admin/') && !actor.isAdmin) throw new ApiError(actor.authenticated ? 403 : 401, 'Vui lòng đăng nhập quản trị để tiếp tục.');
   if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method) && request.headers.get('Origin') !== url.origin) throw new ApiError(403, 'Nguồn gửi yêu cầu không hợp lệ. Vui lòng dùng website để đặt hàng.');
   if (!env.DB) throw new ApiError(503, 'Hệ thống đơn hàng đang được thiết lập. Vui lòng thử lại sau.');
 
+  if(/^\/api\/admin\/security(?:\/(?:setup|enable|disable))?$/.test(url.pathname))return json(await adminSecurity(request,env,request.method==='POST'?await readJson(request):{},actor));
   if(url.pathname.startsWith('/api/admin/zalo-notifications')){
     const retry=/^\/api\/admin\/zalo-notifications\/([0-9a-f-]{36})\/retry$/.exec(url.pathname);
     if(retry&&request.method==='POST')return json(await retryNotification(env,retry[1]));
@@ -86,8 +87,6 @@ export async function api(request: Request, env: Env, context?: {waitUntil(promi
   if(download)return downloadFile(request,env,download[1]);
   const links=/^\/api\/order-downloads\/(DHT-[0-9]{8}-[A-F0-9]{8})$/.exec(url.pathname);
   if(links)return json(await customerDownloads(request,env,links[1]));
-  const importAsset=/^\/api\/admin\/original-assets\/([a-z0-9-]+)\/(complete|[0-9]+)$/.exec(url.pathname);
-  if(importAsset)return adminOriginalAssets(request,env,importAsset[1],importAsset[2]);
   const publicImage=/^\/api\/catalog\/([0-9a-f-]{36})\/preview$/.exec(url.pathname);
   if(publicImage&&['GET','HEAD'].includes(request.method)){
     const image=await env.DB.prepare("SELECT preview_version FROM artwork_submissions WHERE id = ? AND status = 'accepted'").bind(publicImage[1]).first();
@@ -104,6 +103,7 @@ export async function api(request: Request, env: Env, context?: {waitUntil(promi
   if (url.pathname === '/api/curator' && request.method === 'POST') return json(await curate(await readJson(request), env));
 
   if (url.pathname === '/api/orders' && request.method === 'POST') {
+    await limitRequest(env,'order:'+actor.rateKey,30,900);
     const body=await readJson(request);
     const bodyMethodPresent=body.paymentMethod!==undefined;
     const data = validateOrder(body, await getCatalogue(env));

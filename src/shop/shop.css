@@ -1,3 +1,4 @@
+@import './vietnamese-font.css';
 .shop { --gold:#dfb871; --muted:#9ca3af; background:#0b0c0e; color:#f5f0e6; font-size:14px; line-height:1.65; }
 .shop *, .shop *::before, .shop *::after { box-sizing:border-box; }
 .shop button, .shop input, .shop textarea { font:inherit; }
@@ -261,7 +262,7 @@
 .shop-feature-actions .shop-contribute-button:hover { border-color:#ffe2aa; background-color:#6b4b2240; }
 .shop-contribute-button:focus-visible { outline:2px solid #ffe2aa; outline-offset:3px; }
 .submission-collab-intro { background:linear-gradient(120deg,#dfb87114,#171b23); border:1px solid #dfb87155; padding:20px; border-radius:5px; }
-.submission-collab-intro h3 { font-family:var(--font-display,Georgia,serif); font-size:27px; line-height:1.2; margin:8px 0 12px; color:#f5d69f; }
+.submission-collab-intro h3 { font-family:'Noto Sans UI',var(--font-sans),Arial,sans-serif; font-size:24px; font-weight:600; line-height:1.55; letter-spacing:0; margin:8px 0 12px; color:#f5d69f; }
 .submission-collab-intro p { color:#b5bdca; font-size:12px; line-height:1.8; margin:0; }
 @keyframes shop-contribute-shine { 0%,15% { transform:translateX(-120%); opacity:0; } 25% { opacity:1; } 48%,100% { transform:translateX(120%); opacity:0; } }
 @keyframes shop-contribute-twinkle { 0%,100% { opacity:.5; transform:scale(.85); } 50% { opacity:1; transform:scale(1.1); } }

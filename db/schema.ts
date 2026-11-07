@@ -54,11 +54,13 @@ export const artworkSubmissions = sqliteTable('artwork_submissions', {
   pricingJson:text('pricing_json').notNull().default('{}'),
   adminPricingJson:text('admin_pricing_json').notNull().default('{}'),
   previewVersion:integer('preview_version').notNull().default(0),
+  storedBytes:integer('stored_bytes').notNull().default(0),
   objectKey: text('object_key').notNull(), contentType: text('content_type').notNull(), status: text('status').notNull().default('pending'), adminNote: text('admin_note').notNull().default(''), version: integer('version').notNull().default(1),
   createdAt: text('created_at').notNull(), updatedAt: text('updated_at').notNull(),
 }, table => [uniqueIndex('artwork_submissions_reference').on(table.reference), uniqueIndex('artwork_submissions_key').on(table.submissionKey),index('artwork_submissions_requester').on(table.requesterHash,table.createdAt)]);
 
 export const adminSessions = sqliteTable('admin_sessions', {
+  securityEpoch:integer('security_epoch').notNull().default(0),
   tokenHash:text('token_hash').primaryKey(), userId:text('user_id').notNull(), passwordVersion:text('password_version').notNull(), createdAt:integer('created_at').notNull(), expiresAt:integer('expires_at').notNull(),
 },table=>[index('admin_sessions_expiry').on(table.expiresAt)]);
 export const adminLoginAttempts = sqliteTable('admin_login_attempts', {
@@ -92,3 +94,10 @@ export const orderNotifications=sqliteTable('order_notifications',{
  sentAt:text('sent_at'),
  createdAt:text('created_at').notNull(),
 },table=>[index('order_notifications_created').on(table.createdAt)]);
+
+export const requestLimits=sqliteTable('request_limits',{
+ requestKey:text('request_key').primaryKey(),attempts:integer('attempts').notNull(),windowStarted:integer('window_started').notNull(),
+},table=>[index('request_limits_window').on(table.windowStarted)]);
+export const mediaUploadReservations=sqliteTable('media_upload_reservations',{
+ id:text('id').primaryKey(),bytes:integer('bytes').notNull(),createdAt:text('created_at').notNull(),
+});

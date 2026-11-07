@@ -2162,5 +2162,9 @@
   "Ảnh xem trước vượt giới hạn độ phân giải.": [
     "The image preview exceeds the resolution limit.",
     "L’aperçu dépasse la limite de résolution."
+  ],
+  "Trợ lý AI": [
+    "AI assistant",
+    "Assistant IA"
   ]
 }

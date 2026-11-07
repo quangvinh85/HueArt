@@ -6,7 +6,7 @@ await rm('dist', { recursive: true, force: true });
 execFileSync(process.execPath, ['node_modules/vite/bin/vite.js', 'build', '--outDir', 'dist/client'], { stdio: 'inherit' });
 await mkdir('dist/server', { recursive: true });
 await mkdir('dist/.openai', { recursive: true });
-await build({ entryPoints: ['server/worker.ts'], outfile: 'dist/server/index.js', bundle: true, format: 'esm', platform: 'browser', target: 'es2022', minify: true });
+await build({ entryPoints: ['server/worker.ts'], outfile: 'dist/server/index.js', bundle: true, format: 'esm', platform: 'browser', target: 'es2022', minify: true, inject:['scripts/buffer-shim.ts'] });
 const hosting = JSON.parse(await readFile('.openai/hosting.json', 'utf8'));
 if (!hosting.project_id || !hosting.d1) throw new Error('Missing Site identity or database binding');
 await writeFile('dist/.openai/hosting.json', JSON.stringify(hosting, null, 2));

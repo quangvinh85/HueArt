@@ -1,3 +1,4 @@
+import {getAdminSecurity,authenticateSecondFactor} from './twoFactor';
 import { vercelBridge } from './vercelBridge';
 import { ApiError } from './orders';
 const COOKIE_NAME = '__Host-hueart_admin';
@@ -19,11 +20,12 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const actual = Array.from(new Uint8Array(bits)).map(byte=>byte.toString(16).padStart(2,'0')).join('');
   return timingEqual(actual,expected);
 }
-const cookieToken = (request: Request) => {
+export const cookieToken = (request: Request) => {
   const value = request.headers.get('Cookie')?.split(';').map(part=>part.trim()).find(part=>part.startsWith(COOKIE_NAME+'='))?.slice(COOKIE_NAME.length+1) || '';
   return /^[0-9a-f]{64}$/.test(value) ? value : '';
 };
-const cookie = (value:string,maxAge:number) => `${COOKIE_NAME}=${value}; Path=/; HttpOnly; Secure; SameSite=None; Partitioned; Max-Age=${maxAge}`;
+const cookie = (value:string,maxAge:number,bridge=false) => `${COOKIE_NAME}=${value}; Path=/; HttpOnly; Secure; ${bridge?'SameSite=Lax':'SameSite=None; Partitioned'}; Max-Age=${maxAge}`;
+function authResponse(data:unknown,request:Request,env:AuthEnv,token:string,age:number){const result=response(data);const bridge=Boolean(vercelBridge(request,env));if(bridge)result.headers.append('Set-Cookie',cookie('',0));result.headers.append('Set-Cookie',cookie(token,age,bridge));return result;}
 const response = (data:unknown,headers:Record<string,string>={}) => Response.json(data,{headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers}});
 
 export async function adminIdentity(request: Request, env: AuthEnv) {
@@ -34,8 +36,9 @@ export async function adminIdentity(request: Request, env: AuthEnv) {
   let isAdmin=false;
   const token=cookieToken(request);
   if(ownerAuthenticated&&token&&env.ADMIN_USERNAME&&env.ADMIN_PASSWORD_HASH&&env.DB){
-    const session=await env.DB.prepare('SELECT user_id, expires_at, password_version FROM admin_sessions WHERE token_hash = ?').bind(await hashToken(token)).first();
-    isAdmin=Boolean(session&&session.user_id===userId&&session.expires_at>Math.floor(Date.now()/1000)&&session.password_version===await hashToken(env.ADMIN_PASSWORD_HASH));
+    const session=await env.DB.prepare('SELECT user_id, expires_at, password_version, security_epoch FROM admin_sessions WHERE token_hash = ?').bind(await hashToken(token)).first();
+    const security=await getAdminSecurity(env);
+    isAdmin=Boolean(session&&Number(session.security_epoch||0)===security.epoch&&session.user_id===userId&&session.expires_at>Math.floor(Date.now()/1000)&&session.password_version===await hashToken(env.ADMIN_PASSWORD_HASH));
   }
   return {authenticated:Boolean(userId),ownerAuthenticated,isAdmin,userId,rateKey:bridge?.rateKey || userId || request.headers.get('CF-Connecting-IP') || 'anonymous'};
 }
@@ -46,7 +49,7 @@ export async function adminAuth(request: Request,env:AuthEnv,actor:Awaited<Retur
   if(path==='/api/admin-auth/logout'){
     const token=cookieToken(request);
     if(token)await env.DB.prepare('DELETE FROM admin_sessions WHERE token_hash = ?').bind(await hashToken(token)).run();
-    return response({isAdmin:false},{'Set-Cookie':cookie('',0)});
+    return authResponse({isAdmin:false},request,env,'',0);
   }
   if(path!=='/api/admin-auth/login')throw new ApiError(404,'Không tìm thấy chức năng này.');
   if(!env.ADMIN_USERNAME||!env.ADMIN_PASSWORD_HASH)throw new ApiError(503,'Cấu hình đăng nhập chưa sẵn sàng.');
@@ -55,15 +58,14 @@ export async function adminAuth(request: Request,env:AuthEnv,actor:Awaited<Retur
   if(username.length>100||password.length>256)throw new ApiError(400,'Tên đăng nhập hoặc mật khẩu không đúng.');
   const now=Math.floor(Date.now()/1000);
   const attemptKey=await hashToken(actor.rateKey+':admin-login');
-  const attempts=await env.DB.prepare('SELECT failures, window_started FROM admin_login_attempts WHERE attempt_key = ?').bind(attemptKey).first();
-  if(attempts&&attempts.window_started>now-900&&attempts.failures>=5)throw new ApiError(429,'Bạn đã nhập sai nhiều lần. Vui lòng thử lại sau 15 phút.');
-  // Count attempts atomically, before the expensive password check.
-  await env.DB.prepare('INSERT INTO admin_login_attempts (attempt_key, failures, window_started) VALUES (?, 1, ?) ON CONFLICT(attempt_key) DO UPDATE SET failures = CASE WHEN window_started <= ? THEN 1 ELSE failures + 1 END, window_started = CASE WHEN window_started <= ? THEN ? ELSE window_started END').bind(attemptKey,now,now-900,now-900,now).run();
+  const attempts=await env.DB.prepare('INSERT INTO admin_login_attempts (attempt_key, failures, window_started) VALUES (?, 1, ?) ON CONFLICT(attempt_key) DO UPDATE SET failures = CASE WHEN window_started <= ? THEN 1 ELSE failures + 1 END, window_started = CASE WHEN window_started <= ? THEN ? ELSE window_started END RETURNING failures').bind(attemptKey,now,now-900,now-900,now).first();
+  if(Number(attempts.failures)>5)throw new ApiError(429,'Bạn đã nhập sai nhiều lần. Vui lòng thử lại sau 15 phút.');
   const validPassword=await verifyPassword(password,env.ADMIN_PASSWORD_HASH);
   if(!validPassword||!timingEqual(username,env.ADMIN_USERNAME))throw new ApiError(401,'Tên đăng nhập hoặc mật khẩu không đúng.');
+  const epoch=await authenticateSecondFactor(env,body.otp);if(epoch===null)throw new ApiError(401,'Mã xác thực không đúng hoặc đã dùng.');
   const token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(value=>value.toString(16).padStart(2,'0')).join('');
-  await env.DB.prepare('INSERT INTO admin_sessions (token_hash, user_id, password_version, created_at, expires_at) VALUES (?, ?, ?, ?, ?)').bind(await hashToken(token),actor.userId,await hashToken(env.ADMIN_PASSWORD_HASH),now,now+SESSION_SECONDS).run();
+  await env.DB.prepare('INSERT INTO admin_sessions (token_hash, user_id, password_version, created_at, expires_at, security_epoch) VALUES (?, ?, ?, ?, ?, ?)').bind(await hashToken(token),actor.userId,await hashToken(env.ADMIN_PASSWORD_HASH),now,now+SESSION_SECONDS,epoch).run();
   await env.DB.prepare('DELETE FROM admin_login_attempts WHERE attempt_key = ?').bind(attemptKey).run();
   await env.DB.prepare('DELETE FROM admin_sessions WHERE expires_at <= ?').bind(now).run();
-  return response({isAdmin:true},{'Set-Cookie':cookie(token,SESSION_SECONDS)});
+  return authResponse({isAdmin:true},request,env,token,SESSION_SECONDS);
 }

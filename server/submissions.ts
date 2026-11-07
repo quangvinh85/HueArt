@@ -1,3 +1,5 @@
+import {validateOriginal} from './imageValidation';
+import {limitRequest,reserveMedia,releaseMedia} from './limits';
 import {readMultipart,readPreviews,putPreviews,previewKey} from './media';
 import {REVENUE_POLICY} from '../src/shop/revenueTerms';
 import { ApiError } from './orders';
@@ -23,6 +25,7 @@ export async function submissions(request: Request, env: any, rateKey?: string, 
     if (!env.BUCKET) throw new ApiError(503, 'Tính năng gửi ảnh đang được thiết lập. Vui lòng thử lại sau.');
     if (!request.headers.get('Content-Type')?.startsWith('multipart/form-data')) throw new ApiError(415, 'Định dạng gửi ảnh không hợp lệ.');
     if (Number(request.headers.get('Content-Length')) > MAX_FILE_BYTES + 1600000) throw new ApiError(413, 'Ảnh tối đa 8 MB.');
+    if(!adminUpload)await limitRequest(env,'upload:'+rateKey,20,3600);
     const form = await readMultipart(request);
     const image = form.get('image');
     if (!(image instanceof File) || image.size === 0 || image.size > MAX_FILE_BYTES) throw new ApiError(400, 'Chọn ảnh JPG, PNG hoặc WebP, tối đa 8 MB.');
@@ -43,11 +46,12 @@ export async function submissions(request: Request, env: any, rateKey?: string, 
     if(!adminUpload&&data.revenueTermsVersion!==REVENUE_POLICY.version)throw new ApiError(409,'Điều kiện cộng tác đã thay đổi. Vui lòng tải lại biểu mẫu để đọc và xác nhận.');
     const pricesCents=data.pricesCents===undefined?{}:validateArtworkPrices(data.pricesCents);
     const revenueTerms=adminUpload?{}:{...REVENUE_POLICY,acceptedAt:new Date().toISOString()};
-    const previews=await readPreviews(form);
-    if(previews.length!==3)throw new ApiError(400,'Vui lòng tạo ảnh xem trước rồi gửi lại tác phẩm.');
     const bytes = new Uint8Array(await image.arrayBuffer());
     const type = imageType(bytes);
-    if (!type) throw new ApiError(400, 'Chỉ nhận ảnh JPG, PNG hoặc WebP hợp lệ.');
+    if(!type)throw new ApiError(400,'Chỉ nhận ảnh JPG, PNG hoặc WebP hợp lệ.');
+    validateOriginal(bytes,type);
+    const previews=await readPreviews(form);
+    if(previews.length!==3)throw new ApiError(400,'Vui lòng tạo ảnh xem trước rồi gửi lại tác phẩm.');
     const payloadHash = await digest(new TextEncoder().encode(JSON.stringify({title,titleEn,titleFr,authorName,authorEmail,authorPhone,location,story,collection,...(Object.keys(pricesCents).length?{pricesCents:Object.fromEntries(Object.entries(pricesCents).sort())}:{}),imageHash:await digest(bytes),...(adminUpload?{adminUpload:true,publish:data.publish}:{revenueTermsVersion:REVENUE_POLICY.version})})));
     const existing = await env.DB.prepare('SELECT * FROM artwork_submissions WHERE submission_key = ?').bind(key).first();
     if (existing) {
@@ -59,23 +63,27 @@ export async function submissions(request: Request, env: any, rateKey?: string, 
     if (!adminUpload&&Number(recent?.count) >= 5) throw new ApiError(429, 'Bạn đã gửi nhiều tác phẩm. Vui lòng thử lại sau một giờ.');
     const id = crypto.randomUUID(), reference = `DHT-ART-${id.slice(0,8).toUpperCase()}`;
     const objectKey = `submissions/${id}/original`;
-    await env.BUCKET.put(objectKey, bytes, { httpMetadata: { contentType: type } });
+    const storedBytes=bytes.length+previews.reduce((sum,preview)=>sum+preview.bytes.length,0);
+    await reserveMedia(env,id,storedBytes);let releaseQuota=false;
     try {
+      await env.BUCKET.put(objectKey, bytes, { httpMetadata: { contentType: type } });
       await putPreviews(env,id,previews);
       if(adminUpload&&!data.publish)await env.DB.prepare('INSERT INTO catalogue_overrides (artwork_id, metadata_json, hidden, deleted_at, version, updated_at) VALUES (?, ?, 1, NULL, 1, ?)').bind('submission-'+id,'{}',new Date().toISOString()).run();
-      await env.DB.prepare('INSERT INTO artwork_submissions (id, reference, submission_key, payload_hash, requester_hash, title, title_en, title_fr, author_name, author_email, author_phone, location, story, collection, object_key, content_type, status, admin_note, version, created_at, updated_at, submission_origin, revenue_terms_json, pricing_json, preview_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id,reference,key,payloadHash,requester,title,titleEn,titleFr,authorName,authorEmail,authorPhone,location,story,collection,objectKey,type,adminUpload?'accepted':'pending',adminUpload?'Thêm trực tiếp từ thư viện admin':'',1,new Date().toISOString(),new Date().toISOString(),adminUpload?'admin':'contributor',JSON.stringify(revenueTerms),JSON.stringify(pricesCents),2).run();
+      await env.DB.prepare('INSERT INTO artwork_submissions (id, reference, submission_key, payload_hash, requester_hash, title, title_en, title_fr, author_name, author_email, author_phone, location, story, collection, object_key, content_type, status, admin_note, version, created_at, updated_at, submission_origin, revenue_terms_json, pricing_json, preview_version, stored_bytes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id,reference,key,payloadHash,requester,title,titleEn,titleFr,authorName,authorEmail,authorPhone,location,story,collection,objectKey,type,adminUpload?'accepted':'pending',adminUpload?'Thêm trực tiếp từ thư viện admin':'',1,new Date().toISOString(),new Date().toISOString(),adminUpload?'admin':'contributor',JSON.stringify(revenueTerms),JSON.stringify(pricesCents),3,storedBytes).run();
+      releaseQuota=true;
     } catch (error) {
       // A database write may have committed even when its response was lost.
       // Keep that row's original file; only clean up this request's unused object.
       const saved = await env.DB.prepare('SELECT id, reference, payload_hash FROM artwork_submissions WHERE submission_key = ?').bind(key).first();
-      if(saved?.id===id&&saved.payload_hash===payloadHash)return json(receipt(saved));
+      if(saved?.id===id&&saved.payload_hash===payloadHash){releaseQuota=true;return json(receipt(saved));}
       await env.BUCKET.delete(objectKey);
       for(const width of [160,480,960])await env.BUCKET.delete(previewKey(id,width));
       if(adminUpload)await env.DB.prepare('DELETE FROM catalogue_overrides WHERE artwork_id = ?').bind('submission-'+id).run();
+      releaseQuota=true;
       if (saved?.payload_hash === payloadHash) return json(receipt(saved));
       if(saved)throw new ApiError(409,'Yêu cầu đã gửi có nội dung khác. Vui lòng đóng rồi mở lại biểu mẫu.');
       throw error;
-    }
+    }finally{if(releaseQuota)await releaseMedia(env,id);}
     return json(receipt({id,reference}), 201);
   }
   if (path === '/api/admin/submissions' && request.method === 'GET') {
@@ -93,7 +101,7 @@ export async function submissions(request: Request, env: any, rateKey?: string, 
   if (['/image','/original'].includes(match[2]) && request.method === 'GET') {
     const object = await env.BUCKET?.get(match[2]==='/image'&&row.preview_version>=2?previewKey(row.id,480):row.object_key);
     if (!object) throw new ApiError(404, 'Không tìm thấy ảnh.');
-    return new Response(object.body, { headers: { 'Content-Type': row.content_type, 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'" } });
+    return new Response(object.body, { headers: { 'Content-Type': match[2]==='/image'&&row.preview_version>=2?'image/jpeg':row.content_type, 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'" } });
   }
   if (!match[2] && request.method === 'PATCH') {
     let data: any;

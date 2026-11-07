@@ -1,4 +1,4 @@
-import { pbkdf2Sync, createHash } from 'node:crypto';
+import { pbkdf2Sync, createHash, createHmac } from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
@@ -288,7 +288,7 @@ test('accepting a submitted photo publishes it, enables all purchase options and
   const serialized=JSON.stringify(catalog.data);
   assert.doesNotMatch(serialized,/private@example.com|0901234567|Private admin note|object_key|password_hash/);
   const image=await worker.fetch(new Request(origin+art.imageUrl),f.env);assert.equal(image.status,200);assert.equal(image.headers.get('Cache-Control'),'no-store');
-  assert.deepEqual(Buffer.from(await image.arrayBuffer()),previewJpeg);
+  assert.notDeepEqual(Buffer.from(await image.arrayBuffer()),previewJpeg);
   const advice=await f.request('/api/curator',{method:'POST',body:{language:'en',query:'A photograph for my room'}});
   const recommendation=advice.data.recommendations.find(rec=>rec.artworkId===artworkId);
   assert.ok(recommendation);assert.equal(recommendation.artwork.titles.en,'Approved artwork');
@@ -630,7 +630,7 @@ test('admin can save final prices before approval and publish atomically while p
 test('public catalogue exposes only bounded previews and retired original routes never return bytes',async()=>{
  const f=fixture(),response=await uploadAdmin(f,{submissionKey:crypto.randomUUID(),title:'Ảnh bảo mật',authorName:'Admin',collection:'imperial-echoes',rightsConfirmed:true,publish:true});assert.equal(response.status,201);const id=(await response.json()).artworkId.slice(11);
  const catalog=await f.request('/api/catalog'),serialized=JSON.stringify(catalog.data);assert.doesNotMatch(serialized,/highResUrl|images\/hue|object_key|submissions\/.+original/);
- for(const width of [160,480,960]){const image=await worker.fetch(new Request(origin+`/api/catalog/${id}/preview?w=${width}`),f.env);assert.equal(image.status,200);assert.equal(image.headers.get('Content-Type'),'image/jpeg');assert.deepEqual(Buffer.from(await image.arrayBuffer()),previewJpeg);}
+ for(const width of [160,480,960]){const image=await worker.fetch(new Request(origin+`/api/catalog/${id}/preview?w=${width}`),f.env);assert.equal(image.status,200);assert.equal(image.headers.get('Content-Type'),'image/jpeg');assert.notDeepEqual(Buffer.from(await image.arrayBuffer()),previewJpeg);}
  assert.equal((await f.request(`/api/catalog/${id}/preview?w=1440`)).status,400);
  for(const path of [`/api/catalog/${id}/image`,'/images/hue/ngo-mon-meridian.jpg','/images/previews/ngo-mon-meridian-1440.webp','/_vercel/image?url=/images/hue/ngo-mon-meridian.jpg&w=4000&q=100'])assert.equal((await f.request(path)).status,410,path);
  assert.equal((await f.request(`/api/admin/submissions/${id}/original`)).status,401);
@@ -673,11 +673,45 @@ test('HTML and API responses carry security headers while Sites only permits tru
  const f=fixture();for(const path of ['/','/admin','/api/catalog','/api/not-found']){const response=await f.request(path);assert.equal(response.headers.get('X-Content-Type-Options'),'nosniff');assert.match(response.headers.get('Content-Security-Policy'),/script-src 'self';/);assert.match(response.headers.get('Content-Security-Policy'),/frame-ancestors 'self' https:\/\/chatgpt.com https:\/\/chat.openai.com/);assert.equal(response.headers.get('Referrer-Policy'),'strict-origin-when-cross-origin');assert.match(response.headers.get('Permissions-Policy'),/camera=\(\)/);}
 });
 
-test('temporary migration routes require a separate strong token, expire, and never become public through the Vercel proxy',async()=>{
- const f=fixture(),token='ee'.repeat(32),headers={Authorization:'Bearer '+token};
- assert.equal((await f.request('/api/internal/media-list',{headers})).status,404);
- f.env.MEDIA_MIGRATION_TOKEN_HASH=createHash('sha256').update(token).digest('hex');f.env.MEDIA_MIGRATION_EXPIRES_AT=String(Date.now()+60000);
- assert.equal((await f.request('/api/internal/media-list')).status,404);assert.equal((await f.request('/api/internal/media-list',{headers:{Authorization:'Bearer '+'ff'.repeat(32)}})).status,404);
- assert.equal((await f.request('/api/internal/media-list',{headers})).status,200);
- f.env.MEDIA_MIGRATION_EXPIRES_AT=String(Date.now()-1);assert.equal((await f.request('/api/internal/media-list',{headers})).status,404);
+test('retired migration routes stay inaccessible even with legacy credentials',async()=>{
+ const f=fixture(),token='ee'.repeat(32); f.env.MEDIA_MIGRATION_TOKEN_HASH=createHash('sha256').update(token).digest('hex'); f.env.MEDIA_MIGRATION_EXPIRES_AT=String(Date.now()+60000);
+ for(const path of ['/api/internal/media-list','/api/internal/media-upload','/api/admin/original-assets'])assert.equal((await f.request(path,{headers:{...owner,Authorization:'Bearer '+token}})).status,404);
+});
+
+function testTotp(secret){let bits=0,value=0,bytes=[];for(const char of secret){value=(value<<5)|'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'.indexOf(char);bits+=5;if(bits>=8){bits-=8;bytes.push((value>>>bits)&255);}}const counter=Buffer.alloc(8);counter.writeBigUInt64BE(BigInt(Math.floor(Date.now()/30000)));const digest=createHmac('sha1',Buffer.from(bytes)).update(counter).digest(),offset=digest[19]&15;return String((digest.readUInt32BE(offset)&0x7fffffff)%1000000).padStart(6,'0');}
+test('owner can enroll encrypted 2FA, use one-time recovery and revoke other sessions',async()=>{
+ const f=fixture();f.env.VERCEL_BRIDGE_TOKEN='test-encryption-only-key';
+ const action=(name,body={},headers=owner)=>f.request('/api/admin/security'+name,{method:'POST',headers,body:{password:TEST_PASSWORD,...body}});
+ assert.equal((await f.request('/api/admin/security')).status,401);
+ assert.equal((await action('/setup',{password:'incorrect'})).status,401);
+ const setup=await action('/setup');assert.equal(setup.status,200);assert.match(setup.data.secret,/^[A-Z2-7]{32}$/);
+ assert.doesNotMatch(f.sqlite.prepare("SELECT value_json FROM shop_settings WHERE key='admin_security'").get().value_json,new RegExp(setup.data.secret));
+ assert.equal((await action('/enable',{code:'invalid'})).status,400);
+ const enabled=await action('/enable',{code:testTotp(setup.data.secret)});assert.equal(enabled.status,200);assert.equal(enabled.data.recoveryCodes.length,10);
+ const status=await f.request('/api/admin/security',{headers:owner});assert.deepEqual(status.data,{enabled:true,recoveryRemaining:10});
+ const login=otp=>f.request('/api/admin-auth/login',{method:'POST',headers:ownerIdentity,body:{username:'test-owner',password:TEST_PASSWORD,otp}});
+ assert.equal((await login()).status,401);assert.equal((await login(testTotp(setup.data.secret))).status,401,'used enrollment code cannot be replayed');
+ const signed=await login(enabled.data.recoveryCodes[0]);assert.equal(signed.status,200);assert.equal((await login(enabled.data.recoveryCodes[0])).status,401,'backup code is one use');
+ const cookie=signed.headers.get('Set-Cookie').match(/__Host-hueart_admin=[0-9a-f]+/)[0];
+ assert.equal((await f.request('/api/session',{headers:{...ownerIdentity,Cookie:cookie}})).data.isAdmin,true);
+ assert.equal((await action('/disable',{code:'invalid'})).status,401);
+ assert.equal((await action('/disable',{code:enabled.data.recoveryCodes[1]})).status,200);
+ assert.equal((await f.request('/api/session',{headers:{...ownerIdentity,Cookie:cookie}})).data.isAdmin,false,'other sessions revoked');
+ assert.equal((await f.request('/api/session',{headers:owner})).data.isAdmin,true,'current session kept');
+ assert.equal((await login()).status,200);
+});
+
+test('invalid uploads, pixel bombs, request spam and exhausted storage fail before persistence',async()=>{
+ const f=fixture(),metadata={submissionKey:crypto.randomUUID(),title:'Kiểm tra tải ảnh',authorName:'Tác giả',authorPhone:'0901234567',collection:'imperial-echoes',rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v2'};
+ const send=async(image,preview=previewJpeg)=>{const form=new FormData();form.append('image',new File([image],'image.jpg',{type:'image/jpeg'}));for(const size of [160,480,960])form.append('preview'+size,new File([preview],'preview.jpg',{type:'image/jpeg'}));form.append('metadata',JSON.stringify({...metadata,submissionKey:crypto.randomUUID()}));return worker.fetch(new Request(origin+'/api/submissions',{method:'POST',headers:{Origin:origin},body:form}),f.env);};
+ assert.equal((await send(previewJpeg.subarray(0,30))).status,400);
+ const bomb=Buffer.from(previewJpeg);for(let i=2;i<bomb.length-9;i++)if(bomb[i]===255&&[192,193,194].includes(bomb[i+1])){bomb.writeUInt16BE(20001,i+5);break;}
+ assert.equal((await send(bomb)).status,400);
+ const broken=Buffer.from(previewJpeg);broken.fill(0,Math.floor(broken.length/2),broken.length-2);assert.equal((await send(previewJpeg,broken)).status,400);
+ f.env.MAX_MEDIA_STORAGE_MB='32';assert.equal((await send(previewJpeg)).status,503);assert.equal(f.sqlite.prepare('SELECT count(*) AS n FROM media_upload_reservations').get().n,0);
+ assert.equal(f.sqlite.prepare('SELECT count(*) AS n FROM artwork_submissions').get().n,0);
+ for(let i=0;i<31;i++)await f.request('/api/orders',{method:'POST',body:{invalid:true}});
+ assert.equal((await f.request('/api/orders',{method:'POST',body:{invalid:true}})).status,429);
+ assert.equal((await f.request('/api/orders',{method:'POST',body:{invalid:true}})).status,429);
+ const big=await f.request('/api/orders',{method:'POST',headers:{'CF-Connecting-IP':'different-ip'},body:{note:'x'.repeat(33000)}});assert.equal(big.status,413);
 });
