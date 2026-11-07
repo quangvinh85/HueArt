@@ -24,7 +24,7 @@ class CaptureResponse extends Writable{
  const saved=Object.fromEntries(keys.map(key=>[key,process.env[key]]));
  try{
   await fs.mkdir(workPath,{recursive:true});await fs.symlink(path.join(source,'node_modules'),path.join(workPath,'node_modules'),'dir');
-  const files={};for(const name of ['api/backend.ts','api/tsconfig.json','server/vercelProxy.ts','package.json','tsconfig.json'])files[name]=new FileFsRef({fsPath:path.join(source,name)});
+  const files={};for(const name of ['api/backend.ts','api/tsconfig.json','server/vercelProxy.ts','server/securityHeaders.ts','package.json','tsconfig.json'])files[name]=new FileFsRef({fsPath:path.join(source,name)});
   const result=await build({files,entrypoint:'api/backend.ts',workPath,config:{functions:{'api/backend.ts':{installCommand:''}},projectSettings:{nodeVersion:'24.x'}},meta:{isDev:false}});
   assert.equal(result.output.runtime,'nodejs24.x');
   for(const[name,file]of Object.entries(result.output.files)){

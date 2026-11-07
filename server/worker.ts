@@ -1,3 +1,7 @@
+import {mediaMigration} from './mediaMigration';
+import {secureResponse} from './securityHeaders';
+import {previewKey,adminOriginalAssets} from './media';
+import {customerDownloads,downloadFile} from './downloads';
 import {getContactSettings,publicContactSettings,saveContactSettings} from './contactSettings';
 import {notificationSettings,queueOrderNotification,deliverOrderNotification,retryNotification} from './zaloNotifications';
 import {getPaymentSettings,savePaymentSettings,paymentReceipt,customerPayment} from './payments';
@@ -9,7 +13,7 @@ import { curate } from './curator';
 import { ApiError, ORDER_STATUSES, PAYMENT_STATUSES, serializeOrder, validateOrder, validateUpdate } from './orders';
 
 interface Statement { bind(...values: unknown[]): Statement; first<T = any>(): Promise<T | null>; all<T = any>(): Promise<{ results: T[] }>; run(): Promise<{ meta: { changes: number } }> }
-interface Env { DB: { prepare(query: string): Statement }; ASSETS: { fetch(request: Request): Promise<Response> }; ADMIN_EMAIL: string; BUCKET?: any; GEMINI_API_KEY?: string; ADMIN_USERNAME?: string; ADMIN_PASSWORD_HASH?: string; VERCEL_BRIDGE_TOKEN?: string; }
+interface Env { DB: { prepare(query: string): Statement }; ASSETS: { fetch(request: Request): Promise<Response> }; ADMIN_EMAIL: string; BUCKET?: any; GEMINI_API_KEY?: string; ADMIN_USERNAME?: string; ADMIN_PASSWORD_HASH?: string; VERCEL_BRIDGE_TOKEN?: string; MEDIA_MIGRATION_TOKEN_HASH?:string; MEDIA_MIGRATION_EXPIRES_AT?:string; }
 const json = (data: unknown, status = 200) => Response.json(data, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
 const sha256 = async (input: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input)))).map(byte => byte.toString(16).padStart(2, '0')).join('');
 async function readJson(request: Request) {
@@ -31,6 +35,7 @@ async function notifyOrder(env:Env,order:any,context?:{waitUntil(promise:Promise
 
 export async function api(request: Request, env: Env, context?: {waitUntil(promise:Promise<unknown>):void}): Promise<Response> {
   const url = new URL(request.url);
+  if(url.pathname.startsWith('/api/internal/media-'))return mediaMigration(request,env);
   const actor = await adminIdentity(request, env);
   if (request.method === 'GET' && url.pathname === '/api/session') return json({ authenticated: actor.authenticated, ownerAuthenticated: actor.ownerAuthenticated, isAdmin: actor.isAdmin });
   if (url.pathname.startsWith('/api/admin/') && !actor.isAdmin) throw new ApiError(actor.authenticated ? 403 : 401, 'Vui lòng đăng nhập quản trị để tiếp tục.');
@@ -76,15 +81,21 @@ export async function api(request: Request, env: Env, context?: {waitUntil(promi
   if(url.pathname.startsWith('/api/order-payment/'))return json(await customerPayment(request,env,readJson));
   if (url.pathname.startsWith('/api/admin/catalog')) return catalogueAdmin(request,env,request.method==='PATCH'?await readJson(request):undefined);
   if (url.pathname === '/api/catalog' && request.method === 'GET') return json({ artworks: await getCatalogue(env) });
-  const publicImage = /^\/api\/catalog\/([0-9a-f-]{36})\/image$/.exec(url.pathname);
-  if (publicImage && request.method === 'GET') {
-    const image = await env.DB.prepare("SELECT object_key, content_type FROM artwork_submissions WHERE id = ? AND status = 'accepted'").bind(publicImage[1]).first();
-    const override = await env.DB.prepare('SELECT hidden, deleted_at FROM catalogue_overrides WHERE artwork_id = ?').bind('submission-'+publicImage[1]).first();
-    if (override?.hidden || override?.deleted_at) throw new ApiError(404, 'Tác phẩm chưa được xuất bản hoặc đã ngừng bán.');
-    if (!image) throw new ApiError(404, 'Tác phẩm chưa được xuất bản hoặc đã ngừng bán.');
-    const object = await env.BUCKET?.get(image.object_key);
-    if (!object) throw new ApiError(404, 'Không tìm thấy ảnh.');
-    return new Response(object.body, { headers: { 'Content-Type': image.content_type, 'Cache-Control':'no-store', 'X-Content-Type-Options':'nosniff', 'Content-Security-Policy':"default-src 'none'" } });
+  if(url.pathname==='/api/retired-image'||/^\/api\/catalog\/[0-9a-f-]{36}\/image$/.test(url.pathname))return json({error:'Đường dẫn ảnh gốc công khai đã ngừng phục vụ.'},410);
+  const download=/^\/api\/downloads\/([A-Za-z0-9_.-]+)$/.exec(url.pathname);
+  if(download)return downloadFile(request,env,download[1]);
+  const links=/^\/api\/order-downloads\/(DHT-[0-9]{8}-[A-F0-9]{8})$/.exec(url.pathname);
+  if(links)return json(await customerDownloads(request,env,links[1]));
+  const importAsset=/^\/api\/admin\/original-assets\/([a-z0-9-]+)\/(complete|[0-9]+)$/.exec(url.pathname);
+  if(importAsset)return adminOriginalAssets(request,env,importAsset[1],importAsset[2]);
+  const publicImage=/^\/api\/catalog\/([0-9a-f-]{36})\/preview$/.exec(url.pathname);
+  if(publicImage&&['GET','HEAD'].includes(request.method)){
+    const image=await env.DB.prepare("SELECT preview_version FROM artwork_submissions WHERE id = ? AND status = 'accepted'").bind(publicImage[1]).first();
+    const override=await env.DB.prepare('SELECT hidden, deleted_at FROM catalogue_overrides WHERE artwork_id = ?').bind('submission-'+publicImage[1]).first();
+    if(!image||image.preview_version<2||override?.hidden||override?.deleted_at)throw new ApiError(404,'Không tìm thấy ảnh xem trước.');
+    const width=Number(url.searchParams.get('w')||960);if(![160,480,960].includes(width))throw new ApiError(400,'Kích thước xem trước không hợp lệ.');
+    const object=await env.BUCKET?.get(previewKey(publicImage[1],width));if(!object)throw new ApiError(404,'Không tìm thấy ảnh xem trước.');
+    return new Response(request.method==='HEAD'?null:object.body,{headers:{'Content-Type':'image/jpeg','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
   }
 
   if (url.pathname.startsWith('/api/admin-auth/') && request.method === 'POST') return adminAuth(request, env, actor, url.pathname.endsWith('/login') ? await readJson(request) : {});
@@ -167,15 +178,16 @@ export default {
   async fetch(request: Request, env: Env, context?: {waitUntil(promise:Promise<unknown>):void}): Promise<Response> {
     try {
       const url = new URL(request.url);
-      if (url.pathname.startsWith('/api/')) return await api(request, env, context);
+      if (url.pathname.startsWith('/api/')) return secureResponse(await api(request, env, context),true);
+      if(/^\/(?:images\/(?:hue|previews)\/|_vercel\/image)/.test(url.pathname))return secureResponse(json({error:'Đường dẫn ảnh cũ đã ngừng phục vụ.'},410),true);
       // Fetch the root asset internally. /index.html triggers the asset service's
       // canonical redirect to /, which would erase the browser's /admin route.
       if (url.pathname === '/admin' || url.pathname === '/admin/') url.pathname = '/';
-      return await env.ASSETS.fetch(new Request(url, request));
+      return secureResponse(await env.ASSETS.fetch(new Request(url, request)),true);
     } catch (error) {
-      if (error instanceof ApiError) return json({ error: error.message }, error.status);
+      if (error instanceof ApiError) return secureResponse(json({ error: error.message }, error.status),true);
       console.error('Order service failed', error instanceof Error ? error.name : 'UnknownError');
-      return json({ error: 'Chưa xử lý được yêu cầu. Vui lòng thử lại; giỏ hàng của bạn vẫn được giữ.' }, 500);
+      return secureResponse(json({ error: 'Chưa xử lý được yêu cầu. Vui lòng thử lại; giỏ hàng của bạn vẫn được giữ.' }, 500),true);
     }
   },
 };

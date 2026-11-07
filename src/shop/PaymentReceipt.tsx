@@ -11,6 +11,8 @@ function QrImage({payload}:{payload:string}){
 }
 export default function PaymentReceipt({initial,onClose}:{initial:Receipt;onClose:()=>void}){
  const {language,tr}=useShopLanguage();const [receipt,setReceipt]=useState(initial),[busy,setBusy]=useState(false),[error,setError]=useState(''),[reference,setReference]=useState(''),[confirmed,setConfirmed]=useState(false);
+ const [downloads,setDownloads]=useState<{title:string;optionId:string;url:string}[]>([]),[downloadBusy,setDownloadBusy]=useState(false),[downloadExpiry,setDownloadExpiry]=useState('');
+ const getDownloads=async()=>{setDownloadBusy(true);setError('');try{const result=await requestApi<{files:typeof downloads;expiresAt:string}>('/api/order-downloads/'+receipt.orderNumber,{headers});setDownloads(result.files);setDownloadExpiry(result.expiresAt);}catch(e){setError(e instanceof Error?e.message:tr('Không tạo được link tải file.'));}finally{setDownloadBusy(false);}};
  const [bankMode,setBankMode]=useState(initial.paymentMethod==='vietqr'||initial.paymentMethod==='transfer');
  const endpoint='/api/order-payment/'+receipt.orderNumber;
  const headers={'X-HueArt-Checkout-Key':receipt.paymentAccessKey};
@@ -39,6 +41,7 @@ export default function PaymentReceipt({initial,onClose}:{initial:Receipt;onClos
    {receipt.paymentStatus!=='reported'&&<form className="shop-payment-report" onSubmit={report}><label>{tr('Mã giao dịch (nếu có)')}<input maxLength={100} value={reference} disabled={busy} onChange={e=>setReference(e.target.value)}/></label><label className="shop-consent"><input type="checkbox" required disabled={busy} checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/><span>{tr('Tôi đã hoàn tất chuyển khoản số tiền ở trên.')}</span></label><button className="shop-primary shop-full" type="submit" disabled={busy||!confirmed}>{tr(busy?'Đang gửi…':'Thông báo tôi đã chuyển khoản')}</button></form>}
   </section>}
   {receipt.receivedAmountVnd>0&&receipt.shippingCents===null&&<p>{tr('Đã ghi nhận khoản trả trước. Người bán sẽ liên hệ để chốt phí vận chuyển còn lại.')}</p>}
+  {receipt.paymentStatus==='paid'&&receipt.status!=='cancelled'&&<section className="shop-bank-panel"><h3>{tr('Tải file đã mua')}</h3><p>{tr('Link tải có hiệu lực 10 phút và chỉ dành cho file đã thanh toán.')}</p><button className="shop-secondary" disabled={downloadBusy} onClick={()=>void getDownloads()}>{tr(downloadBusy?'Đang tạo link tải…':'Nhận link tải file')}</button>{downloadExpiry&&downloads.length===0&&<p>{tr('Đơn này không có file kỹ thuật số được phép tải.')}</p>}{downloads.map(file=><p key={file.url}><a className="shop-text-button" href={file.url} rel="noreferrer">{file.title} · {tr('Tải file gốc')}</a></p>)}</section>}
   {error&&<p className="shop-order-error" role="alert">{tr(error)}</p>}
   <a className="shop-text-button" href={`/#pay=${receipt.orderNumber}&key=${receipt.paymentAccessKey}`} target="_blank" rel="noopener noreferrer">{tr('Mở biên nhận trong tab riêng')}</a><button className="shop-primary shop-full" type="button" onClick={onClose}>{tr('Tiếp tục xem ảnh')}</button>
  </div>;

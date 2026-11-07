@@ -1,1 +1,1 @@
-export const REVENUE_POLICY={version:'2026-11-07-v1',totalFeePercent:20,associationFundPercent:10,administrationPercent:10,photographerPercent:80} as const;
+export const REVENUE_POLICY={version:'2026-11-07-v2',totalFeePercent:20,associationFundPercent:10,associationFundName:'CLB Nhiếp ảnh Đặng Huy Trứ',administrationPercent:10,photographerPercent:80} as const;

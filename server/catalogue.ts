@@ -4,7 +4,7 @@ import type { Artwork } from '../src/types';
 
 export function publishedArtwork(row: any): Artwork {
   const pricesCents=storedArtworkPrices(row);
-  const imageUrl = `/api/catalog/${row.id}/image`;
+  const imageUrl = `/api/catalog/${row.id}/preview`;
   return {
     id: `submission-${row.id}`,
     title: row.title,
@@ -24,7 +24,6 @@ export function publishedArtwork(row: any): Artwork {
     editionsRemaining: 0,
     camera: { camera:'', lens:'', settings:'', locationName:row.location || '', coordinates:'', capturedAt:'' },
     imageUrl,
-    highResUrl: imageUrl,
     basePriceUSD: (pricesCents['high-resolution']||500)/100,
     pricesCents,
     mood: row.collection === 'perfume-river' ? 'serene' : row.collection === 'living-traditions' ? 'vibrant' : 'imperial',
@@ -35,12 +34,12 @@ export function publishedArtwork(row: any): Artwork {
 }
 
 export async function getCatalogue(env: { DB?: any }): Promise<Artwork[]> {
-  return (await getCatalogueEntries(env)).filter(item=>!item.hidden&&!item.deleted).map(item=>item.artwork);
+  return (await getCatalogueEntries(env)).filter(item=>!item.hidden&&!item.deleted&&item.previewReady).map(item=>item.artwork);
 }
 
 export async function getCatalogueEntries(env:{DB?:any}) {
   const [submissions,overrides] = env.DB ? await Promise.all([
-    env.DB.prepare("SELECT id, title, title_en, title_fr, location, story, collection, author_name, created_at, submission_origin, pricing_json, admin_pricing_json FROM artwork_submissions WHERE status = 'accepted' ORDER BY updated_at DESC, id DESC").all(),
+    env.DB.prepare("SELECT id, title, title_en, title_fr, location, story, collection, author_name, created_at, submission_origin, pricing_json, admin_pricing_json, preview_version FROM artwork_submissions WHERE status = 'accepted' ORDER BY updated_at DESC, id DESC").all(),
     env.DB.prepare('SELECT * FROM catalogue_overrides').all(),
   ]) : [{results:[]},{results:[]}];
   const adminIds=new Set(submissions.results.filter((row:any)=>row.submission_origin==='admin').map((row:any)=>'submission-'+row.id));
@@ -52,6 +51,6 @@ export async function getCatalogueEntries(env:{DB?:any}) {
     if(metadata.titles){merged.title=metadata.titles.vi;merged.vietnameseTitle=metadata.titles.vi;}
     if(metadata.locations)merged.location=metadata.locations.vi;
     if(metadata.stories)merged.story=metadata.stories.vi;
-    return {artwork:merged as Artwork,metadata,source:adminIds.has(artwork.id)?'admin':artwork.id.startsWith('submission-')?'submission':'original',hidden:Boolean(row?.hidden),deleted:Boolean(row?.deleted_at),deletedAt:row?.deleted_at||null,version:row?.version||0};
+    return {artwork:merged as Artwork,metadata,source:adminIds.has(artwork.id)?'admin':artwork.id.startsWith('submission-')?'submission':'original',hidden:Boolean(row?.hidden),deleted:Boolean(row?.deleted_at),deletedAt:row?.deleted_at||null,version:row?.version||0,previewReady:!artwork.id.startsWith('submission-')||Number(submissions.results.find((r:any)=>'submission-'+r.id===artwork.id)?.preview_version)>=2};
   });
 }

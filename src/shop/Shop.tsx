@@ -187,7 +187,7 @@ export default function Shop() {
         <div className="shop-hero-content shop-container">
           <span className="shop-eyebrow">{tr("Góc nhìn từ xứ Huế")}</span>
           <h1>NHIẾP ẢNH<br /><em>NGHỆ THUẬT HUẾ</em></h1>
-          <p>{tr("Mang một góc Huế về với bạn.")}<br />{tr("Chọn ảnh yêu thích, nhận file hoặc đặt bản in có khung.")}</p>
+          <p>{tr("Mang 1 tác phẩm nghệ thuật về với bạn")}</p>
           <a href="#gallery" className="shop-primary">{tr("Chọn ảnh ngay ")}<ArrowDown size={16} /></a>
           <span className="shop-hero-note">{tr("File từ 5 USD · Bản in có khung 7 USD")}</span>
         </div>

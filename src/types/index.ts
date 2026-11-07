@@ -37,7 +37,7 @@ export interface Artwork {
   editionsRemaining: number;
   camera: CameraMetadata;
   imageUrl: string;
-  highResUrl: string;
+  highResUrl?: string;
   basePriceUSD: number;
   pricesCents?: Partial<Record<'copyright' | 'high-resolution' | 'framed-print', number>>;
   mood: 'imperial' | 'misty' | 'serene' | 'vibrant' | 'nocturnal';

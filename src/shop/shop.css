@@ -290,3 +290,7 @@
 .submission-price-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:16px; }
 .submission-price-grid > div { min-width:0; }
 @media (max-width:760px) { .submission-price-grid { grid-template-columns:1fr; } }
+.submission-form .submission-upload.is-dragging { border-style:solid; border-color:var(--gold); background:#dfb87124; box-shadow:0 0 0 3px #dfb87122; }
+.submission-preview { position:relative; width:100%; }
+.submission-remove-image { position:absolute; top:8px; right:8px; display:grid; place-items:center; width:44px; height:44px; border:2px solid #fff; border-radius:50%; background:#9b2626; color:white; box-shadow:0 2px 8px #0008; }
+.submission-remove-image:disabled { opacity:.5; }

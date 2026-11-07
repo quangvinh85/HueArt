@@ -13,7 +13,7 @@ await writeFile('dist/.openai/hosting.json', JSON.stringify(hosting, null, 2));
 await cp('drizzle', 'dist/drizzle', { recursive: true });
 await writeFile('dist/server/wrangler.json', JSON.stringify({
   name: 'hueart-orders', main: 'index.js', compatibility_date: '2026-11-01',
-  assets: { directory: '../client', binding: 'ASSETS', run_worker_first: ['/api/*', '/admin', '/admin/*'] },
+  assets: { directory: '../client', binding: 'ASSETS', run_worker_first: true },
   ...(hosting.r2 ? { r2_buckets: [{ binding: hosting.r2, bucket_name: 'hueart-submissions' }] } : {}),
   d1_databases: [{ binding: 'DB', database_name: 'hueart-orders', database_id: '00000000-0000-0000-0000-000000000000', migrations_dir: '../drizzle' }],
 }, null, 2));

@@ -115,3 +115,13 @@ Biểu mẫu Gửi tác phẩm có ba ô giá USD riêng, tự hiển thị VND 
 Admin → Tác phẩm gửi đến → Xem hồ sơ hiển thị giá tác giả đề xuất và ba ô **Giá bán admin chốt**. Admin có thể chỉnh giá, lưu lúc đang xem xét, hoặc chọn Đã chấp nhận và lưu để công khai giá đã chốt trong cùng một cập nhật có kiểm tra phiên bản. Giá gốc tác giả đề xuất được giữ riêng trong pricing_json; admin_pricing_json lưu giá bán đã chốt.
 
 Cửa hàng, lựa chọn mua, giỏ hàng và máy chủ đặt hàng cùng dùng giá đã chốt. Máy chủ không tin giá do khách gửi. Giá và tỷ giá của đơn đã tạo được lưu cố định. Ảnh/hồ sơ cũ không có giá riêng tiếp tục dùng giá mặc định 10 / 5 / 7 USD. Ba thẻ giới thiệu cách mua không hiển thị giá.
+
+### Original files and browser security
+
+Public catalogue entries and client bundles contain preview URLs only. Public previews are JPEGs capped at 960 pixels on the long edge, with four watermarks baked into the pixels; 160/480 variants keep lists small. The former `/images/hue/*`, `/images/previews/*`, old catalogue `/image` URLs and old optimizer route are retired. Upload previews are generated before sending and validated server-side for format, size and dimensions; missing previews never fall back to public originals. Original uploads remain in private R2. The original static catalogue files are removed from current public assets and copied into private R2 with SHA-256 verification.
+
+After admin-confirmed full payment, the customer uses their secret checkout key to request 10-minute signed links. The file endpoint checks the signature, expiry, purchased item, current payment/cancellation state and written copyright confirmation on every request. Print-only orders grant no digital originals. Downloads use `private, no-store`, attachment disposition and no referrer. Stored previews and originals have separate keys.
+
+Production HTML/API responses use a CSP without inline/eval JavaScript, plus `nosniff`, referrer and permissions policies. Vercel blocks framing with `frame-ancestors 'none'` and `X-Frame-Options: DENY`. The Sites preview explicitly permits only itself and ChatGPT hosts as frame ancestors so its trusted preview remains usable.
+
+The initial migration runs during the project's own Vercel build, behind an independent 256-bit, expiring credential; internal migration paths are never allowed through the public Vercel proxy. Remove that credential and migration endpoints once all originals and legacy previews are verified. Existing public Git history and files already downloaded cannot be retroactively made secret; review repository visibility separately.

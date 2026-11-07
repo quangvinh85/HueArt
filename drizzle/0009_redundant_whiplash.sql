@@ -1,0 +1,1 @@
+ALTER TABLE `artwork_submissions` ADD `preview_version` integer DEFAULT 0 NOT NULL;

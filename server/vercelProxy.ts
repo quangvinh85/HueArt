@@ -1,7 +1,7 @@
 export interface VercelBackendConfig { backendUrl?: string; serviceToken?: string; bridgeToken?: string; }
-const allowedPath = /^\/api\/(?:health|session|site-stats|curator|contact-settings|payment-settings|order-payment\/DHT-[0-9]{8}-[A-F0-9]{8}(?:\/report)?|catalog(?:\/[0-9a-f-]{36}\/image)?|orders|submissions|admin-auth\/(?:login|logout)|admin\/(?:artworks|zalo-notifications(?:\/(?:test|recipient|[0-9a-f-]{36}\/retry))?|contact-settings|payment-settings|catalog(?:\/[a-z0-9-]{1,100})?|orders(?:\/[0-9a-f-]{36})?|submissions(?:\/[0-9a-f-]{36}(?:\/image)?)?))$/;
+const allowedPath = /^\/api\/(?:health|session|retired-image|order-downloads\/DHT-[0-9]{8}-[A-F0-9]{8}|downloads\/[A-Za-z0-9_.-]{1,2000}|site-stats|curator|contact-settings|payment-settings|order-payment\/DHT-[0-9]{8}-[A-F0-9]{8}(?:\/report)?|catalog(?:\/[0-9a-f-]{36}\/(?:image|preview))?|orders|submissions|admin-auth\/(?:login|logout)|admin\/(?:original-assets\/[a-z0-9-]+\/(?:complete|[0-9]+)|artworks|zalo-notifications(?:\/(?:test|recipient|[0-9a-f-]{36}\/retry))?|contact-settings|payment-settings|catalog(?:\/[a-z0-9-]{1,100})?|orders(?:\/[0-9a-f-]{36})?|submissions(?:\/[0-9a-f-]{36}(?:\/(?:image|original|previews))?)?))$/;
 const json=(error:string,status:number)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
-export const MAX_VERCEL_BODY=3*1024*1024+65536;
+export const MAX_VERCEL_BODY=4*1024*1024;
 
 export async function proxyApi(request:Request,config:VercelBackendConfig,send:typeof fetch=fetch):Promise<Response>{
   const incoming=new URL(request.url);
@@ -38,7 +38,7 @@ export async function proxyApi(request:Request,config:VercelBackendConfig,send:t
     const upstream=await send(backend,{method:request.method,headers,body,redirect:'manual',signal:AbortSignal.timeout(30000)});
     if(upstream.status>=300&&upstream.status<400)return json('Không kết nối được backend. Vui lòng kiểm tra cấu hình Vercel.',502);
     const outputHeaders=new Headers({'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});
-    for(const name of ['Content-Type','Content-Disposition','Content-Security-Policy']){const value=upstream.headers.get(name);if(value)outputHeaders.set(name,value);}
+    for(const name of ['Content-Type','Content-Disposition','Referrer-Policy']){const value=upstream.headers.get(name);if(value)outputHeaders.set(name,value);}
     const cookies=typeof upstream.headers.getSetCookie==='function'?upstream.headers.getSetCookie():[upstream.headers.get('Set-Cookie')||''];
     for(const value of cookies)if(value.startsWith('__Host-hueart_admin='))outputHeaders.append('Set-Cookie',value);
     return new Response(upstream.body,{status:upstream.status,headers:outputHeaders});

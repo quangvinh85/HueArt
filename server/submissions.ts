@@ -1,3 +1,4 @@
+import {readMultipart,readPreviews,putPreviews,previewKey} from './media';
 import {REVENUE_POLICY} from '../src/shop/revenueTerms';
 import { ApiError } from './orders';
 import {validateArtworkPrices,storedArtworkPrices} from './artworkPricing';
@@ -11,7 +12,7 @@ export function imageType(bytes: Uint8Array): string | null {
   if (bytes.length >= 12 && String.fromCharCode(...bytes.slice(0,4)) === 'RIFF' && String.fromCharCode(...bytes.slice(8,12)) === 'WEBP') return 'image/webp';
   return null;
 }
-const serialize = (row: any) => ({ id: row.id, reference: row.reference, title: row.title, titleEn: row.title_en, titleFr: row.title_fr, authorName: row.author_name, authorEmail: row.author_email, authorPhone: row.author_phone, location: row.location, story: row.story, collection: row.collection, status: row.status, adminNote: row.admin_note, version: row.version, createdAt: row.created_at, pricesCents:storedArtworkPrices(row),proposedPricesCents:JSON.parse(row.pricing_json||'{}'),revenueTerms:row.revenue_terms_json&&JSON.parse(row.revenue_terms_json).acceptedAt?JSON.parse(row.revenue_terms_json):null,imageUrl: `/api/admin/submissions/${row.id}/image` });
+const serialize = (row: any) => ({ id: row.id, reference: row.reference, title: row.title, titleEn: row.title_en, titleFr: row.title_fr, authorName: row.author_name, authorEmail: row.author_email, authorPhone: row.author_phone, location: row.location, story: row.story, collection: row.collection, status: row.status, adminNote: row.admin_note, version: row.version, createdAt: row.created_at,previewVersion:row.preview_version, pricesCents:storedArtworkPrices(row),proposedPricesCents:JSON.parse(row.pricing_json||'{}'),revenueTerms:row.revenue_terms_json&&JSON.parse(row.revenue_terms_json).acceptedAt?JSON.parse(row.revenue_terms_json):null,imageUrl: `/api/admin/submissions/${row.id}/image` });
 
 export async function submissions(request: Request, env: any, rateKey?: string, isAdmin = false): Promise<Response> {
   const path = new URL(request.url).pathname;
@@ -21,8 +22,8 @@ export async function submissions(request: Request, env: any, rateKey?: string, 
   if ((path === '/api/submissions'||adminUpload) && request.method === 'POST') {
     if (!env.BUCKET) throw new ApiError(503, 'Tính năng gửi ảnh đang được thiết lập. Vui lòng thử lại sau.');
     if (!request.headers.get('Content-Type')?.startsWith('multipart/form-data')) throw new ApiError(415, 'Định dạng gửi ảnh không hợp lệ.');
-    if (Number(request.headers.get('Content-Length')) > MAX_FILE_BYTES + 32768) throw new ApiError(413, 'Ảnh tối đa 8 MB.');
-    const form = await request.formData();
+    if (Number(request.headers.get('Content-Length')) > MAX_FILE_BYTES + 1600000) throw new ApiError(413, 'Ảnh tối đa 8 MB.');
+    const form = await readMultipart(request);
     const image = form.get('image');
     if (!(image instanceof File) || image.size === 0 || image.size > MAX_FILE_BYTES) throw new ApiError(400, 'Chọn ảnh JPG, PNG hoặc WebP, tối đa 8 MB.');
     const metadataRaw = form.get('metadata');
@@ -42,6 +43,8 @@ export async function submissions(request: Request, env: any, rateKey?: string, 
     if(!adminUpload&&data.revenueTermsVersion!==REVENUE_POLICY.version)throw new ApiError(409,'Điều kiện cộng tác đã thay đổi. Vui lòng tải lại biểu mẫu để đọc và xác nhận.');
     const pricesCents=data.pricesCents===undefined?{}:validateArtworkPrices(data.pricesCents);
     const revenueTerms=adminUpload?{}:{...REVENUE_POLICY,acceptedAt:new Date().toISOString()};
+    const previews=await readPreviews(form);
+    if(previews.length!==3)throw new ApiError(400,'Vui lòng tạo ảnh xem trước rồi gửi lại tác phẩm.');
     const bytes = new Uint8Array(await image.arrayBuffer());
     const type = imageType(bytes);
     if (!type) throw new ApiError(400, 'Chỉ nhận ảnh JPG, PNG hoặc WebP hợp lệ.');
@@ -58,14 +61,16 @@ export async function submissions(request: Request, env: any, rateKey?: string, 
     const objectKey = `submissions/${id}/original`;
     await env.BUCKET.put(objectKey, bytes, { httpMetadata: { contentType: type } });
     try {
+      await putPreviews(env,id,previews);
       if(adminUpload&&!data.publish)await env.DB.prepare('INSERT INTO catalogue_overrides (artwork_id, metadata_json, hidden, deleted_at, version, updated_at) VALUES (?, ?, 1, NULL, 1, ?)').bind('submission-'+id,'{}',new Date().toISOString()).run();
-      await env.DB.prepare('INSERT INTO artwork_submissions (id, reference, submission_key, payload_hash, requester_hash, title, title_en, title_fr, author_name, author_email, author_phone, location, story, collection, object_key, content_type, status, admin_note, version, created_at, updated_at, submission_origin, revenue_terms_json, pricing_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id,reference,key,payloadHash,requester,title,titleEn,titleFr,authorName,authorEmail,authorPhone,location,story,collection,objectKey,type,adminUpload?'accepted':'pending',adminUpload?'Thêm trực tiếp từ thư viện admin':'',1,new Date().toISOString(),new Date().toISOString(),adminUpload?'admin':'contributor',JSON.stringify(revenueTerms),JSON.stringify(pricesCents)).run();
+      await env.DB.prepare('INSERT INTO artwork_submissions (id, reference, submission_key, payload_hash, requester_hash, title, title_en, title_fr, author_name, author_email, author_phone, location, story, collection, object_key, content_type, status, admin_note, version, created_at, updated_at, submission_origin, revenue_terms_json, pricing_json, preview_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id,reference,key,payloadHash,requester,title,titleEn,titleFr,authorName,authorEmail,authorPhone,location,story,collection,objectKey,type,adminUpload?'accepted':'pending',adminUpload?'Thêm trực tiếp từ thư viện admin':'',1,new Date().toISOString(),new Date().toISOString(),adminUpload?'admin':'contributor',JSON.stringify(revenueTerms),JSON.stringify(pricesCents),2).run();
     } catch (error) {
       // A database write may have committed even when its response was lost.
       // Keep that row's original file; only clean up this request's unused object.
       const saved = await env.DB.prepare('SELECT id, reference, payload_hash FROM artwork_submissions WHERE submission_key = ?').bind(key).first();
       if(saved?.id===id&&saved.payload_hash===payloadHash)return json(receipt(saved));
       await env.BUCKET.delete(objectKey);
+      for(const width of [160,480,960])await env.BUCKET.delete(previewKey(id,width));
       if(adminUpload)await env.DB.prepare('DELETE FROM catalogue_overrides WHERE artwork_id = ?').bind('submission-'+id).run();
       if (saved?.payload_hash === payloadHash) return json(receipt(saved));
       if(saved)throw new ApiError(409,'Yêu cầu đã gửi có nội dung khác. Vui lòng đóng rồi mở lại biểu mẫu.');
@@ -77,12 +82,16 @@ export async function submissions(request: Request, env: any, rateKey?: string, 
     const result = await env.DB.prepare("SELECT * FROM artwork_submissions WHERE submission_origin = 'contributor' ORDER BY created_at DESC LIMIT 50").all();
     return json({ submissions: result.results.map(serialize) });
   }
-  const match = /^\/api\/admin\/submissions\/([0-9a-f-]{36})(\/image)?$/.exec(path);
+  const match = /^\/api\/admin\/submissions\/([0-9a-f-]{36})(\/(?:image|original|previews))?$/.exec(path);
   if (!match) throw new ApiError(404, 'Không tìm thấy hồ sơ.');
   const row = await env.DB.prepare('SELECT * FROM artwork_submissions WHERE id = ?').bind(match[1]).first();
   if (!row) throw new ApiError(404, 'Không tìm thấy hồ sơ.');
-  if (match[2] && request.method === 'GET') {
-    const object = await env.BUCKET?.get(row.object_key);
+  if(match[2]==='/previews'&&request.method==='POST'){
+    const form=await readMultipart(request),previews=await readPreviews(form);if(previews.length!==3)throw new ApiError(400,'Cần đủ ba ảnh xem trước.');await putPreviews(env,row.id,previews);
+    await env.DB.prepare('UPDATE artwork_submissions SET preview_version = 2 WHERE id = ?').bind(row.id).run();return json({ok:true});
+  }
+  if (['/image','/original'].includes(match[2]) && request.method === 'GET') {
+    const object = await env.BUCKET?.get(match[2]==='/image'&&row.preview_version>=2?previewKey(row.id,480):row.object_key);
     if (!object) throw new ApiError(404, 'Không tìm thấy ảnh.');
     return new Response(object.body, { headers: { 'Content-Type': row.content_type, 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'" } });
   }
@@ -90,6 +99,7 @@ export async function submissions(request: Request, env: any, rateKey?: string, 
     let data: any;
     try { data = await request.json(); } catch { throw new ApiError(400, 'Dữ liệu không hợp lệ.'); }
     if (!['pending','reviewing','accepted','rejected'].includes(data.status)) throw new ApiError(400, 'Trạng thái không hợp lệ.');
+    if(data.status==='accepted'&&row.preview_version<2)throw new ApiError(400,'Cần tạo ảnh xem trước an toàn trước khi xuất bản.');
     if (data.version !== row.version) throw new ApiError(409, 'Hồ sơ đã thay đổi. Vui lòng tải lại.');
     const adminPricing=data.pricesCents===undefined?row.admin_pricing_json:JSON.stringify(validateArtworkPrices(data.pricesCents));
     const result = await env.DB.prepare('UPDATE artwork_submissions SET status = ?, admin_note = ?, admin_pricing_json = ?, version = version + 1, updated_at = ? WHERE id = ? AND version = ?').bind(data.status, clean(data.adminNote,2000), adminPricing, new Date().toISOString(), row.id,row.version).run();

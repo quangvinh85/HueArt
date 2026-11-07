@@ -188,7 +188,7 @@ export const ArtworkDetailModal: React.FC<ArtworkDetailModalProps> = ({
                         style={{
                           left: `${loupePos.x - 70}px`,
                           top: `${loupePos.y - 70}px`,
-                          backgroundImage: `url(${artwork.highResUrl})`,
+                          backgroundImage: `url(${artwork.imageUrl})`,
                           backgroundPosition: `${loupePos.bgX}% ${loupePos.bgY}%`,
                           backgroundSize: '350%',
                         }}

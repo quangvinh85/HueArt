@@ -1,9 +1,11 @@
+import {securityHeaders} from '../server/securityHeaders.js';
 import type { IncomingMessage,ServerResponse } from 'node:http';
 import { Readable } from 'node:stream';
 import process from 'node:process';
 import { proxyApi,MAX_VERCEL_BODY } from '../server/vercelProxy.ts';
 
 export default async function handler(req:IncomingMessage & {body?:unknown},res:ServerResponse){
+  for(const [key,value] of Object.entries(securityHeaders()))res.setHeader(key,value);
   try{
     const host=req.headers.host||'';
     const allowedHosts=(process.env.HUEART_PUBLIC_HOSTS||'').split(',').map(value=>value.trim()).filter(Boolean);

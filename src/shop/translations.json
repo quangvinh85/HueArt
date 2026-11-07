@@ -1679,9 +1679,9 @@
     "For photographers",
     "Pour les photographes"
   ],
-  "Cộng tác bán ảnh cùng NHIẾP ẢNH NGHỆ THUẬT HUẾ": [
-    "Sell your photographs with NHIẾP ẢNH NGHỆ THUẬT HUẾ",
-    "Vendez vos photographies avec NHIẾP ẢNH NGHỆ THUẬT HUẾ"
+  "Cộng tác bán ảnh cùng CLB Nhiếp ảnh Đặng Huy Trứ": [
+    "Sell photographs with Đặng Huy Trứ Photography Club",
+    "Vendez vos photographies avec le club photographique Đặng Huy Trứ"
   ],
   "Gửi ảnh của bạn để được xét duyệt và trao đổi cơ hội hợp tác bán ảnh. Điều kiện hợp tác và phân chia doanh thu sẽ được hai bên thống nhất trước khi đăng bán.": [
     "Submit your photos for review and discuss selling them with NHIẾP ẢNH NGHỆ THUẬT HUẾ. Partnership and revenue-sharing terms will be agreed before publication.",
@@ -1731,9 +1731,9 @@
     "Please enter a valid photo title and photographer name.",
     "Veuillez saisir un titre et un nom d’auteur valides."
   ],
-  "Gửi ảnh của bạn để được xét duyệt và cộng tác bán ảnh cùng NHIẾP ẢNH NGHỆ THUẬT HUẾ. Xem rõ tỷ lệ phân chia doanh thu bên dưới trước khi gửi.": [
-    "Submit your photographs for review and sell them in partnership with NHIẾP ẢNH NGHỆ THUẬT HUẾ. Review the revenue split below before submitting.",
-    "Proposez vos photographies pour examen et vente avec NHIẾP ẢNH NGHỆ THUẬT HUẾ. Consultez le partage des revenus ci-dessous avant l’envoi."
+  "Gửi ảnh của bạn để được xét duyệt và cộng tác bán ảnh cùng CLB Nhiếp ảnh Đặng Huy Trứ. Xem rõ tỷ lệ phân chia doanh thu bên dưới trước khi gửi.": [
+    "Submit your photographs for review and sale with Đặng Huy Trứ Photography Club. Review the revenue split below before submitting.",
+    "Proposez vos photographies pour examen et vente avec le club photographique Đặng Huy Trứ. Consultez le partage des revenus ci-dessous."
   ],
   "Phân chia doanh thu bán ảnh": [
     "Photo sales revenue sharing",
@@ -1747,17 +1747,17 @@
     "Total partnership fee: {0}%",
     "Frais de partenariat : {0} % au total"
   ],
-  "dành cho quỹ Hội Nhiếp ảnh": [
-    "for the Photography Association fund",
-    "pour le fonds de l’Association photographique"
+  "dành cho quỹ CLB Nhiếp ảnh Đặng Huy Trứ": [
+    "for the Đặng Huy Trứ Photography Club fund",
+    "pour le fonds du club photographique Đặng Huy Trứ"
   ],
   "dành cho chi phí quản trị website": [
     "for website administration costs",
     "pour les frais d’administration du site"
   ],
-  "Tôi đã đọc và đồng ý phí cộng tác 20% doanh thu bán ảnh: 10% cho quỹ Hội Nhiếp ảnh và 10% cho chi phí quản trị; tác giả nhận 80% còn lại.": [
-    "I have read and agree to the 20% photo sales fee: 10% for the Photography Association fund and 10% for administration; the photographer receives the remaining 80%.",
-    "J’ai lu et j’accepte les frais de 20 % des ventes : 10 % pour le fonds de l’Association photographique et 10 % pour l’administration ; l’auteur reçoit les 80 % restants."
+  "Tôi đã đọc và đồng ý phí cộng tác 20% doanh thu bán ảnh: 10% cho quỹ CLB Nhiếp ảnh Đặng Huy Trứ và 10% cho chi phí quản trị; tác giả nhận 80% còn lại.": [
+    "I agree to the 20% sales fee: 10% for the Đặng Huy Trứ Photography Club fund and 10% for website administration; the photographer receives 80%.",
+    "J’accepte les frais de 20 % : 10 % pour le fonds du club photographique Đặng Huy Trứ et 10 % pour l’administration du site ; l’auteur reçoit 80 %."
   ],
   "Vui lòng đọc và đồng ý mức phí cộng tác 20% trước khi gửi tác phẩm.": [
     "Please read and agree to the 20% partnership fee before submitting.",
@@ -2066,5 +2066,101 @@
   "Số điện thoại này dùng cho nút chat. Để tự nhận đơn hàng, kết nối Zalo Bot trong phần Thông báo đơn hàng qua Zalo bên dưới.": [
     "This phone number is used by the chat button. To receive orders automatically, connect a Zalo Bot in the Zalo order notifications section below.",
     "Ce numéro de téléphone est utilisé par le bouton de chat. Pour recevoir automatiquement les commandes, connectez un bot Zalo dans la section ci-dessous."
+  ],
+  "Mang 1 tác phẩm nghệ thuật về với bạn": [
+    "Bring a work of art home",
+    "Emportez une œuvre d’art chez vous"
+  ],
+  "Quỹ {0}: {1}% · Quản trị: {2}% · Tác giả: {3}%": [
+    "{0} fund: {1}% · Administration: {2}% · Photographer: {3}%",
+    "Fonds {0} : {1} % · Administration : {2} % · Auteur : {3} %"
+  ],
+  "Xóa ảnh đã chọn": [
+    "Remove selected image",
+    "Supprimer l’image sélectionnée"
+  ],
+  "Đang tạo ảnh xem trước…": [
+    "Preparing image preview…",
+    "Préparation de l’aperçu…"
+  ],
+  "Không đọc được ảnh. Vui lòng chọn lại ảnh JPG, PNG hoặc WebP.": [
+    "Could not read this image. Choose a valid JPG, PNG or WebP image.",
+    "Impossible de lire cette image. Choisissez une image JPG, PNG ou WebP valide."
+  ],
+  "Chọn ảnh JPG, PNG hoặc WebP đúng định dạng và giới hạn dung lượng.": [
+    "Choose a valid JPG, PNG or WebP within the file size limit.",
+    "Choisissez une image JPG, PNG ou WebP valide dans la limite de taille."
+  ],
+  "Ảnh quá lớn hoặc không hợp lệ.": [
+    "The image is too large or invalid.",
+    "L’image est trop grande ou invalide."
+  ],
+  "Không tạo được ảnh xem trước.": [
+    "Could not prepare the image preview.",
+    "Impossible de préparer l’aperçu."
+  ],
+  "Vui lòng chọn ảnh và chờ tạo ảnh xem trước.": [
+    "Choose an image and wait for its preview.",
+    "Choisissez une image et attendez son aperçu."
+  ],
+  "Tải file đã mua": [
+    "Download purchased files",
+    "Télécharger les fichiers achetés"
+  ],
+  "Link tải có hiệu lực 10 phút và chỉ dành cho file đã thanh toán.": [
+    "Download links expire in 10 minutes and require confirmed payment.",
+    "Les liens expirent après 10 minutes et nécessitent un paiement confirmé."
+  ],
+  "Đang tạo link tải…": [
+    "Preparing download links…",
+    "Préparation des liens…"
+  ],
+  "Nhận link tải file": [
+    "Get download links",
+    "Obtenir les liens de téléchargement"
+  ],
+  "Đơn này không có file kỹ thuật số được phép tải.": [
+    "This order has no digital files available for download.",
+    "Cette commande ne contient aucun fichier numérique téléchargeable."
+  ],
+  "Tải file gốc": [
+    "Download original",
+    "Télécharger l’original"
+  ],
+  "Không tạo được link tải file.": [
+    "Could not create download links.",
+    "Impossible de créer les liens de téléchargement."
+  ],
+  "Chỉ tải được file sau khi admin xác nhận đã thanh toán.": [
+    "Files are available only after the admin confirms payment.",
+    "Les fichiers sont disponibles après confirmation du paiement par l’administrateur."
+  ],
+  "Link tải không hợp lệ hoặc đã hết hạn.": [
+    "This download link is invalid or expired.",
+    "Ce lien de téléchargement est invalide ou expiré."
+  ],
+  "Đơn hàng không còn quyền tải file này.": [
+    "This order no longer has permission to download this file.",
+    "Cette commande n’autorise plus le téléchargement de ce fichier."
+  ],
+  "File đang được chuẩn bị. Vui lòng thử lại hoặc liên hệ admin.": [
+    "The file is being prepared. Retry or contact the admin.",
+    "Le fichier est en préparation. Réessayez ou contactez l’administrateur."
+  ],
+  "Vui lòng tạo ảnh xem trước rồi gửi lại tác phẩm.": [
+    "Prepare image previews and resubmit the artwork.",
+    "Préparez les aperçus et renvoyez l’œuvre."
+  ],
+  "Cần tạo ảnh xem trước an toàn trước khi xuất bản.": [
+    "Create safe previews before publishing.",
+    "Créez des aperçus sécurisés avant publication."
+  ],
+  "Ảnh xem trước không hợp lệ.": [
+    "Invalid image preview.",
+    "Aperçu invalide."
+  ],
+  "Ảnh xem trước vượt giới hạn độ phân giải.": [
+    "The image preview exceeds the resolution limit.",
+    "L’aperçu dépasse la limite de résolution."
   ]
 }

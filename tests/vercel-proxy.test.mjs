@@ -8,6 +8,8 @@ import {finished} from 'node:stream/promises';
 import {proxyApi,MAX_VERCEL_BODY} from '../.work-tests/vercel-proxy.mjs';
 import handler from '../.work-tests/vercel-handler.mjs';
 import worker from '../.work-tests/vercel-worker.mjs';
+const previewJpeg=readFileSync(new URL('./fixtures/preview.jpg',import.meta.url));
+function addPreviews(form){for(const size of [160,480,960])form.append('preview'+size,new File([previewJpeg],'preview.jpg',{type:'image/jpeg'}));}
 const publicOrigin='https://hue-art2.vercel.app';
 const config={backendUrl:'https://backend.example',serviceToken:'test-service-token',bridgeToken:'cd'.repeat(32)};
 const password='fixture-password-only';
@@ -79,7 +81,7 @@ test('Vercel can log in, manage orders and log out without Sites browser identit
  const customerKey=sqlite.prepare('SELECT checkout_key FROM orders').get().checkout_key,orderNumber=orders.orders[0].orderNumber;
  const reportRequest=new Request(publicOrigin+'/api/order-payment/'+orderNumber+'/report',{method:'POST',headers:{Origin:publicOrigin,'X-HueArt-Checkout-Key':customerKey,'Content-Type':'application/json'},body:JSON.stringify({method:'transfer',reference:'TEST-REF'})});
  const report=await proxyApi(reportRequest,config,send);assert.equal(report.status,200);assert.equal((await report.json()).paymentStatus,'reported');
- const uploadForm=new FormData();uploadForm.append('image',new File([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvhoAAAAASUVORK5CYII=','base64')],'admin.png',{type:'image/png'}));uploadForm.append('metadata',JSON.stringify({submissionKey:crypto.randomUUID(),title:'Uploaded via Vercel',authorName:'Test owner',rightsConfirmed:true,collection:'imperial-echoes',publish:true}));
+ const uploadForm=new FormData();uploadForm.append('image',new File([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvhoAAAAASUVORK5CYII=','base64')],'admin.png',{type:'image/png'}));addPreviews(uploadForm);uploadForm.append('metadata',JSON.stringify({submissionKey:crypto.randomUUID(),title:'Uploaded via Vercel',authorName:'Test owner',rightsConfirmed:true,collection:'imperial-echoes',publish:true}));
  env.BUCKET={async put(){},async get(){return null},async delete(){}};
  const uploadResponse=await proxyApi(new Request(publicOrigin+'/api/admin/artworks',{method:'POST',headers:{Origin:publicOrigin,Cookie:cookie},body:uploadForm}),config,send);assert.equal(uploadResponse.status,201);const uploaded=await uploadResponse.json();assert.ok((await(await proxy('/api/catalog')).json()).artworks.some(art=>art.id===uploaded.artworkId));
  const library=await(await proxy('/api/admin/catalog',null,cookie)).json();assert.equal(library.stats.visible,13);
@@ -128,4 +130,8 @@ test('production proxy allows persisted counters and secured Zalo notification r
   let called=false;const response=await proxyApi(new Request('https://shop.example'+path,{method,headers:{Origin:'https://shop.example'}}),config,async(url)=>{called=true;assert.equal(new URL(url).pathname,path);return Response.json({ok:true});});
   assert.equal(response.status,200);assert.equal(called,true);
  }
+});
+
+test('proxy never forwards internal migration routes or accepts a caller Authorization as a migration credential',async()=>{
+ let forwarded=false;const response=await proxyApi(new Request(publicOrigin+'/api/internal/media-list',{headers:{Authorization:'Bearer '+'ee'.repeat(32)}}),config,async()=>{forwarded=true;return Response.json({ok:true});});assert.equal(response.status,404);assert.equal(forwarded,false);
 });
