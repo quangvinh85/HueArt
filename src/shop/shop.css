@@ -12,6 +12,8 @@
 .shop-brand { display:flex; flex-direction:column; flex-shrink:0; line-height:1.3; }
 .shop-brand span { color:var(--muted); font-size:12px; }
 .shop-brand strong { font-family:var(--font-serif); font-weight:500; font-size:28px; }
+.shop-club-brand strong { font-size:23px; }
+@media (max-width:760px) { .shop-brand.shop-club-brand strong { font-size:20px; } }
 .shop-header nav { display:flex; gap:32px; color:#b8b8b6; font-size:13px; }
 .shop-header nav a:hover { color:var(--gold); }
 .shop-cart-button { display:flex; align-items:center; gap:10px; border:1px solid #343638; border-radius:5px; padding:10px 14px; background:#151719; white-space:nowrap; }

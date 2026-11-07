@@ -165,7 +165,7 @@ export default function Shop() {
   };
   return <RateContext.Provider value={paymentSettings.exchangeRate}><div className="shop">
     <header className="shop-header">
-      <a className="shop-brand" href="#home"><span>{tr("Nhiếp ảnh Nghệ thuật")}</span><strong>Đặng Huy Trứ</strong></a>
+      <a className="shop-brand shop-club-brand" href="#home" aria-label="NHIẾP ẢNH NGHỆ THUẬT HUẾ - CLB ĐẶNG HUY TRỨ"><span>NHIẾP ẢNH NGHỆ THUẬT HUẾ - </span><strong>CLB ĐẶNG HUY TRỨ</strong></a>
       <nav aria-label={tr("Điều hướng chính")}><a href="#gallery">{tr("Chọn ảnh")}</a><a href="#options">{tr("Bảng giá")}</a><a href="#contact">{tr("Liên hệ")}</a></nav><div className="shop-feature-actions"><button className="shop-contribute-button" aria-label={tr("Gửi tác phẩm để cộng tác bán ảnh")} onClick={() => setSubmissionOpen(true)}><Camera size={18} aria-hidden="true"/><span><strong>{tr("Gửi tác phẩm")}</strong><small>{tr("Cộng tác bán ảnh")}</small></span><Sparkles className="shop-contribute-sparkle" size={11} aria-hidden="true"/></button><button onClick={() => setCuratorOpen(true)}><Sparkles size={15} /><span>{tr("Giám tuyển AI")}</span></button></div><LanguageSwitcher />
       <button className="shop-cart-button" onClick={() => setPanel('cart')} aria-label={tr("Giỏ hàng, {0} sản phẩm", count)}><ShoppingBag size={18} /><span>{tr("Giỏ hàng")}</span><b>{count}</b></button>
     </header>
