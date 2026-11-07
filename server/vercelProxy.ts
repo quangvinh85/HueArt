@@ -1,5 +1,5 @@
 export interface VercelBackendConfig { backendUrl?: string; serviceToken?: string; bridgeToken?: string; }
-const allowedPath = /^\/api\/(?:health|session|curator|payment-settings|order-payment\/DHT-[0-9]{8}-[A-F0-9]{8}(?:\/report)?|catalog(?:\/[0-9a-f-]{36}\/image)?|orders|submissions|admin-auth\/(?:login|logout)|admin\/(?:payment-settings|catalog(?:\/[a-z0-9-]{1,100})?|orders(?:\/[0-9a-f-]{36})?|submissions(?:\/[0-9a-f-]{36}(?:\/image)?)?))$/;
+const allowedPath = /^\/api\/(?:health|session|curator|contact-settings|payment-settings|order-payment\/DHT-[0-9]{8}-[A-F0-9]{8}(?:\/report)?|catalog(?:\/[0-9a-f-]{36}\/image)?|orders|submissions|admin-auth\/(?:login|logout)|admin\/(?:contact-settings|payment-settings|catalog(?:\/[a-z0-9-]{1,100})?|orders(?:\/[0-9a-f-]{36})?|submissions(?:\/[0-9a-f-]{36}(?:\/image)?)?))$/;
 const json=(error:string,status:number)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 export const MAX_VERCEL_BODY=3*1024*1024+65536;
 

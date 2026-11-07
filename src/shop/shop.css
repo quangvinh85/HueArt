@@ -232,3 +232,20 @@
 @media(max-width:520px) { .shop-bank-panel { padding:14px; } .shop-bank-panel dl { grid-template-columns:105px minmax(0,1fr); gap:10px; } }
 .shop-hero-prices { display:flex; gap:24px; align-items:start; }
 .shop-hero-prices > span { display:flex; gap:6px; align-items:start; }
+
+.shop-chat-dock { position:fixed; z-index:40; right:max(22px,env(safe-area-inset-right)); bottom:max(22px,env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:18px; }
+.shop-chat-link { position:relative; isolation:isolate; display:grid; place-items:center; width:56px; height:56px; border:2px solid #ffffffcc; border-radius:50%; text-decoration:none; box-shadow:0 5px 22px #0006; color:white; transition:box-shadow .2s; }
+.shop-chat-link > svg { width:40px; height:40px; }
+.shop-chat-zalo { background:#0068ff; --chat-color:#0068ff; }
+.shop-chat-messenger { background:linear-gradient(145deg,#0696ff,#7653ed 55%,#ff5caa); --chat-color:#8862f4; }
+.shop-chat-link::before { content:''; position:absolute; inset:-2px; z-index:-1; border:2px solid var(--chat-color); border-radius:50%; pointer-events:none; animation:shop-chat-pulse 4s ease-out infinite; }
+.shop-chat-messenger::before { animation-delay:1.6s; }
+.shop-chat-link:hover { box-shadow:0 7px 28px #0009; }
+.shop-chat-link:focus-visible { outline:3px solid #f2ca83; outline-offset:5px; }
+.shop-chat-link:hover::before,.shop-chat-link:focus-visible::before { animation-play-state:paused; }
+.shop-chat-caption { position:absolute; right:calc(100% + 12px); padding:9px 13px; background:#171d27; border:1px solid #454f60; border-radius:6px; color:#fff; font-size:12px; white-space:nowrap; opacity:0; transform:translateX(5px); transition:opacity .2s,transform .2s; pointer-events:none; }
+.shop-chat-link:hover .shop-chat-caption,.shop-chat-link:focus-visible .shop-chat-caption { opacity:1; transform:translateX(0); }
+@keyframes shop-chat-pulse { 0%,30% { transform:scale(1); opacity:0; } 35% { opacity:.6; } 65%,100% { transform:scale(1.4); opacity:0; } }
+@media(max-width:520px) { .shop-chat-dock { right:max(16px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom)); gap:16px; } .shop-chat-link { width:52px; height:52px; } .shop-chat-link > svg { width:37px; height:37px; } }
+@media(prefers-reduced-motion:reduce) { .shop-chat-link::before { animation:none; } .shop-chat-link,.shop-chat-caption { transition:none; } }
+@media print { .shop-chat-dock { display:none; } }

@@ -36,3 +36,5 @@ console.log('Language rendering passed: Vietnamese default and invalid-language 
 
 language='vi';assert.match(renderToStaticMarkup(<LanguageProvider><Price cents={500}/></LanguageProvider>),/5 USD.*<small>~ 130.000 VND<\/small>/);
 assert.match(renderToStaticMarkup(<LanguageProvider><Price cents={500} rate={30000}/></LanguageProvider>),/150.000 VND/);
+
+assert.doesNotMatch(render(null).match(/<section class="shop-hero">.*?<\/section>/)?.[0]||'',/VND/);

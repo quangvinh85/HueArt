@@ -75,3 +75,9 @@ Sau khi lưu đơn, khách có thể quét VietQR (tạo ngay trong trình duy�
 Nút **Thông báo tôi đã chuyển khoản** chỉ tạo trạng thái **Khách báo đã chuyển · Chờ xác minh**, không tự đánh dấu đã nhận tiền. Admin đối chiếu tài khoản hoặc tiền COD, nhập số tiền thực nhận và chọn **Đã nhận một phần** hoặc **Đã thanh toán**. Lịch sử giữ các lần báo chuyển và xác nhận. Website chưa kết nối webhook ngân hàng để đối soát tự động.
 
 Biên nhận có liên kết riêng chứa khóa ngẫu nhiên trong URL fragment (không gửi trong URL HTTP). API yêu cầu khóa qua header `X-HueArt-Checkout-Key`, không trả thông tin cá nhân khách; quyền xem/sửa danh sách đơn vẫn chỉ thuộc admin. Không công khai liên kết biên nhận của khách.
+
+## Nút chat Zalo / Messenger
+
+Vào `/admin` → **Cài đặt chat** để nhập số Zalo và link Facebook/Messenger (hoặc ID/username trang), bật từng kênh và lưu. Hỗ trợ số Việt Nam dạng `0…` / `+84…`; link Facebook được chuyển về `https://m.me/...`. Chưa cấu hình thì kênh tương ứng không xuất hiện, không dùng tài khoản mẫu.
+
+Nút nổi nằm ở góc phải dưới, mở trang chat hoặc ứng dụng qua liên kết HTTPS khi khách bấm. Hiệu ứng pulse tắt khi thiết bị bật giảm chuyển động. Nút tạm ẩn khi mở giỏ hàng, thanh toán hoặc hộp thoại; không tải SDK Facebook/Zalo bên ngoài. Cài đặt lưu ở khóa `contact` trong bảng `shop_settings`, độc lập với thanh toán. Phần đầu trang chỉ hiển thị USD; các vị trí giá khác vẫn hiển thị USD/VND.

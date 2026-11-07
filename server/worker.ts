@@ -1,3 +1,4 @@
+import {getContactSettings,publicContactSettings,saveContactSettings} from './contactSettings';
 import {getPaymentSettings,savePaymentSettings,paymentReceipt,customerPayment} from './payments';
 import { catalogueAdmin } from './catalogueAdmin';
 import { getCatalogue } from './catalogue';
@@ -30,6 +31,11 @@ export async function api(request: Request, env: Env): Promise<Response> {
   if (url.pathname === '/api/health' && request.method === 'GET') {
     await env.DB.prepare('SELECT 1 AS ok').first();
     return json({ok:true,database:true,uploads:Boolean(env.BUCKET),protocol:1});
+  }
+  if(url.pathname==='/api/contact-settings'&&request.method==='GET')return json(publicContactSettings(await getContactSettings(env)));
+  if(url.pathname==='/api/admin/contact-settings'){
+    if(request.method==='GET')return json(await getContactSettings(env));
+    if(request.method==='PATCH')return json(await saveContactSettings(env,await readJson(request)));
   }
   if(url.pathname==='/api/payment-settings'&&request.method==='GET'){
     const settings=await getPaymentSettings(env);

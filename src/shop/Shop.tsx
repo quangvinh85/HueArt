@@ -1,3 +1,4 @@
+import ChatDock from './ChatDock';
 import Price,{RateContext} from './Price';
 import PaymentOptions from './PaymentOptions';
 import {defaultPaymentSettings,type PaymentSettings,type PaymentMethod,vnd} from './paymentTypes';
@@ -176,7 +177,7 @@ export default function Shop() {
           <h1>Artistic photography<br /><em>ĐẶNG HUY TRỨ</em></h1>
           <p>{tr("Mang một góc Huế về với bạn.")}<br />{tr("Chọn ảnh yêu thích, nhận file hoặc đặt bản in có khung.")}</p>
           <a href="#gallery" className="shop-primary">{tr("Chọn ảnh ngay ")}<ArrowDown size={16} /></a>
-          <span className="shop-hero-note shop-hero-prices"><span>{tr('File từ')} <Price cents={500}/></span><span>{tr('Bản in có khung')} <Price cents={700}/></span></span>
+          <span className="shop-hero-note">{tr("File từ 5 USD · Bản in có khung 7 USD")}</span>
         </div>
       </section>
       <section id="options" className="shop-container shop-pricing">
@@ -263,6 +264,7 @@ export default function Shop() {
       </form>}
     </Modal>}
     <Suspense fallback={null}>{curatorOpen && <CuratorModal isOpen onClose={() => setCuratorOpen(false)} onSelectArtwork={openArtwork} />} {submissionOpen && <SubmissionModal onClose={() => setSubmissionOpen(false)} />}</Suspense>
+    <ChatDock hidden={Boolean(selected||panel||curatorOpen||submissionOpen)}/>
     {notice && <div className="shop-toast" role="status">{notice}</div>}
   </div></RateContext.Provider>;
 }

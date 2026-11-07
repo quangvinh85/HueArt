@@ -1602,5 +1602,77 @@
   "Bản in có khung": [
     "Framed print",
     "Tirage encadré"
+  ],
+  "Cài đặt chat": [
+    "Chat settings",
+    "Paramètres de discussion"
+  ],
+  "Cấu hình Zalo và Facebook Messenger hiển thị ở góc phải cửa hàng.": [
+    "Configure Zalo and Facebook Messenger in the bottom-right corner of the shop.",
+    "Configurez Zalo et Facebook Messenger dans le coin inférieur droit de la boutique."
+  ],
+  "Đã lưu cài đặt chat.": [
+    "Chat settings saved.",
+    "Paramètres de discussion enregistrés."
+  ],
+  "Hiển thị nút chat Zalo": [
+    "Show Zalo chat button",
+    "Afficher le bouton Zalo"
+  ],
+  "Số điện thoại Zalo của admin": [
+    "Administrator’s Zalo phone number",
+    "Numéro Zalo de l’administrateur"
+  ],
+  "Mở thử Zalo": [
+    "Test Zalo link",
+    "Tester le lien Zalo"
+  ],
+  "Hiển thị nút chat Messenger": [
+    "Show Messenger chat button",
+    "Afficher le bouton Messenger"
+  ],
+  "Liên kết Facebook / Messenger hoặc ID trang": [
+    "Facebook / Messenger link or page ID",
+    "Lien Facebook / Messenger ou identifiant de page"
+  ],
+  "Nhập link m.me, link trang Facebook hoặc ID/username trang. Website sẽ mở Messenger tới tài khoản này.": [
+    "Enter an m.me link, Facebook page link or page ID/username. The website will open Messenger to this account.",
+    "Saisissez un lien m.me, un lien Facebook ou l’identifiant/nom de la page. Le site ouvrira Messenger vers ce compte."
+  ],
+  "Mở thử Messenger": [
+    "Test Messenger link",
+    "Tester le lien Messenger"
+  ],
+  "Bật từng kênh rồi lưu. Khách bấm nút để mở ứng dụng hoặc trang chat tương ứng.": [
+    "Enable each channel and save. Customers click to open the corresponding app or chat page.",
+    "Activez chaque canal puis enregistrez. Le client clique pour ouvrir l’application ou la page de discussion correspondante."
+  ],
+  "Chat với người bán": [
+    "Chat with the seller",
+    "Discuter avec le vendeur"
+  ],
+  "Chat Zalo với người bán": [
+    "Chat with the seller on Zalo",
+    "Discuter avec le vendeur sur Zalo"
+  ],
+  "Chat Messenger với người bán": [
+    "Chat with the seller on Messenger",
+    "Discuter avec le vendeur sur Messenger"
+  ],
+  "Chat Zalo": [
+    "Zalo chat",
+    "Discussion Zalo"
+  ],
+  "Cài đặt chat không hợp lệ.": [
+    "Invalid chat settings.",
+    "Paramètres de discussion non valides."
+  ],
+  "Vui lòng nhập số điện thoại Zalo Việt Nam hợp lệ.": [
+    "Please enter a valid Vietnamese Zalo phone number.",
+    "Veuillez saisir un numéro Zalo vietnamien valide."
+  ],
+  "Vui lòng nhập liên kết Messenger hoặc Facebook hợp lệ.": [
+    "Please enter a valid Messenger or Facebook link.",
+    "Veuillez saisir un lien Messenger ou Facebook valide."
   ]
 }

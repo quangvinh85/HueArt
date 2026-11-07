@@ -409,3 +409,23 @@ test('copyright payment waits for admin confirmation of the written agreement',a
  const ready=(await f.request('/api/order-payment/'+placed.orderNumber,{headers:{'X-HueArt-Checkout-Key':placed.paymentAccessKey}})).data;
  assert.equal(ready.canPay,true);assert.equal(ready.expectedAmountVnd,260000);
 });
+
+test('chat settings require admin, validate destinations, normalize links and hide disabled drafts',async()=>{
+ const f=fixture();
+ const defaults=(await f.request('/api/contact-settings')).data;assert.equal(defaults.zaloEnabled,false);assert.equal(defaults.messengerEnabled,false);
+ assert.equal((await f.request('/api/admin/contact-settings')).status,401);
+ const body={version:0,zaloEnabled:true,zaloPhone:'+84 901 234 567',messengerEnabled:true,messengerUrl:'https://www.facebook.com/fixture.page?ref=test'};
+ assert.equal((await f.request('/api/admin/contact-settings',{method:'PATCH',body})).status,401);
+ assert.equal((await f.request('/api/admin/contact-settings',{method:'PATCH',headers:owner,sameOrigin:false,body})).status,403);
+ for(const messengerUrl of ['javascript:alert(1)','https://example.com/chat','https://facebook.com.evil.example/page','https://user:pass@facebook.com/page','http://m.me/page']){
+  assert.equal((await f.request('/api/admin/contact-settings',{method:'PATCH',headers:owner,body:{...body,messengerUrl}})).status,400);
+ }
+ assert.equal((await f.request('/api/admin/contact-settings',{method:'PATCH',headers:owner,body:{...body,zaloPhone:'123'}})).status,400);
+ const result=await f.request('/api/admin/contact-settings',{method:'PATCH',headers:owner,body});assert.equal(result.status,200);assert.equal(result.data.zaloPhone,'0901234567');assert.equal(result.data.messengerUrl,'https://m.me/fixture.page');
+ assert.equal((await f.request('/api/contact-settings')).data.messengerUrl,'https://m.me/fixture.page');
+ assert.equal((await f.request('/api/admin/contact-settings',{method:'PATCH',headers:owner,body})).status,409);
+ const disabled=await f.request('/api/admin/contact-settings',{method:'PATCH',headers:owner,body:{...result.data,zaloEnabled:false,messengerEnabled:false}});assert.equal(disabled.status,200);
+ const publicState=(await f.request('/api/contact-settings')).data;assert.equal(publicState.zaloPhone,'');assert.equal(publicState.messengerUrl,'');
+ assert.equal((await f.request('/api/admin/contact-settings',{headers:owner})).data.zaloPhone,'0901234567');
+ const facebookId=await f.request('/api/admin/contact-settings',{method:'PATCH',headers:owner,body:{...disabled.data,messengerEnabled:true,messengerUrl:'https://facebook.com/profile.php?id=1234567890'}});assert.equal(facebookId.data.messengerUrl,'https://m.me/1234567890');
+});
