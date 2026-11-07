@@ -27,10 +27,10 @@ export default function Modal({
       const elements = Array.from(ref.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), textarea, select') || []).filter(el => el.getClientRects().length > 0);
       const first = elements[0];
       const last = elements[elements.length - 1];
-      if (event.shiftKey && (document.activeElement === first || document.activeElement === ref.current)) {
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === ref.current || !ref.current?.contains(document.activeElement))) {
         event.preventDefault();
         last?.focus();
-      } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === ref.current)) {
+      } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === ref.current || !ref.current?.contains(document.activeElement))) {
         event.preventDefault();
         first?.focus();
       }

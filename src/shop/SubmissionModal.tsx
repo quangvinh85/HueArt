@@ -95,7 +95,7 @@ export default function SubmissionModal({
       event.preventDefault();
       void submit();
     }}>
-      <p>{tr("Chia sẻ góc nhìn của bạn về Huế. Ảnh được gửi riêng cho quản trị viên, chỉ công bố sau khi hai bên thống nhất.")}</p>
+      <div className="submission-collab-intro"><span className="shop-eyebrow">{tr("Dành cho nhiếp ảnh gia")}</span><h3>{tr("Cộng tác bán ảnh cùng HueArt")}</h3><p>{tr("Gửi ảnh của bạn để được xét duyệt và trao đổi cơ hội hợp tác bán ảnh. Điều kiện hợp tác và phân chia doanh thu sẽ được hai bên thống nhất trước khi đăng bán.")}</p></div>
       <label className="submission-upload" onDragOver={event => event.preventDefault()} onDrop={event => {
         event.preventDefault();
         if (!busy) selectFile(event.dataTransfer.files[0]);

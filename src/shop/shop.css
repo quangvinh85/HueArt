@@ -249,3 +249,18 @@
 @media(max-width:520px) { .shop-chat-dock { right:max(16px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom)); gap:16px; } .shop-chat-link { width:52px; height:52px; } .shop-chat-link > svg { width:37px; height:37px; } }
 @media(prefers-reduced-motion:reduce) { .shop-chat-link::before { animation:none; } .shop-chat-link,.shop-chat-caption { transition:none; } }
 @media print { .shop-chat-dock { display:none; } }
+
+.shop-feature-actions .shop-contribute-button { position:relative; overflow:hidden; isolation:isolate; gap:9px; padding:8px 25px 8px 12px; border-color:#dfb871b3; background:linear-gradient(115deg,#70501c45,#dfb87117); box-shadow:0 0 14px #dfb87118; }
+.shop-contribute-button > span { text-align:left; position:relative; z-index:1; }
+.shop-contribute-button strong { display:block; font-size:11px; font-weight:650; color:#ffe2aa; line-height:1.25; }
+.shop-contribute-button small { display:block; margin-top:3px; color:#d4bd95; font-size:10px; line-height:1.2; }
+.shop-contribute-button::before { content:''; position:absolute; z-index:0; inset:-10px -35%; background:linear-gradient(110deg,transparent 30%,#ffe6b433 50%,transparent 70%); transform:translateX(-120%); animation:shop-contribute-shine 5.5s ease-in-out infinite; pointer-events:none; }
+.shop-contribute-button .shop-contribute-sparkle { position:absolute; top:6px; right:7px; color:#ffe2aa; animation:shop-contribute-twinkle 3s ease-in-out infinite; }
+.shop-feature-actions .shop-contribute-button:hover { border-color:#ffe2aa; background-color:#6b4b2240; }
+.shop-contribute-button:focus-visible { outline:2px solid #ffe2aa; outline-offset:3px; }
+.submission-collab-intro { background:linear-gradient(120deg,#dfb87114,#171b23); border:1px solid #dfb87155; padding:20px; border-radius:5px; }
+.submission-collab-intro h3 { font-family:var(--font-display,Georgia,serif); font-size:27px; line-height:1.2; margin:8px 0 12px; color:#f5d69f; }
+.submission-collab-intro p { color:#b5bdca; font-size:12px; line-height:1.8; margin:0; }
+@keyframes shop-contribute-shine { 0%,15% { transform:translateX(-120%); opacity:0; } 25% { opacity:1; } 48%,100% { transform:translateX(120%); opacity:0; } }
+@keyframes shop-contribute-twinkle { 0%,100% { opacity:.5; transform:scale(.85); } 50% { opacity:1; transform:scale(1.1); } }
+@media(prefers-reduced-motion:reduce) { .shop-contribute-button::before,.shop-contribute-button .shop-contribute-sparkle { animation:none; } .shop-contribute-button::before { opacity:0; } }
