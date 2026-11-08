@@ -297,10 +297,8 @@
 .submission-remove-image:disabled { opacity:.5; }
 
 .shop-footer-partner { border-top:1px solid #26282c; padding-block:30px; }
-.shop-footer-partner h2 { margin:8px 0; font-size:32px; }
-.shop-footer-partner > p { color:#b7b3aa; font-size:13px; }
 .shop-footer .shop-partner-logo { display:flex; flex-direction:column; align-items:flex-start; gap:12px; width:fit-content; max-width:100%; margin:20px 0 0; }
-.shop-partner-logo img { display:block; width:240px; max-width:100%; height:auto; border-radius:12px; background:#fff7e6; padding:12px; }
+.shop-partner-logo img { display:block; width:240px; max-width:100%; height:auto; background:transparent; padding:0; }
 .shop-partner-logo > span { display:flex; align-items:center; gap:7px; }
 .shop-partner-logo:focus-visible { outline:2px solid var(--gold); outline-offset:6px; border-radius:12px; }
-.shop-partner-logo:hover img { box-shadow:0 0 0 2px var(--gold); }
+.shop-partner-logo:hover img { filter:brightness(1.05); }
