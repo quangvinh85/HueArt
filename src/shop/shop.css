@@ -296,9 +296,8 @@
 .submission-remove-image { position:absolute; top:8px; right:8px; display:grid; place-items:center; width:44px; height:44px; border:2px solid #fff; border-radius:50%; background:#9b2626; color:white; box-shadow:0 2px 8px #0008; }
 .submission-remove-image:disabled { opacity:.5; }
 
-.shop-footer-partner { border-top:1px solid #26282c; padding-block:30px; }
-.shop-footer .shop-partner-logo { display:flex; flex-direction:column; align-items:flex-start; gap:12px; width:fit-content; max-width:100%; margin:20px 0 0; }
-.shop-partner-logo img { display:block; width:240px; max-width:100%; height:auto; background:transparent; padding:0; }
-.shop-partner-logo > span { display:flex; align-items:center; gap:7px; }
+.shop-footer-partner { display:flex; align-items:center; gap:16px; border-top:1px solid #26282c; padding-block:12px; }
+.shop-footer .shop-partner-logo { display:block; flex:0 0 60px; width:60px; height:60px; margin:0; }
+.shop-partner-logo img { display:block; width:60px; height:60px; object-fit:contain; background:transparent; padding:0; }
 .shop-partner-logo:focus-visible { outline:2px solid var(--gold); outline-offset:6px; border-radius:12px; }
 .shop-partner-logo:hover img { filter:brightness(1.05); }
