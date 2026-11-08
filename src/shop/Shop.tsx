@@ -273,7 +273,7 @@ export default function Shop() {
             note: event.target.value
           })} /></label>
         <PaymentOptions settings={paymentSettings} method={paymentMethod} onChange={setPaymentMethod} hasPrint={hasPrint} disabled={submitting}/>
-        {hasCopyright && <label className="shop-consent"><input type="checkbox" required disabled={submitting} checked={rightsAccepted} onChange={event => setRightsAccepted(event.target.checked)} /><span>{tr("Tôi chọn mua file kèm chuyển toàn bộ quyền tác giả. Hai bên sẽ xác nhận nội dung chuyển quyền bằng văn bản trước khi thanh toán.")}</span></label>}
+        {hasCopyright && <label className="shop-consent"><input type="checkbox" required disabled={submitting} checked={rightsAccepted} onChange={event => setRightsAccepted(event.target.checked)} /><span>{tr("Tôi chọn mua file kèm chuyển toàn bộ quyền tác giả. Hai bên sẽ xác nhận nội dung chuyển quyền bằng văn bản trước khi giao file.")}</span></label>}
         {orderError && <p className="shop-order-error" role="alert">{tr(orderError)}{tr(" Giỏ hàng được giữ lại để bạn thử lại.")}</p>}
         <button className="shop-primary shop-full" type="button" onClick={() => void sendOrder()} disabled={submitting || !cart.length || hasUnavailableItem}><ShoppingBag size={17} />{submitting ? tr("Đang gửi đơn…") : tr(paymentMethod==='vietqr'||paymentMethod==='transfer'?'Gửi đơn & xem thanh toán':'Gửi đơn hàng')}</button><p className="shop-fine-print">{tr('Đơn được lưu trước khi hiển thị thanh toán. Website không tự trừ tiền khi bạn gửi đơn.')}</p><button type="button" disabled={submitting} className="shop-text-button" onClick={() => setPanel('cart')}>{tr("Quay lại giỏ hàng")}</button>
       </form>}

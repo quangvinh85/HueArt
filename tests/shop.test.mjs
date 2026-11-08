@@ -61,7 +61,7 @@ test('mixed order includes framed print shipping terms and written copyright agr
   assert.match(text, /Địa chỉ nhận bản in: Huế/);
   assert.match(text, /40 × 60 cm đã gồm khung/);
   assert.match(text, /Phí vận chuyển chưa bao gồm/);
-  assert.match(text, /thỏa thuận bằng văn bản trước khi thanh toán/);
+  assert.match(text, /thỏa thuận bằng văn bản trước khi giao file/);
 });
 
 test('published-artwork carts survive reload while the live catalogue loads',()=>{

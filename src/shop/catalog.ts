@@ -6,7 +6,7 @@ export const SALE_OPTIONS = [
     title: 'File + bản quyền',
     priceUSD: 10,
     short: 'File ảnh và chuyển toàn bộ quyền tác giả',
-    description: 'Nhận file ảnh kèm chuyển toàn bộ quyền tác giả theo thỏa thuận bằng văn bản. Nội dung chuyển quyền được hai bên xác nhận trước khi thanh toán.',
+    description: 'Nhận file ảnh kèm chuyển toàn bộ quyền tác giả theo thỏa thuận bằng văn bản. Nội dung chuyển quyền được hai bên xác nhận trước khi giao file.',
     delivery: 'Giao file qua email sau khi xác nhận thanh toán và thỏa thuận chuyển quyền.',
   },
   {
@@ -87,7 +87,7 @@ export function orderText(items: ShopItem[], customer: Customer, artworks: Artwo
       return `${art.titles.vi} [${art.id}]\n${getOption(item.optionId).title} × ${item.quantity} — ${usd(itemTotal(item,artworks))}`;
     }), '', `Tiền ảnh: ${usd(cartTotal(items,artworks))}`,
     hasPrint ? 'Bản in 40 × 60 cm đã gồm khung. Phí vận chuyển chưa bao gồm, cần báo riêng để tôi xác nhận.' : 'Nhận file qua email, không có phí vận chuyển.',
-    hasCopyright ? 'Tôi yêu cầu chuyển toàn bộ quyền tác giả đối với ảnh chọn gói File + bản quyền. Hai bên cần xác nhận khả năng chuyển quyền và thỏa thuận bằng văn bản trước khi thanh toán.' : '',
+    hasCopyright ? 'Tôi yêu cầu chuyển toàn bộ quyền tác giả đối với ảnh chọn gói File + bản quyền. Hai bên cần xác nhận khả năng chuyển quyền và thỏa thuận bằng văn bản trước khi giao file.' : '',
     customer.note ? `Ghi chú: ${customer.note}` : '', '',
     'Vui lòng xác nhận đơn, thông tin file / bản in, tổng tiền và hướng dẫn thanh toán. Đây là yêu cầu đặt hàng, chưa xác nhận thanh toán.',
   ].filter(line => line !== undefined).join('\n');

@@ -33,8 +33,8 @@ export function paymentReceipt(row:any,settings:PaymentSettings){
  const rate=row.exchange_rate||26000;
  const expected=Math.max(0,toVnd(row.subtotal_cents+(row.shipping_cents||0),rate)-(row.received_amount_vnd||0));
  const awaitingRights=Boolean(row.has_copyright&&!row.rights_confirmed);
- const canPay=settings.transferEnabled&&validBank(bank)&&!awaitingRights&&row.status!=='cancelled'&&!['paid','reported'].includes(row.payment_status)&&expected>0;
- return {orderNumber:row.order_number,subtotalCents:row.subtotal_cents,shippingCents:row.shipping_cents,status:row.status,createdAt:row.created_at,paymentStatus:row.payment_status,paymentMethod:row.payment_method||'contact',exchangeRate:rate,paymentAccessKey:row.checkout_key,expectedAmountVnd:expected,receivedAmountVnd:row.received_amount_vnd||0,reportedAmountVnd:row.reported_amount_vnd||0,paymentReference:row.payment_reference||'',paymentClaimedAt:row.payment_claimed_at||null,canPay,awaitingRights,bank:canPay?bank:null,qrPayload:canPay?vietQr(bank,expected,row.order_number):null};
+ const canPay=settings.transferEnabled&&validBank(bank)&&row.status!=='cancelled'&&!['paid','reported'].includes(row.payment_status)&&expected>0;
+ return {orderNumber:row.order_number,subtotalCents:row.subtotal_cents,shippingCents:row.shipping_cents,status:row.status,createdAt:row.created_at,paymentStatus:row.payment_status,paymentMethod:row.payment_method||'contact',exchangeRate:rate,paymentAccessKey:row.checkout_key,expectedAmountVnd:expected,receivedAmountVnd:row.received_amount_vnd||0,reportedAmountVnd:row.reported_amount_vnd||0,paymentReference:row.payment_reference||'',paymentClaimedAt:row.payment_claimed_at||null,canPay,awaitingRights,bank:settings.transferEnabled&&validBank(bank)&&row.status!=='cancelled'?bank:null,qrPayload:canPay?vietQr(bank,expected,row.order_number):null};
 }
 export async function customerPayment(request:Request,env:any,readJson:(request:Request)=>Promise<any>){
  const match=/^\/api\/order-payment\/(DHT-[0-9]{8}-[A-F0-9]{8})(\/report)?$/.exec(new URL(request.url).pathname);

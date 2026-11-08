@@ -2258,5 +2258,33 @@
   "Đồng hành phát triển cùng": [
     "Growing together with",
     "Grandir ensemble avec"
+  ],
+  "Nhận file ảnh kèm chuyển toàn bộ quyền tác giả theo thỏa thuận bằng văn bản. Nội dung chuyển quyền được hai bên xác nhận trước khi giao file.": [
+    "Receive the image file and copyright transfer under a written agreement, confirmed by both parties before file delivery.",
+    "Recevez le fichier et le transfert des droits selon un accord écrit, confirmé par les deux parties avant la livraison du fichier."
+  ],
+  "Tôi chọn mua file kèm chuyển toàn bộ quyền tác giả. Hai bên sẽ xác nhận nội dung chuyển quyền bằng văn bản trước khi giao file.": [
+    "I am purchasing the file with copyright transfer. Both parties will confirm the transfer terms in writing before file delivery.",
+    "J’achète le fichier avec transfert des droits. Les deux parties confirmeront les conditions par écrit avant la livraison du fichier."
+  ],
+  "Khách đã xác nhận yêu cầu chuyển toàn bộ quyền tác giả. Cần thống nhất và ký thỏa thuận riêng trước khi giao file.": [
+    "The customer requested copyright transfer. Agree and sign a separate agreement before delivering the file.",
+    "Le client demande le transfert des droits. Convenez d’un accord distinct et signez-le avant de livrer le fichier."
+  ],
+  "Đơn có chuyển quyền tác giả: người bán sẽ xác nhận thỏa thuận bằng văn bản trước khi giao file.": [
+    "This order includes copyright transfer: the seller will confirm the written agreement before delivering the file.",
+    "Cette commande inclut un transfert des droits : le vendeur confirmera l’accord écrit avant de livrer le fichier."
+  ],
+  "Đơn đã được lưu. Quét mã QR hoặc chuyển khoản theo thông tin bên dưới.": [
+    "Your order is saved. Scan the QR code or transfer using the bank details below.",
+    "Votre commande est enregistrée. Scannez le code QR ou effectuez un virement avec les coordonnées ci-dessous."
+  ],
+  "Thông tin chuyển khoản": [
+    "Bank transfer details",
+    "Coordonnées pour le virement"
+  ],
+  "Chưa có thông tin chuyển khoản. Vui lòng liên hệ người bán.": [
+    "Bank transfer details are not available. Please contact the seller.",
+    "Les coordonnées bancaires ne sont pas disponibles. Veuillez contacter le vendeur."
   ]
 }

@@ -402,14 +402,20 @@ test('framed prints accept a verified deposit and a separate shipping balance; C
  assert.equal((await f.request('/api/orders',{method:'POST',body:{...body,checkoutKey:crypto.randomUUID(),paymentMethod:'cod'}})).status,201);
 });
 
-test('copyright payment waits for admin confirmation of the written agreement',async()=>{
- const f=fixture();await enableBank(f);
- const placed=(await f.request('/api/orders',{method:'POST',body:f.payload({paymentMethod:'vietqr',rightsAccepted:true,items:[{artworkId:artId,optionId:'copyright',quantity:1}]})})).data;
- assert.equal(placed.awaitingRights,true);assert.equal(placed.canPay,false);assert.equal(placed.qrPayload,null);
- let order=(await f.request('/api/admin/orders',{headers:owner})).data.orders[0];
- assert.equal((await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:{version:order.version,status:'confirmed',paymentStatus:'unpaid',shippingCents:0,receivedAmountVnd:0,rightsConfirmed:true,revenueTermsAccepted:true,revenueTermsVersion:'2026-11-07-v2'}})).status,200);
- const ready=(await f.request('/api/order-payment/'+placed.orderNumber,{headers:{'X-HueArt-Checkout-Key':placed.paymentAccessKey}})).data;
- assert.equal(ready.canPay,true);assert.equal(ready.expectedAmountVnd,260000);
+test('copyright transfer and VietQR show configured bank details immediately while delivery still waits for rights confirmation',async()=>{
+ for(const method of ['transfer','vietqr']){
+  const f=fixture();await enableBank(f);f.env.VERCEL_BRIDGE_TOKEN='cd'.repeat(32);
+  const result=await f.request('/api/orders',{method:'POST',body:f.payload({paymentMethod:method,rightsAccepted:true,items:[{artworkId:artId,optionId:'copyright',quantity:1}]})});assert.equal(result.status,201);
+  const placed=result.data;assert.equal(placed.awaitingRights,true);assert.equal(placed.canPay,true);assert.deepEqual(placed.bank,bankFixture);assert.equal(placed.expectedAmountVnd,260000);assert.ok(placed.qrPayload.includes(bankFixture.bankBin));assert.ok(placed.qrPayload.includes(bankFixture.accountNumber));assert.ok(placed.qrPayload.includes('5406260000'));assert.ok(placed.qrPayload.includes(placed.orderNumber));
+  const headers={'X-HueArt-Checkout-Key':placed.paymentAccessKey},path='/api/order-payment/'+placed.orderNumber;
+  const reported=await f.request(path+'/report',{method:'POST',headers,body:{method,reference:'TEST-ONLY'}});assert.equal(reported.status,200);assert.equal(reported.data.paymentStatus,'reported');assert.equal(reported.data.receivedAmountVnd,0);assert.equal(reported.data.canPay,false);assert.equal(reported.data.qrPayload,null);assert.deepEqual(reported.data.bank,bankFixture);
+  let order=(await f.request('/api/admin/orders',{headers:owner})).data.orders[0];
+  const paid=await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:{version:order.version,status:'confirmed',paymentStatus:'paid',shippingCents:0,receivedAmountVnd:260000,rightsConfirmed:false}});assert.equal(paid.status,200);
+  const receipt=(await f.request(path,{headers})).data;assert.equal(receipt.expectedAmountVnd,0);assert.deepEqual(receipt.bank,bankFixture);assert.equal(receipt.qrPayload,null);
+  const waiting=await f.request('/api/order-downloads/'+placed.orderNumber,{headers});assert.equal(waiting.status,200);assert.equal(waiting.data.files.length,0);
+  order=paid.data;assert.equal((await f.request('/api/admin/orders/'+order.id,{method:'PATCH',headers:owner,body:{version:order.version,status:'confirmed',paymentStatus:'paid',shippingCents:0,receivedAmountVnd:260000,rightsConfirmed:true}})).status,200);
+  assert.equal((await f.request('/api/order-downloads/'+placed.orderNumber,{headers})).data.files.length,1);
+ }
 });
 
 test('chat settings require admin, validate destinations, normalize links and hide disabled drafts',async()=>{
