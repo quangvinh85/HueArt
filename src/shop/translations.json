@@ -2178,5 +2178,81 @@
   "Khám phá Mệ Kể (mở trong tab mới)": [
     "Explore Mệ Kể (opens in a new tab)",
     "Découvrir Mệ Kể (s’ouvre dans un nouvel onglet)"
+  ],
+  "Giao diện cửa hàng": [
+    "Storefront appearance",
+    "Apparence de la boutique"
+  ],
+  "Chỉnh ảnh nền và hai dòng giới thiệu ở đầu trang cửa hàng.": [
+    "Edit the background and the two introductory lines at the top of the storefront.",
+    "Modifiez l’image de fond et les deux lignes de présentation en haut de la boutique."
+  ],
+  "Ảnh nền cửa hàng": [
+    "Storefront background",
+    "Image de fond de la boutique"
+  ],
+  "Dòng giới thiệu phía trên": [
+    "Top introductory line",
+    "Ligne de présentation supérieure"
+  ],
+  "Dòng mô tả phía dưới": [
+    "Lower description line",
+    "Ligne de description inférieure"
+  ],
+  "Lưu giao diện cửa hàng": [
+    "Save storefront appearance",
+    "Enregistrer l’apparence"
+  ],
+  "Đã lưu giao diện cửa hàng.": [
+    "Storefront appearance saved.",
+    "Apparence de la boutique enregistrée."
+  ],
+  "Chọn ảnh đang hiển thị trong thư viện. Để dùng ảnh mới, thêm ảnh vào thư viện trước.": [
+    "Choose a published image from the library. Add a new image to the library first to use it here.",
+    "Choisissez une image publiée dans la bibliothèque. Ajoutez-y d’abord toute nouvelle image."
+  ],
+  "Mở thư viện ảnh": [
+    "Open photo library",
+    "Ouvrir la photothèque"
+  ],
+  "Ảnh hiện tại không còn hiển thị — vui lòng chọn ảnh khác": [
+    "This image is no longer published — choose another image",
+    "Cette image n’est plus publiée — choisissez-en une autre"
+  ],
+  "Đổi mật khẩu": [
+    "Change password",
+    "Changer le mot de passe"
+  ],
+  "Mật khẩu hiện tại": [
+    "Current password",
+    "Mot de passe actuel"
+  ],
+  "Mật khẩu mới (ít nhất 12 ký tự)": [
+    "New password (at least 12 characters)",
+    "Nouveau mot de passe (12 caractères minimum)"
+  ],
+  "Nhập lại mật khẩu mới": [
+    "Confirm new password",
+    "Confirmer le nouveau mot de passe"
+  ],
+  "Lưu mật khẩu mới": [
+    "Save new password",
+    "Enregistrer le nouveau mot de passe"
+  ],
+  "Hai mật khẩu mới chưa trùng nhau.": [
+    "The new passwords do not match.",
+    "Les nouveaux mots de passe ne correspondent pas."
+  ],
+  "Vui lòng đổi mật khẩu tạm trước khi sử dụng trang quản lý.": [
+    "Change your temporary password before using the admin area.",
+    "Changez votre mot de passe temporaire avant d’accéder à la gestion."
+  ],
+  "Chỉ admin chính được truy cập chức năng này.": [
+    "Only the primary admin can access this feature.",
+    "Seul l’administrateur principal peut accéder à cette fonction."
+  ],
+  "Mật khẩu mới phải khác mật khẩu cũ và có từ 12 đến 128 ký tự.": [
+    "Your new password must differ from your current password and contain 12–128 characters.",
+    "Votre nouveau mot de passe doit être différent et contenir entre 12 et 128 caractères."
   ]
 }

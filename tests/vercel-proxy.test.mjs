@@ -136,3 +136,15 @@ test('production proxy allows persisted counters and secured Zalo notification r
 test('proxy never forwards internal migration routes or accepts a caller Authorization as a migration credential',async()=>{
  let forwarded=false;const response=await proxyApi(new Request(publicOrigin+'/api/internal/media-list',{headers:{Authorization:'Bearer '+'ee'.repeat(32)}}),config,async()=>{forwarded=true;return Response.json({ok:true});});assert.equal(response.status,404);assert.equal(forwarded,false);
 });
+
+test('Vercel sub-admin changes its temporary password and edits the storefront while owner-only APIs stay forbidden',async()=>{
+ const sqlite=new DatabaseSync(':memory:');for(const name of readdirSync(new URL('../drizzle/',import.meta.url)).filter(f=>f.endsWith('.sql')).sort())sqlite.exec(readFileSync(new URL('../drizzle/'+name,import.meta.url),'utf8'));
+ const env={ADMIN_EMAIL:'owner@example.com',ADMIN_USERNAME:'fixture-owner',ADMIN_PASSWORD_HASH:passwordHash,SUB_ADMIN_USERNAME:'Thanhfab',SUB_ADMIN_PASSWORD_HASH:passwordHash,VERCEL_BRIDGE_TOKEN:config.bridgeToken,BUCKET:{},DB:{prepare(sql){const statement=sqlite.prepare(sql);let values=[];return{bind(...next){values=next;return this;},async first(){return statement.get(...values)||null;},async all(){return{results:statement.all(...values)};},async run(){return{meta:{changes:Number(statement.run(...values).changes)}};}};}}};
+ const send=(url,init)=>worker.fetch(new Request(url,init),env),proxy=(path,body,cookie)=>proxyApi(makeRequest(path,body,cookie),config,send),cookie=r=>r.headers.getSetCookie().find(c=>c.includes('Max-Age=28800')).split(';')[0];
+ const login=await proxy('/api/admin-auth/login',{username:'Thanhfab',password});assert.equal(login.status,200);const first=cookie(login);assert.equal((await proxy('/api/admin/orders',null,first)).status,403);
+ const changed=await proxy('/api/admin-auth/change-password',{password,newPassword:'new-proxy-staff-password'},first);assert.equal(changed.status,200);const current=cookie(changed),identity=await(await proxy('/api/session',null,current)).json();assert.equal(identity.role,'sub-admin');assert.equal(identity.mustChangePassword,false);
+ for(const path of ['/api/admin/security','/api/admin/payment-settings'])assert.equal((await proxy(path,null,current)).status,403);
+ const settings=await(await proxy('/api/homepage-settings')).json();assert.equal((await proxy('/api/admin/homepage-settings',null,current)).status,200);
+ const update=new Request(publicOrigin+'/api/admin/homepage-settings',{method:'PATCH',headers:{Origin:publicOrigin,Cookie:current,'Content-Type':'application/json'},body:JSON.stringify({...settings,eyebrow:{...settings.eyebrow,vi:'Nội dung qua Vercel'}})});assert.equal((await proxyApi(update,config,send)).status,200);
+ assert.equal((await(await proxy('/api/homepage-settings')).json()).eyebrow.vi,'Nội dung qua Vercel');assert.equal((await(await proxy('/api/session',null,first)).json()).isAdmin,false);
+});

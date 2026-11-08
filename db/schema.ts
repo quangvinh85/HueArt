@@ -59,7 +59,14 @@ export const artworkSubmissions = sqliteTable('artwork_submissions', {
   createdAt: text('created_at').notNull(), updatedAt: text('updated_at').notNull(),
 }, table => [uniqueIndex('artwork_submissions_reference').on(table.reference), uniqueIndex('artwork_submissions_key').on(table.submissionKey),index('artwork_submissions_requester').on(table.requesterHash,table.createdAt)]);
 
+export const staffAccounts = sqliteTable('staff_accounts', {
+  id:text('id').primaryKey(), username:text('username').notNull(), passwordHash:text('password_hash').notNull(),
+  mustChangePassword:integer('must_change_password').notNull().default(1), disabled:integer('disabled').notNull().default(0),
+  createdAt:text('created_at').notNull(), updatedAt:text('updated_at').notNull(),
+},table=>[uniqueIndex('staff_accounts_username').on(table.username)]);
+
 export const adminSessions = sqliteTable('admin_sessions', {
+  accountId:text('account_id'),
   securityEpoch:integer('security_epoch').notNull().default(0),
   tokenHash:text('token_hash').primaryKey(), userId:text('user_id').notNull(), passwordVersion:text('password_version').notNull(), createdAt:integer('created_at').notNull(), expiresAt:integer('expires_at').notNull(),
 },table=>[index('admin_sessions_expiry').on(table.expiresAt)]);

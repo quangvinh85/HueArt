@@ -1,3 +1,5 @@
+import {getHomepageSettings,saveHomepageSettings} from './homepageSettings';
+import {getAdminSecurity} from './twoFactor';
 import {adminSecurity} from './twoFactor';
 import {readBoundedBytes,limitRequest} from './limits';
 import {secureResponse} from './securityHeaders';
@@ -37,8 +39,10 @@ async function notifyOrder(env:Env,order:any,context?:{waitUntil(promise:Promise
 export async function api(request: Request, env: Env, context?: {waitUntil(promise:Promise<unknown>):void}): Promise<Response> {
   const url = new URL(request.url);
   const actor = await adminIdentity(request, env);
-  if (request.method === 'GET' && url.pathname === '/api/session') return json({ authenticated: actor.authenticated, ownerAuthenticated: actor.ownerAuthenticated, isAdmin: actor.isAdmin });
+  if (request.method === 'GET' && url.pathname === '/api/session') return json({ authenticated: actor.authenticated, ownerAuthenticated: actor.ownerAuthenticated, isAdmin: actor.isAdmin,role:actor.role,mustChangePassword:actor.mustChangePassword,username:actor.username,twoFactorEnabled:Boolean((await getAdminSecurity(env)).enabled)&&(!url.searchParams.has('username')||url.searchParams.get('username')===env.ADMIN_USERNAME) });
   if (url.pathname.startsWith('/api/admin/') && !actor.isAdmin) throw new ApiError(actor.authenticated ? 403 : 401, 'Vui lòng đăng nhập quản trị để tiếp tục.');
+  if(url.pathname.startsWith('/api/admin/')&&actor.mustChangePassword)throw new ApiError(403,'Vui lòng đổi mật khẩu tạm trước khi sử dụng trang quản lý.');
+  if(/^\/api\/admin\/(?:payment-settings|security)(?:\/|$)/.test(url.pathname)&&actor.role!=='admin')throw new ApiError(403,'Chỉ admin chính được truy cập chức năng này.');
   if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method) && request.headers.get('Origin') !== url.origin) throw new ApiError(403, 'Nguồn gửi yêu cầu không hợp lệ. Vui lòng dùng website để đặt hàng.');
   if (!env.DB) throw new ApiError(503, 'Hệ thống đơn hàng đang được thiết lập. Vui lòng thử lại sau.');
 
@@ -52,6 +56,12 @@ export async function api(request: Request, env: Env, context?: {waitUntil(promi
   if (url.pathname === '/api/health' && request.method === 'GET') {
     await env.DB.prepare('SELECT 1 AS ok').first();
     return json({ok:true,database:true,uploads:Boolean(env.BUCKET),protocol:1});
+  }
+  if(url.pathname==='/api/homepage-settings'&&request.method==='GET')return json(await getHomepageSettings(env));
+  if(url.pathname==='/api/admin/homepage-settings'){
+    if(request.method==='GET')return json(await getHomepageSettings(env));
+    if(request.method==='PATCH')return json(await saveHomepageSettings(env,await readJson(request)));
+    throw new ApiError(405,'Phương thức không được hỗ trợ.');
   }
   if(url.pathname==='/api/contact-settings'&&request.method==='GET')return json(publicContactSettings(await getContactSettings(env)));
   if(url.pathname==='/api/site-stats'&&['GET','POST'].includes(request.method)){
@@ -97,7 +107,7 @@ export async function api(request: Request, env: Env, context?: {waitUntil(promi
     return new Response(request.method==='HEAD'?null:object.body,{headers:{'Content-Type':'image/jpeg','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
   }
 
-  if (url.pathname.startsWith('/api/admin-auth/') && request.method === 'POST') return adminAuth(request, env, actor, url.pathname.endsWith('/login') ? await readJson(request) : {});
+  if (url.pathname.startsWith('/api/admin-auth/') && request.method === 'POST') return adminAuth(request, env, actor, url.pathname.endsWith('/logout') ? {} : await readJson(request));
 
   if (url.pathname === '/api/submissions' || url.pathname === '/api/admin/artworks' || url.pathname.startsWith('/api/admin/submissions')) return submissions(request, env, actor.rateKey,actor.isAdmin);
   if (url.pathname === '/api/curator' && request.method === 'POST') return json(await curate(await readJson(request), env));

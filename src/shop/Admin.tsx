@@ -1,3 +1,4 @@
+import StaffPasswordChange from './StaffPasswordChange';
 import ZaloOrderNotice from './ZaloOrderNotice';
 import Price from './Price';
 import {PAYMENT_METHOD_LABELS,toVnd,vnd} from './paymentTypes';
@@ -8,6 +9,8 @@ import { ArrowLeft, Check, ClipboardList, ExternalLink, RefreshCw, Search, Shiel
 import { dateTime, money, PAYMENT_LABELS, requestApi, STATUS_LABELS, type Order, type OrdersResult, type OrderStatus, type PaymentStatus } from './ordersApi';
 import Modal from './Modal';
 import SubmissionsAdmin from './SubmissionsAdmin';
+const HomepageAdmin=lazy(()=>import('./HomepageAdmin'));
+type AdminSession={authenticated:boolean;ownerAuthenticated:boolean;isAdmin:boolean;role:'admin'|'sub-admin'|null;mustChangePassword:boolean;username:string|null;twoFactorEnabled:boolean};
 const AdminSecurity = lazy(()=>import('./AdminSecurity'));
 const CatalogueAdmin = lazy(()=>import('./CatalogueAdmin'));
 const PaymentSettingsAdmin = lazy(()=>import('./PaymentSettingsAdmin'));
@@ -87,12 +90,10 @@ export default function Admin() {
     language,
     tr
   } = useShopLanguage();
-  const [tab, setTab] = useState<'orders' | 'submissions' | 'catalog' | 'payments' | 'contact' | 'security'>('orders');
-  const [session, setSession] = useState<{
-    authenticated: boolean;
-    ownerAuthenticated: boolean;
-    isAdmin: boolean;
-  } | null>(null);
+  const [tab, setTab] = useState<'orders' | 'submissions' | 'catalog' | 'payments' | 'contact' | 'security' | 'homepage'>('orders');
+  const [session,setSession]=useState<AdminSession|null>(null);
+  const [passwordChange,setPasswordChange]=useState(false);
+  const [loginOtpEnabled,setLoginOtpEnabled]=useState(false);
   const [username,setUsername] = useState('');
   const [password,setPassword] = useState('');
   const [otp,setOtp] = useState('');
@@ -114,8 +115,8 @@ export default function Admin() {
   const loadSession = useCallback(async () => {
     setSessionError('');
     try {
-      const data = await requestApi<{authenticated:boolean;ownerAuthenticated:boolean;isAdmin:boolean}>('/api/session');
-      setSession(data);
+      const data = await requestApi<AdminSession>('/api/session');
+      setSession(data);setLoginOtpEnabled(data.twoFactorEnabled);
       return data;
     } catch (error) {
       setSessionError(error instanceof Error ? error.message : tr("Không xác minh được đăng nhập."));
@@ -124,6 +125,8 @@ export default function Admin() {
   useEffect(() => {
     void loadSession();
   }, [loadSession]);
+  useEffect(()=>{if(session?.isAdmin)return;let active=true;const timer=setTimeout(()=>{void requestApi<AdminSession>('/api/session?username='+encodeURIComponent(username.trim())).then(data=>{if(active){setLoginOtpEnabled(data.twoFactorEnabled);if(!data.twoFactorEnabled)setOtp('');}}).catch(()=>{});},250);return()=>{active=false;clearTimeout(timer);};},[username,session?.isAdmin]);
+  useEffect(()=>{if(session?.role!=='admin'&&(tab==='payments'||tab==='security'))setTab('orders');},[session?.role,tab]);
   const login = async () => {
     if(loginBusy || !loginFormRef.current?.reportValidity()) return;
     setLoginBusy(true);setLoginError('');
@@ -139,7 +142,7 @@ export default function Admin() {
     setLoginBusy(true);
     try {
       await requestApi('/api/admin-auth/logout',{method:'POST'});
-      requestVersion.current++;setResult(null);setSelected(null);setNotice('');setPassword('');setOtp('');
+      requestVersion.current++;setResult(null);setSelected(null);setNotice('');setPassword('');setOtp('');setPasswordChange(false);
       await loadSession();
     } catch(error) {setError(error instanceof Error?error.message:tr('Không đăng xuất được. Vui lòng thử lại.'));}
     finally {setLoginBusy(false);}
@@ -168,11 +171,11 @@ export default function Admin() {
     }
   }, [search, status, payment, page]);
   useEffect(() => {
-    if (session?.isAdmin && tab==='orders') void loadOrders();
-  }, [session?.isAdmin, tab, loadOrders]);
+    if (session?.isAdmin && !session.mustChangePassword && tab==='orders') void loadOrders();
+  }, [session?.isAdmin, session?.mustChangePassword, tab, loadOrders]);
   const stats = result?.stats;
-  return <div className="shop admin-app"><header className="shop-header"><a className="shop-brand" href="/"><span>NHIẾP ẢNH NGHỆ THUẬT</span><strong>HUẾ</strong></a><LanguageSwitcher />{session?.isAdmin&&<button className="shop-secondary" disabled={loginBusy} onClick={()=>void logout()}>{tr("Đăng xuất")}</button>}<span className="admin-header-label"><ShieldCheck size={17} />{tr("Quản lý đơn hàng")}</span><a className="shop-secondary" href="/"><ArrowLeft size={15} />{tr("Về cửa hàng")}</a></header>
-    {!session?.isAdmin ? <main className="shop-container admin-access"><ShieldCheck size={38} /><h1>{tr("Trang quản lý đơn hàng")}</h1>{sessionError ? <><p role="alert">{sessionError}</p><button className="shop-primary" onClick={() => void loadSession()}>{tr("Thử lại")}</button></> : session?.ownerAuthenticated ? <form className="admin-login-form" ref={loginFormRef} onSubmit={event=>{event.preventDefault();void login();}}><p>{tr('Đăng nhập quản trị bằng tên đăng nhập và mật khẩu của bạn.')}</p><label htmlFor="admin-username">{tr('Tên đăng nhập')}<input id="admin-username" type="text" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} required maxLength={100} value={username} disabled={loginBusy} onChange={event=>setUsername(event.target.value)}/></label><label htmlFor="admin-password">{tr('Mật khẩu')}<input id="admin-password" type="password" name="password" autoComplete="current-password" required maxLength={256} value={password} disabled={loginBusy} onChange={event=>setPassword(event.target.value)}/></label><label htmlFor="admin-otp">{tr('Mã 2FA hoặc mã dự phòng (nếu đã bật)')}<input id="admin-otp" autoComplete="one-time-code" maxLength={19} value={otp} disabled={loginBusy} onChange={event=>setOtp(event.target.value)}/></label>{loginError&&<p className="shop-order-error" role="alert">{tr(loginError)}</p>}<button className="shop-primary shop-full" type="button" disabled={loginBusy} onClick={()=>void login()}>{loginBusy?tr('Đang đăng nhập…'):tr('Đăng nhập quản trị')}</button><a className="shop-text-button" href="/admin" target="_blank" rel="noopener noreferrer">{tr('Mở trang quản lý trong tab riêng')}</a></form> : session ? <><p>{session.authenticated ? tr("Tài khoản hiện tại không có quyền quản lý. Vui lòng dùng tài khoản chủ website.") : tr("Đăng nhập bằng tài khoản chủ website để xem và xử lý đơn hàng.")}</p><a className="shop-primary" target="_top" href={session.authenticated ? '/signout-with-chatgpt?return_to=/admin' : '/signin-with-chatgpt?return_to=/admin'}>{session.authenticated ? tr("Đổi tài khoản") : tr("Đăng nhập với ChatGPT")}<ExternalLink size={15} /></a></> : <p>{tr("Đang xác minh quyền truy cập…")}</p>}</main> : <main className="shop-container admin-main"><div className="shop-filters"><button className={tab === 'orders' ? 'active' : ''} onClick={() => setTab('orders')}>{tr("Đơn hàng")}</button><button className={tab === 'submissions' ? 'active' : ''} onClick={() => setTab('submissions')}>{tr("Tác phẩm gửi đến")}</button><button className={tab === 'catalog' ? 'active' : ''} onClick={() => setTab('catalog')}>{tr('Thư viện ảnh')}</button><button className={tab === 'payments' ? 'active' : ''} onClick={() => setTab('payments')}>{tr('Cài đặt thanh toán')}</button><button className={tab === 'contact' ? 'active' : ''} onClick={() => setTab('contact')}>{tr('Cài đặt chat')}</button><button className={tab === 'security' ? 'active' : ''} onClick={()=>setTab('security')}>{tr('Bảo mật')}</button></div>{tab === 'security' ? <Suspense fallback={<p>{tr('Đang tải…')}</p>}><AdminSecurity /></Suspense> : tab === 'contact' ? <Suspense fallback={<p>{tr('Đang tải…')}</p>}><ContactSettingsAdmin /></Suspense> : tab === 'payments' ? <Suspense fallback={<p>{tr('Đang tải…')}</p>}><PaymentSettingsAdmin /></Suspense> : tab === 'catalog' ? <Suspense fallback={<p>{tr('Đang tải…')}</p>}><CatalogueAdmin /></Suspense> : tab === 'submissions' ? <SubmissionsAdmin /> : <><ZaloOrderNotice onConfigure={()=>setTab('contact')}/><div className="admin-heading"><div><span className="shop-eyebrow">{tr("Dành cho chủ cửa hàng")}</span><h1>{tr("Đơn hàng")}</h1><p>{tr("Theo dõi khách đặt ảnh và cập nhật tiến độ xử lý.")}</p></div><button className="shop-secondary" onClick={() => void loadOrders()} disabled={loading}><RefreshCw size={15} />{loading ? tr("Đang tải…") : tr("Làm mới")}</button></div>
+  return <div className="shop admin-app"><header className="shop-header"><a className="shop-brand" href="/"><span>NHIẾP ẢNH NGHỆ THUẬT</span><strong>HUẾ</strong></a><LanguageSwitcher />{session?.isAdmin&&<><span className="admin-role">{session.username} · {session.role}</span>{session.role==='sub-admin'&&!session.mustChangePassword&&<button className="shop-secondary" onClick={()=>setPasswordChange(true)}>{tr("Đổi mật khẩu")}</button>}<button className="shop-secondary" disabled={loginBusy} onClick={()=>void logout()}>{tr("Đăng xuất")}</button></>}<span className="admin-header-label"><ShieldCheck size={17} />{tr("Quản lý đơn hàng")}</span><a className="shop-secondary" href="/"><ArrowLeft size={15} />{tr("Về cửa hàng")}</a></header>
+    {!session?.isAdmin ? <main className="shop-container admin-access"><ShieldCheck size={38} /><h1>{tr("Trang quản lý đơn hàng")}</h1>{sessionError ? <><p role="alert">{sessionError}</p><button className="shop-primary" onClick={() => void loadSession()}>{tr("Thử lại")}</button></> : session?.ownerAuthenticated ? <form className="admin-login-form" ref={loginFormRef} onSubmit={event=>{event.preventDefault();void login();}}><p>{tr('Đăng nhập quản trị bằng tên đăng nhập và mật khẩu của bạn.')}</p><label htmlFor="admin-username">{tr('Tên đăng nhập')}<input id="admin-username" type="text" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} required maxLength={100} value={username} disabled={loginBusy} onChange={event=>setUsername(event.target.value)}/></label><label htmlFor="admin-password">{tr('Mật khẩu')}<input id="admin-password" type="password" name="password" autoComplete="current-password" required maxLength={256} value={password} disabled={loginBusy} onChange={event=>setPassword(event.target.value)}/></label>{loginOtpEnabled&&<label htmlFor="admin-otp">{tr('Mã 2FA hoặc mã dự phòng (nếu đã bật)')}<input id="admin-otp" autoComplete="one-time-code" maxLength={19} value={otp} disabled={loginBusy} onChange={event=>setOtp(event.target.value)}/></label>}{loginError&&<p className="shop-order-error" role="alert">{tr(loginError)}</p>}<button className="shop-primary shop-full" type="button" disabled={loginBusy} onClick={()=>void login()}>{loginBusy?tr('Đang đăng nhập…'):tr('Đăng nhập quản trị')}</button><a className="shop-text-button" href="/admin" target="_blank" rel="noopener noreferrer">{tr('Mở trang quản lý trong tab riêng')}</a></form> : session ? <><p>{session.authenticated ? tr("Tài khoản hiện tại không có quyền quản lý. Vui lòng dùng tài khoản chủ website.") : tr("Đăng nhập bằng tài khoản chủ website để xem và xử lý đơn hàng.")}</p><a className="shop-primary" target="_top" href={session.authenticated ? '/signout-with-chatgpt?return_to=/admin' : '/signin-with-chatgpt?return_to=/admin'}>{session.authenticated ? tr("Đổi tài khoản") : tr("Đăng nhập với ChatGPT")}<ExternalLink size={15} /></a></> : <p>{tr("Đang xác minh quyền truy cập…")}</p>}</main> : session.mustChangePassword||passwordChange ? <StaffPasswordChange required={session.mustChangePassword} onCancel={()=>setPasswordChange(false)} onChanged={()=>{setPasswordChange(false);setTab('orders');void loadSession();}}/> : <main className="shop-container admin-main"><div className="shop-filters"><button className={tab === 'orders' ? 'active' : ''} onClick={() => setTab('orders')}>{tr("Đơn hàng")}</button><button className={tab === 'submissions' ? 'active' : ''} onClick={() => setTab('submissions')}>{tr("Tác phẩm gửi đến")}</button><button className={tab === 'catalog' ? 'active' : ''} onClick={() => setTab('catalog')}>{tr('Thư viện ảnh')}</button>{session.role==='admin'&&<button className={tab === 'payments' ? 'active' : ''} onClick={() => setTab('payments')}>{tr('Cài đặt thanh toán')}</button>}<button className={tab === 'contact' ? 'active' : ''} onClick={() => setTab('contact')}>{tr('Cài đặt chat')}</button>{session.role==='admin'&&<button className={tab === 'security' ? 'active' : ''} onClick={()=>setTab('security')}>{tr('Bảo mật')}</button>}<button className={tab==='homepage'?'active':''} onClick={()=>setTab('homepage')}>{tr('Giao diện cửa hàng')}</button></div>{tab==='homepage'?<Suspense fallback={<p>{tr('Đang tải…')}</p>}><HomepageAdmin onOpenLibrary={()=>setTab('catalog')}/></Suspense>:tab === 'security'&&session.role==='admin' ? <Suspense fallback={<p>{tr('Đang tải…')}</p>}><AdminSecurity /></Suspense> : tab === 'contact' ? <Suspense fallback={<p>{tr('Đang tải…')}</p>}><ContactSettingsAdmin /></Suspense> : tab === 'payments'&&session.role==='admin' ? <Suspense fallback={<p>{tr('Đang tải…')}</p>}><PaymentSettingsAdmin /></Suspense> : tab === 'catalog' ? <Suspense fallback={<p>{tr('Đang tải…')}</p>}><CatalogueAdmin /></Suspense> : tab === 'submissions' ? <SubmissionsAdmin /> : <><ZaloOrderNotice onConfigure={()=>setTab('contact')}/><div className="admin-heading"><div><span className="shop-eyebrow">{tr("Dành cho chủ cửa hàng")}</span><h1>{tr("Đơn hàng")}</h1><p>{tr("Theo dõi khách đặt ảnh và cập nhật tiến độ xử lý.")}</p></div><button className="shop-secondary" onClick={() => void loadOrders()} disabled={loading}><RefreshCw size={15} />{loading ? tr("Đang tải…") : tr("Làm mới")}</button></div>
       <div className="admin-stats"><article><span>{tr("Tổng đơn hàng")}</span><strong>{stats?.total ?? '—'}</strong><ClipboardList size={22} /></article><article><span>{tr("Đơn mới")}</span><strong>{stats?.newOrders ?? '—'}</strong><ShoppingBag size={22} /></article><article><span>{tr("Đang xử lý")}</span><strong>{stats?.processing ?? '—'}</strong><RefreshCw size={22} /></article><article><span>{tr("Đã thu (trừ đơn hủy)")}</span><strong>{stats ? vnd(stats.receivedVnd) : '—'}</strong><Check size={22} /></article></div>
       <div className="admin-toolbar"><form onSubmit={event => {
             event.preventDefault();

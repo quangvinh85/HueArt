@@ -1,3 +1,4 @@
+import {defaultHomepageSettings,type HomepageSettings} from './homepageTypes';
 import ChatDock from './ChatDock';
 import Price,{RateContext} from './Price';
 import PaymentOptions from './PaymentOptions';
@@ -46,6 +47,8 @@ export default function Shop() {
     requestApi<typeof siteStats>('/api/site-stats',sessionId?{method:'POST',body:JSON.stringify({sessionId})}:{}).then(stats=>{if(active)setSiteStats(stats);}).catch(()=>{/* Baseline figures remain visible during an outage. */});
     return ()=>{active=false;};
   },[]);
+  const [homepage,setHomepage]=useState<HomepageSettings>(defaultHomepageSettings);
+  useEffect(()=>{let active=true;const load=()=>{void requestApi<HomepageSettings>('/api/homepage-settings').then(data=>{if(active)setHomepage(data);}).catch(()=>{});};const changed=(event:StorageEvent)=>{if(event.key==='hueart_homepage_updated')load();};load();window.addEventListener('focus',load);window.addEventListener('storage',changed);return()=>{active=false;window.removeEventListener('focus',load);window.removeEventListener('storage',changed);};},[]);
   const [artworks,setArtworks] = useState<Artwork[]>([]);
   const [catalogueLoading,setCatalogueLoading] = useState(true);
   const [catalogueError,setCatalogueError] = useState('');
@@ -111,7 +114,7 @@ export default function Shop() {
     document.getElementById(window.location.hash.slice(1))?.scrollIntoView({block:'center'});
   },[artworks,visibleCount]);
   useEffect(()=>{setSelected(current=>current?artworks.find(art=>art.id===current.id)||null:null);},[artworks]);
-  const heroArtwork=artworks.find(art=>art.id==='meridian-gate-twilight')||artworks[0];
+  const heroArtwork=artworks.find(art=>art.id===homepage.backgroundArtworkId)||artworks[0];
   const hasUnavailableItem = cart.some(item=>!artworks.some(art=>art.id===item.artworkId));
   const hasPrint = cart.some(item => item.optionId === 'framed-print');
   const hasCopyright = cart.some(item => item.optionId === 'copyright');
@@ -185,9 +188,9 @@ export default function Shop() {
       <section className="shop-hero">
         <>{heroArtwork&&<ProtectedImage className="shop-hero-image" src={heroArtwork.imageUrl} alt={heroArtwork.titles[language]} view="hero" loading="eager" fetchPriority="high" />}</>
         <div className="shop-hero-content shop-container">
-          <span className="shop-eyebrow">{tr("Góc nhìn từ xứ Huế")}</span>
+          <span className="shop-eyebrow">{homepage.eyebrow[language]||homepage.eyebrow.vi}</span>
           <h1>NHIẾP ẢNH<br /><em>NGHỆ THUẬT HUẾ</em></h1>
-          <p>{tr("Mang 1 tác phẩm nghệ thuật về với bạn")}</p>
+          <p>{homepage.tagline[language]||homepage.tagline.vi}</p>
           <a href="#gallery" className="shop-primary">{tr("Chọn ảnh ngay ")}<ArrowDown size={16} /></a>
         </div>
       </section>

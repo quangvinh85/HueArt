@@ -715,3 +715,50 @@ test('invalid uploads, pixel bombs, request spam and exhausted storage fail befo
  assert.equal((await f.request('/api/orders',{method:'POST',body:{invalid:true}})).status,429);
  const big=await f.request('/api/orders',{method:'POST',headers:{'CF-Connecting-IP':'different-ip'},body:{note:'x'.repeat(33000)}});assert.equal(big.status,413);
 });
+
+function sessionCookie(result){return result.headers.getSetCookie().find(value=>value.includes('Max-Age=28800')).split(';')[0];}
+async function subAdminFixture(){
+ const f=fixture();f.env.SUB_ADMIN_USERNAME='Thanhfab';f.env.SUB_ADMIN_PASSWORD_HASH=TEST_HASH;
+ const login=await f.request('/api/admin-auth/login',{method:'POST',headers:ownerIdentity,body:{username:'Thanhfab',password:TEST_PASSWORD,role:'admin'}});
+ assert.equal(login.status,200);assert.equal(login.data.role,'sub-admin');assert.equal(login.data.mustChangePassword,true);
+ const headers={...ownerIdentity,Cookie:sessionCookie(login)};
+ return {...f,headers};
+}
+test('sub-admin is provisioned once, must change password, cannot promote itself and cannot enter owner-only settings',async()=>{
+ const f=await subAdminFixture();
+ for(const path of ['/api/admin/orders','/api/admin/catalog','/api/admin/homepage-settings','/api/admin/payment-settings','/api/admin/security'])assert.equal((await f.request(path,{headers:f.headers})).status,403);
+ assert.equal((await f.request('/api/admin-auth/change-password',{method:'POST',headers:f.headers,body:{password:'wrong',newPassword:'new-private-test-password'}})).status,401);
+ assert.equal((await f.request('/api/admin-auth/change-password',{method:'POST',headers:f.headers,body:{password:TEST_PASSWORD,newPassword:'short'}})).status,400);
+ assert.equal((await f.request('/api/admin-auth/change-password',{method:'POST',headers:f.headers,sameOrigin:false,body:{password:TEST_PASSWORD,newPassword:'new-private-test-password'}})).status,403);
+ const changed=await f.request('/api/admin-auth/change-password',{method:'POST',headers:f.headers,body:{password:TEST_PASSWORD,newPassword:'new-private-test-password',role:'admin'}});assert.equal(changed.status,200);assert.equal(changed.data.role,'sub-admin');assert.equal(changed.data.mustChangePassword,false);
+ assert.equal((await f.request('/api/session',{headers:f.headers})).data.isAdmin,false,'old session revoked');
+ const headers={...ownerIdentity,Cookie:sessionCookie(changed)};
+ const session=(await f.request('/api/session',{headers})).data;assert.equal(session.role,'sub-admin');assert.equal(session.username,'Thanhfab');assert.equal(session.mustChangePassword,false);
+ for(const path of ['/api/admin/orders','/api/admin/catalog','/api/admin/submissions','/api/admin/contact-settings','/api/admin/homepage-settings'])assert.equal((await f.request(path,{headers})).status,200,path);
+ for(const path of ['/api/admin/payment-settings','/api/admin/security','/api/admin/security/setup','/api/admin/security/enable','/api/admin/security/disable'])for(const method of ['GET','POST','PATCH'])assert.equal((await f.request(path,{headers,method,...(method==='GET'?{}:{body:{version:0,password:TEST_PASSWORD,role:'admin'}})})).status,403,path+method);
+ assert.equal((await f.request('/api/admin/payment-settings',{headers:owner})).status,200);assert.equal((await f.request('/api/admin/security',{headers:owner})).status,200);
+ const row=f.sqlite.prepare('SELECT * FROM staff_accounts').get();assert.notEqual(row.password_hash,TEST_HASH);assert.doesNotMatch(row.password_hash,/new-private-test-password/);assert.equal(row.must_change_password,0);
+ assert.equal((await f.request('/api/admin-auth/login',{method:'POST',headers:ownerIdentity,body:{username:'thanhfab',password:TEST_PASSWORD}})).status,401,'bootstrap never restores temporary password');
+ const next=await f.request('/api/admin-auth/login',{method:'POST',headers:ownerIdentity,body:{username:'THANHFAB',password:'new-private-test-password'}});assert.equal(next.status,200);assert.equal(next.data.role,'sub-admin');
+ f.sqlite.prepare('UPDATE staff_accounts SET disabled=1').run();assert.equal((await f.request('/api/session',{headers})).data.isAdmin,false);
+ assert.equal((await f.request('/api/admin-auth/login',{method:'POST',headers:ownerIdentity,body:{username:'Thanhfab',password:'new-private-test-password'}})).status,401);
+});
+test('both roles can update localized homepage content and approved background, with validation and conflict protection',async()=>{
+ const f=await subAdminFixture(),changed=await f.request('/api/admin-auth/change-password',{method:'POST',headers:f.headers,body:{password:TEST_PASSWORD,newPassword:'new-private-test-password'}}),headers={...ownerIdentity,Cookie:sessionCookie(changed)};
+ const initial=await f.request('/api/homepage-settings');assert.equal(initial.status,200);assert.equal(initial.data.eyebrow.vi,'Góc nhìn từ xứ Huế');assert.equal(initial.data.tagline.vi,'Mang 1 tác phẩm nghệ thuật về với bạn');
+ const settings={...initial.data,eyebrow:{vi:'Góc nhìn mới',en:'A new perspective',fr:'Un nouveau regard'},tagline:{vi:'Một tác phẩm dành cho bạn',en:'A work for you',fr:'Une œuvre pour vous'},backgroundArtworkId:artId};
+ assert.equal((await f.request('/api/admin/homepage-settings',{method:'PATCH',body:settings})).status,401);
+ const update=await f.request('/api/admin/homepage-settings',{method:'PATCH',headers,body:settings});assert.equal(update.status,200);assert.equal(update.data.version,1);
+ const publicSettings=await f.request('/api/homepage-settings');assert.deepEqual(publicSettings.data,update.data);assert.doesNotMatch(JSON.stringify(publicSettings.data),/password|account_id|token|highResUrl/);
+ assert.equal((await f.request('/api/admin/homepage-settings',{method:'PATCH',headers:owner,body:settings})).status,409);
+ for(const invalid of [{...update.data,backgroundArtworkId:'https://evil.example/original.jpg'},{...update.data,eyebrow:{vi:'',en:'',fr:''}},{...update.data,tagline:{vi:'x'.repeat(241),en:'',fr:''}}])assert.equal((await f.request('/api/admin/homepage-settings',{method:'PATCH',headers,body:invalid})).status,400);
+ assert.equal((await f.request('/api/admin/homepage-settings',{method:'PATCH',headers:owner,body:update.data})).status,200);
+});
+test('login options show 2FA only when enabled and relevant to the entered owner account',async()=>{
+ const f=fixture();assert.equal((await f.request('/api/session')).data.twoFactorEnabled,false);
+ f.sqlite.prepare("INSERT INTO shop_settings (key,value_json,version,updated_at) VALUES ('admin_security',?,1,?)").run(JSON.stringify({enabled:true,epoch:0}),new Date().toISOString());
+ assert.equal((await f.request('/api/session')).data.twoFactorEnabled,true);
+ assert.equal((await f.request('/api/session?username=test-owner')).data.twoFactorEnabled,true);
+ assert.equal((await f.request('/api/session?username=Thanhfab')).data.twoFactorEnabled,false);
+ const body={username:'test-owner',password:TEST_PASSWORD};assert.equal((await f.request('/api/admin-auth/login',{method:'POST',headers:ownerIdentity,body})).status,401);
+});
