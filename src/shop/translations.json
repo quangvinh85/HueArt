@@ -2254,5 +2254,9 @@
   "Mật khẩu mới phải khác mật khẩu cũ và có từ 12 đến 128 ký tự.": [
     "Your new password must differ from your current password and contain 12–128 characters.",
     "Votre nouveau mot de passe doit être différent et contenir entre 12 et 128 caractères."
+  ],
+  "Đồng hành phát triển cùng": [
+    "Growing together with",
+    "Grandir ensemble avec"
   ]
 }

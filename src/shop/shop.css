@@ -279,7 +279,7 @@
 .submission-revenue-policy ul { padding-left:20px; margin:0; font-size:12px; color:#c0c8d3; line-height:1.9; }
 .submission-revenue-policy b { color:#edc98d; }
 
-.shop-site-stats { display:flex; justify-content:flex-end; gap:40px; padding-block:24px; border-top:1px solid #282a2c; }
+.shop-site-stats { display:grid; grid-template-columns:minmax(0,1fr) repeat(3,max-content); align-items:center; gap:32px; padding-block:20px; border-top:1px solid #282a2c; }
 .shop-site-stats > div { display:flex; flex-direction:column; }
 .shop-site-stats strong { color:var(--gold); font-size:23px; font-variant-numeric:tabular-nums; line-height:1.4; }
 .shop-site-stats span { color:var(--muted); font-size:12px; }
@@ -296,8 +296,17 @@
 .submission-remove-image { position:absolute; top:8px; right:8px; display:grid; place-items:center; width:44px; height:44px; border:2px solid #fff; border-radius:50%; background:#9b2626; color:white; box-shadow:0 2px 8px #0008; }
 .submission-remove-image:disabled { opacity:.5; }
 
-.shop-footer-partner { display:flex; align-items:center; gap:16px; border-top:1px solid #26282c; padding-block:12px; }
+.shop-footer-partner { display:flex; flex-direction:column; align-items:flex-start; gap:8px; min-width:0; }
+.shop-footer-partner .shop-eyebrow { font-size:10px; line-height:1.5; letter-spacing:.12em; color:var(--gold); }
 .shop-footer .shop-partner-logo { display:block; flex:0 0 60px; width:60px; height:60px; margin:0; }
 .shop-partner-logo img { display:block; width:60px; height:60px; object-fit:contain; background:transparent; padding:0; }
 .shop-partner-logo:focus-visible { outline:2px solid var(--gold); outline-offset:6px; border-radius:12px; }
 .shop-partner-logo:hover img { filter:brightness(1.05); }
+
+@media(max-width:520px) {
+ .shop-site-stats { grid-template-columns:minmax(0,1.1fr) repeat(3,minmax(0,1fr)); gap:10px; padding-block:18px; }
+ .shop-site-stats > div { min-width:0; }
+ .shop-site-stats strong { font-size:clamp(12px,3.2vw,16px); }
+ .shop-site-stats span { font-size:10px; line-height:1.5; }
+ .shop-footer-partner .shop-eyebrow { font-size:8px; letter-spacing:.08em; }
+}
